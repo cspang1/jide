@@ -33,6 +33,8 @@ class jide(QtWidgets.QMainWindow):
 
         self.scene = GraphicsScene(self)
         self.graphicsView.setScene(self.scene)
+        self.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
         self.scene.installEventFilter(self)
         self.graphicsView.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
