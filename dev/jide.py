@@ -4,11 +4,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QEvent
 import sys
 import os
+import math
 
 class GraphicsScene(QGraphicsScene):
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
-        self.setSceneRect(0, 0, 1000, 1000)
+        self.setSceneRect(0, 0, 800, 800)
         self.opt = ""
 
     def setOption(self, opt):
@@ -17,10 +18,10 @@ class GraphicsScene(QGraphicsScene):
     def mousePressEvent(self, event):
         pen = QPen(Qt.black)
         brush = QBrush(Qt.black)
-        x = event.scenePos().x()
-        y = event.scenePos().y()
-        if self.opt == "Generate":
-            self.addRect(x, y, 4, 4, pen, brush)
+        x = math.floor(event.scenePos().x()/100)*100
+        y = math.floor(event.scenePos().y()/100)*100
+        if self.opt == "Generate" and x < 800 and y < 800:
+            self.addRect(x, y, 100, 100, pen, brush)
         elif self.opt == "Select":
             print(x, y)
 
@@ -54,20 +55,15 @@ class jide(QtWidgets.QMainWindow):
         return False
 
     def zoomCanvas(self, event):
-        print("{0}, {1}".format(event.scenePos().x(), event.scenePos().y()))
         zoomInFactor = 1.25
         zoomOutFactor = 1 / zoomInFactor
-        # Save the scene pos
         oldPos = event.scenePos()
-        # Zoom
         if event.delta() > 0:
             zoomFactor = zoomInFactor
         else:
             zoomFactor = zoomOutFactor
         self.graphicsView.scale(zoomFactor, zoomFactor)
-        # Get the new position
         newPos = event.scenePos()
-        # Move scene to old position
         delta = newPos - oldPos
         self.graphicsView.translate(delta.x(), delta.y())
 
