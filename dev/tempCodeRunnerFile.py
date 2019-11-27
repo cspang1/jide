@@ -1,0 +1,1 @@
+List[Color] = field(default_factory=lambda: [Color()]*16)

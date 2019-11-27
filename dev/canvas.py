@@ -1,17 +1,37 @@
 from PyQt5 import QtWidgets, QtGui, uic
 from PyQt5.QtGui import QPalette, QColor, QIcon, QPen, QBrush
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt, QSize, QEvent
+from PyQt5.QtCore import Qt, QSize, QEvent, QAbstractListModel, QObject, pyqtSignal, pyqtSlot
 from canvastools import Tools
 from itertools import product
+from typing import List
+from dataclasses import dataclass, field
 import sys
 import os
 import math
 
+@dataclass
+class pixels(QObject):
+    data: List[Qt.GlobalColor]
+    data_changed = punched = pyqtSignal(int, int)
+
+    def __init__(self, data=[[]]):
+        QObject.__init__(self)
+        self.data = data
+
+    def __getitem__(self, index):
+        row, col = index
+        return self.data[row][col]
+
+    def __setitem__(self, index, value):
+        row, col = index
+        self.data[row][col] = value
+        self.data_changed.emit(row, col)
+
 class GraphicsView(QGraphicsView):
     def __init__(self, parent=None):
         QGraphicsView.__init__(self, parent)
-        self.scene = GraphicsScene()
+        self.scene = GraphicsScene(self)
         self.setScene(self.scene)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
@@ -39,26 +59,30 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
+    pix = pixels([[Qt.magenta]*8]*8)
+
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
         self.setSceneRect(0, 0, 700, 700)
-        for coord in product(range(8), range(8)):
-            self.addRect(coord[0]*100, coord[1]*100, 100, 100, Qt.magenta, Qt.magenta)
+        for row in range(8):
+            for column in range(8):
+                self.addRect(row*100, column*100, 100, 100, self.pix[row,column], self.pix[row,column])
         self.tool = Tools.PEN
+        self.pix.data_changed.connect(self.update)
+
+    @pyqtSlot(int, int)
+    def update(self, row, col):
+        pen = QPen(self.pix[row, col], Qt.MiterJoin)
+        brush = QBrush(self.pix[row, col])
+        pixel = self.itemAt(row*100, col*100, QtGui.QTransform())
+        pixel.setBrush(Qt.black)
+        pixel.setPen(Qt.black)
 
     def setTool(self, tool):
         self.tool = tool
 
     def mousePressEvent(self, event):
-        if self.tool is Tools.PEN:
-            self.drawPixel(event)
-
-    def drawPixel(self, event):
-        pen = QPen(Qt.black, Qt.MiterJoin)
-        brush = QBrush(Qt.black)
-        pixel = self.itemAt(event.scenePos().x(), event.scenePos().y(), QtGui.QTransform())
-        x = math.floor(event.scenePos().x()/100)*100
-        y = math.floor(event.scenePos().y()/100)*100
-        if 0 <= x < 800 and 0 <= y < 800:
-            pixel.setBrush(Qt.black)
-            pixel.setPen(Qt.black)
+        if self.tool is Tools.PEN and 0 < event.scenePos().x() < 800 and 0 < event.scenePos().y() < 800:
+            x = math.floor(event.scenePos().x()/100)
+            y = math.floor(event.scenePos().y()/100)
+            self.pix[x,y] = Qt.black
