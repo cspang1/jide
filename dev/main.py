@@ -5,7 +5,7 @@ import sys
 app = QApplication(sys.argv)
 
 window = jide()
-window.show()
+window.showMaximized()
 
 # Start the event loop.
 app.exec_()

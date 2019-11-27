@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtGui, uic
 from PyQt5.QtGui import QPalette, QColor, QIcon, QPen, QBrush
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QEvent
+from canvastools import Tools
 import sys
 import os
 import math
@@ -20,21 +21,18 @@ class GraphicsView(QGraphicsView):
             self.zoomCanvas(event)
             event.accept()
             return True
-        if event.type() == QEvent.GraphicsSceneMousePress:
-            self.scene.drawPixel(event)
-            event.accept()
-            return True
         return False
 
     def zoomCanvas(self, event):
-        zoomInFactor = 1.25
-        zoomOutFactor = 1 / zoomInFactor
+        zoomFactor = 1.25
         oldPos = event.scenePos()
-        if event.delta() > 0:
-            zoomFactor = zoomInFactor
-        else:
-            zoomFactor = zoomOutFactor
-        self.scale(zoomFactor, zoomFactor)
+
+        detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(self.transform())
+        if detail < 10 and event.delta() > 0:
+            self.scale(zoomFactor, zoomFactor)
+        if detail > .1 and event.delta() < 0:
+            self.scale((1 / zoomFactor), (1 / zoomFactor))
+
         newPos = event.scenePos()
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
@@ -43,13 +41,18 @@ class GraphicsScene(QGraphicsScene):
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
         self.setSceneRect(0, 0, 800, 800)
-        self.opt = ""
+        self.addRect(0,0,800,800,Qt.magenta,Qt.magenta)
+        self.tool = Tools.PEN
 
-    def setOption(self, opt):
-        self.opt = opt
+    def setTool(self, tool):
+        self.tool = tool
+
+    def mousePressEvent(self, event):
+        if self.tool is Tools.PEN:
+            self.drawPixel(event)
 
     def drawPixel(self, event):
-        pen = QPen(Qt.black)
+        pen = QPen(Qt.black, Qt.MiterJoin)
         brush = QBrush(Qt.black)
         x = math.floor(event.scenePos().x()/100)*100
         y = math.floor(event.scenePos().y()/100)*100
