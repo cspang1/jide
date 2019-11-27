@@ -6,3 +6,4 @@ class jide(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("JIDE")
         self.setCentralWidget(GraphicsView(self))
+        self.setStyleSheet("background-color: #494949;")
