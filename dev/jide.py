@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, uic
 from canvas import GraphicsView
-from colorpalette import ColorPalette
+from PyQt5 import QtCore
+from colorpalette import *
 import sys
 import os
 
@@ -17,4 +18,6 @@ class jide(QtWidgets.QMainWindow):
 
         # Setup color palette
         color_palette = ColorPalette()
+        for swatch in color_palette.swatches:
+            swatch.clicked.connect(self.canvas.scene.changeColor)
         self.colorPalette.setWidget(color_palette)

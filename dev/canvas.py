@@ -1,7 +1,7 @@
-from PyQt5 import QtWidgets, QtGui, uic
-from PyQt5.QtGui import QPalette, QColor, QIcon, QPen, QBrush
+from PyQt5 import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt, QSize, QEvent, QAbstractListModel, QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import *
 from canvastools import Tools
 from itertools import product
 from typing import List
@@ -13,7 +13,7 @@ import math
 @dataclass
 class pixels(QObject):
     data: List[Qt.GlobalColor]
-    data_changed = punched = pyqtSignal(int, int)
+    data_changed = pyqtSignal(int, int)
 
     def __init__(self, data=[[]]):
         QObject.__init__(self)
@@ -60,6 +60,7 @@ class GraphicsView(QGraphicsView):
 
 class GraphicsScene(QGraphicsScene):
     pix = pixels([[Qt.magenta]*8]*8)
+    pen_color = Qt.black
 
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
@@ -70,13 +71,17 @@ class GraphicsScene(QGraphicsScene):
         self.tool = Tools.PEN
         self.pix.data_changed.connect(self.update)
 
+    @pyqtSlot(QColor)
+    def changeColor(self, color):
+        self.pen_color = color
+
     @pyqtSlot(int, int)
     def update(self, row, col):
         pen = QPen(self.pix[row, col], Qt.MiterJoin)
         brush = QBrush(self.pix[row, col])
         pixel = self.itemAt(row*100, col*100, QtGui.QTransform())
-        pixel.setBrush(Qt.black)
-        pixel.setPen(Qt.black)
+        pixel.setPen(pen)
+        pixel.setBrush(brush)
 
     def setTool(self, tool):
         self.tool = tool
@@ -85,4 +90,4 @@ class GraphicsScene(QGraphicsScene):
         if self.tool is Tools.PEN and 0 < event.scenePos().x() < 800 and 0 < event.scenePos().y() < 800:
             x = math.floor(event.scenePos().x()/100)
             y = math.floor(event.scenePos().y()/100)
-            self.pix[x,y] = Qt.black
+            self.pix[x,y] = self.pen_color
