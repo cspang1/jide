@@ -44,6 +44,9 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="colorPalette">
+   <property name="windowTitle">
+    <string>Color Palette</string>
+   </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
