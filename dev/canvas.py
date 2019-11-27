@@ -3,6 +3,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QPen, QBrush
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QEvent
 from canvastools import Tools
+from itertools import product
 import sys
 import os
 import math
@@ -40,8 +41,9 @@ class GraphicsView(QGraphicsView):
 class GraphicsScene(QGraphicsScene):
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
-        self.setSceneRect(0, 0, 800, 800)
-        self.addRect(0,0,800,800,Qt.magenta,Qt.magenta)
+        self.setSceneRect(0, 0, 700, 700)
+        for coord in product(range(8), range(8)):
+            self.addRect(coord[0]*100, coord[1]*100, 100, 100, Qt.magenta, Qt.magenta)
         self.tool = Tools.PEN
 
     def setTool(self, tool):
@@ -54,7 +56,9 @@ class GraphicsScene(QGraphicsScene):
     def drawPixel(self, event):
         pen = QPen(Qt.black, Qt.MiterJoin)
         brush = QBrush(Qt.black)
+        pixel = self.itemAt(event.scenePos().x(), event.scenePos().y(), QtGui.QTransform())
         x = math.floor(event.scenePos().x()/100)*100
         y = math.floor(event.scenePos().y()/100)*100
         if 0 <= x < 800 and 0 <= y < 800:
-            self.addRect(x, y, 100, 100, pen, brush)
+            pixel.setBrush(Qt.black)
+            pixel.setPen(Qt.black)
