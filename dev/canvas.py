@@ -29,9 +29,9 @@ class pixels(QObject):
         self.data_changed.emit(row, col)
 
 class GraphicsView(QGraphicsView):
-    def __init__(self, parent=None):
+    def __init__(self, scene=None, parent=None):
         QGraphicsView.__init__(self, parent)
-        self.scene = GraphicsScene(self)
+        self.scene = scene
         self.setScene(self.scene)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
