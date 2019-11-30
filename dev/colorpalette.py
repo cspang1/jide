@@ -22,7 +22,7 @@ class Color(QLabel):
 class ColorPalette(QWidget):
     def __init__(self):
         super().__init__()
-        self.setMaximumSize(SWATCH_SIZE*16, SWATCH_SIZE*16)
+        self.setFixedSize(SWATCH_SIZE*16, SWATCH_SIZE*16)
         grid = QGridLayout()
         grid.setHorizontalSpacing(0)
         grid.setVerticalSpacing(0)
