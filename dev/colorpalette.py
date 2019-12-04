@@ -4,6 +4,12 @@ from PyQt5.QtWidgets import *
 
 SWATCH_SIZE = 25
 
+def upsample(red, green, blue):
+    red = round((red/7)*255)
+    green = round((green/7)*255)
+    blue = round((blue/3)*255)
+    return (red, green, blue)
+
 class Color(QLabel):
     color = QColor()
     clicked = pyqtSignal(QColor)
@@ -33,11 +39,5 @@ class ColorPalette(QWidget):
         colors = [(red, green, blue) for red in range(8) for green in range(8) for blue in range(4)]
 
         for position, color, swatch in zip(positions,colors, self.swatches):
-            swatch.fill(QColor(*self.upsample(*color)))
+            swatch.fill(QColor(*upsample(*color)))
             grid.addWidget(swatch, *position)
-
-    def upsample(self, red, green, blue):
-        red = round((red/7)*255)
-        green = round((green/7)*255)
-        blue = round((blue/3)*255)
-        return (red, green, blue)
