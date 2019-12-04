@@ -18,6 +18,7 @@ class GraphicsView(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
         self.scene.installEventFilter(self)
+        self.scale(50, 50)
 
     def eventFilter(self, source, event):
         if event.type() == QEvent.GraphicsSceneWheel and QtWidgets.QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -31,9 +32,9 @@ class GraphicsView(QGraphicsView):
         oldPos = event.scenePos()
 
         detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(self.transform())
-        if detail < 10 and event.delta() > 0:
+        if detail < 100 and event.delta() > 0:
             self.scale(zoomFactor, zoomFactor)
-        if detail > .1 and event.delta() < 0:
+        if detail > 10 and event.delta() < 0:
             self.scale((1 / zoomFactor), (1 / zoomFactor))
 
         newPos = event.scenePos()
@@ -41,6 +42,8 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
+    draw_pixel = pyqtSignal(str, int, int, int)
+
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
         self.canvas = None
@@ -50,26 +53,26 @@ class GraphicsScene(QGraphicsScene):
         self.setTool(Tools.PEN)
 
     def setCanvas(self, source):
-        name = source.name
-        self.pixels = source.pixels
+        self.pixels = source
 
     def setPalette(self, source):
-        self.palette = source.colors
+        self.palette = source
 
     def showSprite(self):
         self.canvas = QImage(bytes([pix for sub in self.pixels for pix in sub]), 8, 8, QImage.Format_Indexed8)
         self.canvas.setColorTable(self.palette)
         sprite = QGraphicsPixmapItem(QPixmap.fromImage(self.canvas))
+        sprite.mousePressEvent = self.draw
         self.addItem(sprite)
 
     def setTool(self, tool):
         self.tool = tool
 
-    def mousePressEvent(self, event):
-        if self.tool is Tools.PEN and 0 < event.scenePos().x() < 800 and 0 < event.scenePos().y() < 800:
-            x = math.floor(event.scenePos().x()/100)
-            y = math.floor(event.scenePos().y()/100)
-            self.pix[x,y] = self.pen_color
+    def draw(self, event):
+        col = math.floor(event.pos().x())
+        row = math.floor(event.pos().y())
+        value = 2
+        self.draw_pixel.emit("sprite80", row, col, value)
 
     @pyqtSlot(QColor)
     def changeColor(self, color):
@@ -77,8 +80,4 @@ class GraphicsScene(QGraphicsScene):
 
     @pyqtSlot(int, int)
     def update(self, row, col):
-        pen = QPen(self.pix[row, col], Qt.MiterJoin)
-        brush = QBrush(self.pix[row, col])
-        pixel = self.itemAt(row*100, col*100, QtGui.QTransform())
-        pixel.setPen(pen)
-        pixel.setBrush(brush)
+        pass
