@@ -59,10 +59,12 @@ class jide(QtWidgets.QMainWindow):
                 self.setCentralWidget(self.view)
                 self.view.setStyleSheet("background-color: #494949;")
 
-                self.scene.setCanvas(self.data.sprite_pixel_palettes[80])
-                self.scene.setPalette(self.data.sprite_color_palettes[2])
+                self.scene.setCanvas(self.data.sprite_pixel_palettes["sprite80"])
+                self.scene.setPalette(self.data.sprite_color_palettes["sprite_color_palette2"])
                 self.scene.showSprite()
 
                 # Setup color palette signals
                 for swatch in self.color_palette.swatches:
                     swatch.clicked.connect(self.scene.changeColor)
+
+                self.scene.draw_pixel.connect(self.data.update_pixel)
