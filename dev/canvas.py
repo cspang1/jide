@@ -42,20 +42,19 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
-    draw_pixel = pyqtSignal(str, int, int, int)
-
-    def __init__(self, parent=None):
+    def __init__(self, data, parent=None):
         QGraphicsScene.__init__(self, parent)
-        self.pixels = [[0]*8]*8
-        self.palette = [qRgb(0,0,0)]*16
+        self.data = data
         self.pen_color = 0
         self.setTool(Tools.PEN)
 
     def setCanvas(self, source):
-        self.canvas = QImage(bytes([pix for sub in source for pix in sub]), 8, 8, QImage.Format_Indexed8)
+        sprite = self.data.getSprite(source)
+        self.canvas = QImage(bytes([pix for sub in sprite for pix in sub]), 8, 8, QImage.Format_Indexed8)
 
     def setPalette(self, source):
-        self.canvas.setColorTable([color.rgba() for color in source])
+        palette = self.data.getSprColPal(source)
+        self.canvas.setColorTable([color.rgba() for color in palette])
         self.items()[0].setPixmap(QPixmap.fromImage(self.canvas))
 
     def showSprite(self):
@@ -69,13 +68,22 @@ class GraphicsScene(QGraphicsScene):
     def draw(self, event):
         col = math.floor(event.pos().x())
         row = math.floor(event.pos().y())
-        self.draw_pixel.emit("sprite80", row, col, self.pen_color)
+        #self.draw_pixel.emit("sprite80", row, col, self.pen_color)
 
-    @pyqtSlot(int, QColor)
-    def changeColor(self, index, color):
-        self.pen_color = index
+    def drawForeground(self, painter, rect):
+        pen = QPen(Qt.darkCyan)
+        pen.setWidth(0)
+        painter.setPen(pen)
+        lines = []
+        for longitude in range(9):
+            line = QLineF(0, longitude, 8, longitude)
+            lines.append(line)
+        for latitude in range(9):
+            line = QLineF(latitude, 0, latitude, 8)
+            lines.append(line)
+        painter.drawLines(lines)
 
-    @pyqtSlot(int, int, int)
-    def update_pixel(self, row, col, value):
-        print((row,col))
-        self.canvas.setPixel(col, row, value)
+    def drawBackground(self, painter, rect):
+        painter.setBrush(QBrush(Qt.magenta, Qt.SolidPattern))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(0, 0, 8, 8)

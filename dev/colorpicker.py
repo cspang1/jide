@@ -29,7 +29,7 @@ class ColorPicker(QDialog):
 
         actions.accepted.connect(self.accept)
         actions.rejected.connect(self.reject)
-        actions.accepted.connect(self.accept)
+        #actions.applied.connect(self.apply)
 
         color_palette = ColorPalette()
         positions = [(row,col) for row in range(16) for col in range(16)]

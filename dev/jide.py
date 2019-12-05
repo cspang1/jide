@@ -20,18 +20,9 @@ class jide(QtWidgets.QMainWindow):
         # Setup color palette dock
         self.colorPaletteDock = QDockWidget("Color Palettes", self)
         self.colorPaletteDock.setFloating(False)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
         self.dockedWidget = QWidget(self)
         self.colorPaletteDock.setWidget(self.dockedWidget)
         self.dockedWidget.setLayout(QGridLayout())
-
-        # Setup color palette
-        self.color_palette = ColorPalette()
-        self.color_palette_list = QComboBox()
-        self.color_palette_list.setEnabled(False)
-        self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
-        self.dockedWidget.layout().addWidget(self.color_palette_list)
-        self.dockedWidget.layout().addWidget(self.color_palette)
 
         # Setup menu bar
         exitAct = QAction('&Exit', self)
@@ -62,24 +53,27 @@ class jide(QtWidgets.QMainWindow):
                 print("Error opening file")
             else:
                 # Setup canvas
-                self.scene = GraphicsScene(self)
+                self.scene = GraphicsScene( self.data, self)
                 self.view = GraphicsView(self.scene, self)
                 self.setCentralWidget(self.view)
                 self.view.setStyleSheet("background-color: #494949;")
-                self.scene.setCanvas(self.data.sprite_pixel_palettes["sprite80"])
+                self.scene.setCanvas("sprite80")
                 self.scene.showSprite()
 
                 # Setup color palette
+                self.color_palette = ColorPalette(self.data)
+                self.color_palette_list = QComboBox()
+                self.color_palette_list.setEnabled(False)
+                self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
+                self.dockedWidget.layout().addWidget(self.color_palette_list)
+                self.dockedWidget.layout().addWidget(self.color_palette)
+                self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
                 self.color_palette_list.setEnabled(True)
                 for palette in self.data.sprite_color_palettes:
                     self.color_palette_list.addItem(palette)
 
-                self.scene.draw_pixel.connect(self.data.update_pixel)
-                self.data.data_changed.connect(self.scene.update_pixel)
-
     def setColorPalette(self, index):
         item_name = self.color_palette_list.currentText()
-        palette = self.data.sprite_color_palettes[item_name]
-        colors = [(color.red(), color.green(), color.blue()) for color in palette]
-        self.color_palette.setPalette(colors)
-        self.scene.setPalette(palette)
+        self.color_palette.setPalette(item_name)
+        # This should happen w/ a signal probably...
+        self.scene.setPalette(item_name)
