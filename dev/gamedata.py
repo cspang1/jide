@@ -6,6 +6,8 @@ from colorpalette import upsample
 import json
 
 class GameData(QObject):
+    spr_col_updated = pyqtSignal(str)
+
     def __init__(self, data):
         QObject.__init__(self)
         self.sprite_color_palettes = {}
@@ -41,6 +43,11 @@ class GameData(QObject):
 
     def getTileMap(self, name):
         return self.tile_maps[name]
+
+    @pyqtSlot(str, int, QColor)
+    def setSprCol(self, palette, index, color):
+        self.sprite_color_palettes[palette][index] = color
+        self.spr_col_updated.emit(palette)
 
     @classmethod
     def from_filename(cls, file_name):
