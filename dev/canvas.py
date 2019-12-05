@@ -51,6 +51,8 @@ class GraphicsScene(QGraphicsScene):
         spriteItem = QGraphicsPixmapItem(QPixmap.fromImage(self.sprite))
         spriteItem.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
         spriteItem.mousePressEvent = self.draw
+        spriteItem.mouseReleaseEvent = self.release
+        spriteItem.mouseMoveEvent = self.drag
         self.addItem(spriteItem)
         self.data = data
         self.data.spr_pix_updated.connect(self.updatePixel)
@@ -87,10 +89,21 @@ class GraphicsScene(QGraphicsScene):
     def setPenColor(self, color):
         self.pen_color = color
 
-    def draw(self, event):
+    def drag(self, event):
         col = math.floor(event.pos().x())
         row = math.floor(event.pos().y())
+        if self.drawing and (row, col) != self.last_pos and 0 <= col < 8 and 0 <= row < 8:
+            self.draw(event)
+
+    def draw(self, event):
+        self.drawing = True
+        col = math.floor(event.pos().x())
+        row = math.floor(event.pos().y())
+        self.last_pos = (row, col)
         self.update_pixel.emit(self.sprite_name, row, col, self.pen_color)
+
+    def release(self, event):
+        self.drawing = False
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
