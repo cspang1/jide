@@ -6,8 +6,6 @@ from colorpalette import upsample
 import json
 
 class GameData(QObject):
-    data_changed = pyqtSignal(int, int, int)
-
     def __init__(self, data):
         QObject.__init__(self)
         self.sprite_color_palettes = {}
@@ -25,16 +23,26 @@ class GameData(QObject):
         self.tile_pixel_palettes = {}
         for tile in data["tiles"]:
             self.tile_pixel_palettes[tile["name"]] = tile["contents"]
+        self.tile_maps = {}
+        for tile_map in data["tileMaps"]:
+            self.tile_maps[tile_map["name"]] = tile_map["contents"]
 
-        self.tile_maps= data["tileMaps"]
+    def getSprite(self, name):
+        return self.sprite_pixel_palettes[name]
+
+    def getTile(self, name):
+        return self.tile_pixel_palettes[name]
+
+    def getSprColPal(self, name):
+        return self.sprite_color_palettes[name]
+
+    def getTileColPal(self, name):
+        return self.tile_color_palettes[name]
+
+    def getTileMap(self, name):
+        return self.tile_maps[name]
 
     @classmethod
     def from_filename(cls, file_name):
         with open(file_name, 'r') as data_file:
                 return cls(json.load(data_file))
-
-    @pyqtSlot(str, int, int, int)
-    def update_pixel(self, target, row, col, value):
-        pixels = self.sprite_pixel_palettes[target]
-        pixels[row][col] = value
-        self.data_changed.emit(row, col, value)
