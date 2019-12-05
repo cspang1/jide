@@ -62,6 +62,7 @@ class jide(QtWidgets.QMainWindow):
 
                 # Setup color palette
                 self.color_palette = ColorPalette(self.data)
+                self.color_palette.palette_updated.connect(self.scene.setPalette)
                 self.color_palette_list = QComboBox()
                 self.color_palette_list.setEnabled(False)
                 self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
@@ -75,5 +76,3 @@ class jide(QtWidgets.QMainWindow):
     def setColorPalette(self, index):
         item_name = self.color_palette_list.currentText()
         self.color_palette.setPalette(item_name)
-        # This should happen w/ a signal probably...
-        self.scene.setPalette(item_name)

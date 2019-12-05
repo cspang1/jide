@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import *
 from colorpicker import *
 
 class Color(QLabel):
+    color_changed = pyqtSignal(int, QColor)
+
     def __init__(self, index, parent=None):
         QLabel.__init__(self, parent)
         self.index = index
@@ -18,41 +20,57 @@ class Color(QLabel):
             painter.setPen(pen)
             painter.drawLine(QLineF(0,0,100,100))
         pen = QPen(Qt.black)
-        pen.setWidth(5)
+        pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.NoBrush)
-        painter.drawRect(0, 0, 100, 100)
+        painter.drawRect(0, 0, 99, 99)
 
     def fill(self, color):
-        self.pixmap().fill(color)
+        self.color = color
+        self.pixmap().fill(self.color)
         self.update()
 
     def mouseDoubleClickEvent(self, event):
         if self.index != 0:
-            picker = ColorPicker()
-            picker.exec()
+            picker = ColorPicker(self.color)
+            if picker.exec():
+                self.color = picker.getColor()
+                self.color_changed.emit(self.index, self.color)
 
     def mousePressEvent(self, event):
         print("Set pen color to {}".format(self.index))
 
 class ColorPalette(QWidget):
+    color_changed = pyqtSignal(str, int, QColor)
+    palette_updated = pyqtSignal(str)
+
     def __init__(self, data):
         super().__init__()
         self.data = data
         self.setFixedSize(400, 400)
         self.grid = QGridLayout()
-        self.grid.setHorizontalSpacing(0)
-        self.grid.setVerticalSpacing(0)
+        self.grid.setSpacing(0)
+        self.grid.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.grid)
-        palette = [Color(n) for n in range(16)]
+        self.palette = [Color(n) for n in range(16)]
         positions = [(row,col) for row in range(4) for col in range(4)]
-        for position, swatch in zip(positions, palette):
+        for position, swatch in zip(positions, self.palette):
             swatch.fill(QColor(0,0,0))
             self.grid.addWidget(swatch, *position)
+        for swatch in self.palette:
+            swatch.color_changed.connect(self.sendColorUpdate)
+        self.color_changed.connect(self.data.setSprCol)
+        self.data.spr_col_updated.connect(self.setPalette)
         self.enabled = False
 
+    pyqtSlot(int, QColor)
+    def sendColorUpdate(self, index, color):
+        self.color_changed.emit(self.current_palette, index, color)
+
+    pyqtSlot(str)
     def setPalette(self, palette):
+        self.current_palette = palette
         widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
-        for color, widget in zip(self.data.sprite_color_palettes[palette], widgets):
+        for color, widget in zip(self.data.sprite_color_palettes[self.current_palette], widgets):
             widget.widget().fill(color)
         self.grid.itemAt(0).widget().fill(QColor(0,0,0))
+        self.palette_updated.emit(self.current_palette)

@@ -52,6 +52,7 @@ class GraphicsScene(QGraphicsScene):
         sprite = self.data.getSprite(source)
         self.canvas = QImage(bytes([pix for sub in sprite for pix in sub]), 8, 8, QImage.Format_Indexed8)
 
+    pyqtSlot(str)
     def setPalette(self, source):
         palette = self.data.getSprColPal(source)
         self.canvas.setColorTable([color.rgba() for color in palette])

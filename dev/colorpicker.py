@@ -10,7 +10,7 @@ def upsample(red, green, blue):
 
 class Color(QLabel):
     color = QColor()
-    clicked = pyqtSignal(int, QColor)
+    clicked = pyqtSignal(QColor)
 
     def __init__(self, index, parent=None):
         QLabel.__init__(self, parent)
@@ -21,20 +21,48 @@ class Color(QLabel):
         self.color = color
         self.pixmap().fill(self.color)
 
-class ColorPicker(QDialog):
+    def paintEvent(self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+        pen = QPen(Qt.black)
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.setBrush(Qt.NoBrush)
+        painter.drawRect(0, 0, 24, 24)
+
+    def mousePressEvent(self, event):
+        self.clicked.emit(self.color)
+
+class ColorPalette(QWidget):
     def __init__(self):
         super().__init__()
-    
-        actions = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Apply | QDialogButtonBox.Cancel)
+        self.setFixedSize(400, 400)
+        self.grid = QGridLayout()
+        self.grid.setSpacing(0)
+        self.grid.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.grid)
+        self.palette = [Color(n) for n in range(256)]
+        positions = [(row,col) for row in range(16) for col in range(16)]
+        colors = [(red, green, blue) for red in range(8) for green in range(8) for blue in range(4)]
+        for position, color, swatch in zip(positions,colors, self.palette):
+            swatch.fill(QColor(*upsample(*color)))
+            self.grid.addWidget(swatch, *position)
+        self.enabled = False
+
+class ColorPicker(QDialog):
+    def __init__(self, color):
+        super().__init__()
+
+        self.color = color
+
+        actions = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
         actions.accepted.connect(self.accept)
         actions.rejected.connect(self.reject)
-        #actions.applied.connect(self.apply)
 
         color_palette = ColorPalette()
-        positions = [(row,col) for row in range(16) for col in range(16)]
-        colors = [(red, green, blue) for red in range(8) for green in range(8) for blue in range(4)]
-        color_palette.addSwatches(colors, positions)
+        for swatch in color_palette.palette:
+            swatch.clicked.connect(self.colorChosen)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(color_palette)
@@ -43,18 +71,9 @@ class ColorPicker(QDialog):
         self.setLayout(mainLayout)
         self.setWindowTitle("Select Color")
 
-class ColorPalette(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setFixedSize(400, 400)
-        self.grid = QGridLayout()
-        self.grid.setHorizontalSpacing(0)
-        self.grid.setVerticalSpacing(0)
-        self.setLayout(self.grid)
-        self.palette = [Color(n) for n in range(256)]
-        self.enabled = False
+    def getColor(self):
+        return self.color
 
-    def addSwatches(self, colors, positions):
-        for position, color, swatch in zip(positions,colors, self.palette):
-            swatch.fill(QColor(*upsample(*color)))
-            self.grid.addWidget(swatch, *position)
+    @pyqtSlot(QColor)
+    def colorChosen(self, color):
+        self.color = color
