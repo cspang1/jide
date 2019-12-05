@@ -7,6 +7,7 @@ import json
 
 class GameData(QObject):
     spr_col_updated = pyqtSignal(str)
+    spr_pix_updated = pyqtSignal(int, int)
 
     def __init__(self, data):
         QObject.__init__(self)
@@ -48,6 +49,10 @@ class GameData(QObject):
     def setSprCol(self, palette, index, color):
         self.sprite_color_palettes[palette][index] = color
         self.spr_col_updated.emit(palette)
+
+    def setSprPix(self, target, row, col, value):
+        self.sprite_pixel_palettes[target][row][col] = value
+        self.spr_pix_updated.emit(row, col)
 
     @classmethod
     def from_filename(cls, file_name):

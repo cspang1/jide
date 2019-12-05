@@ -5,6 +5,7 @@ from colorpicker import *
 
 class Color(QLabel):
     color_changed = pyqtSignal(int, QColor)
+    pen_changed = pyqtSignal(int)
 
     def __init__(self, index, parent=None):
         QLabel.__init__(self, parent)
@@ -37,7 +38,7 @@ class Color(QLabel):
                 self.color_changed.emit(self.index, self.color)
 
     def mousePressEvent(self, event):
-        print("Set pen color to {}".format(self.index))
+        self.pen_changed.emit(self.index)
 
 class ColorPalette(QWidget):
     color_changed = pyqtSignal(str, int, QColor)
