@@ -10,32 +10,15 @@ import sys
 import os
 import math
 
-@dataclass
-class pixels(QObject):
-    data: List[Qt.GlobalColor]
-    data_changed = pyqtSignal(int, int)
-
-    def __init__(self, data=[[]]):
-        QObject.__init__(self)
-        self.data = data
-
-    def __getitem__(self, index):
-        row, col = index
-        return self.data[row][col]
-
-    def __setitem__(self, index, value):
-        row, col = index
-        self.data[row][col] = value
-        self.data_changed.emit(row, col)
-
 class GraphicsView(QGraphicsView):
-    def __init__(self, parent=None):
+    def __init__(self, scene=None, parent=None):
         QGraphicsView.__init__(self, parent)
-        self.scene = GraphicsScene(self)
+        self.scene = scene
         self.setScene(self.scene)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
         self.scene.installEventFilter(self)
+        self.scale(50, 50)
 
     def eventFilter(self, source, event):
         if event.type() == QEvent.GraphicsSceneWheel and QtWidgets.QApplication.keyboardModifiers() == Qt.ControlModifier:
@@ -49,9 +32,9 @@ class GraphicsView(QGraphicsView):
         oldPos = event.scenePos()
 
         detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(self.transform())
-        if detail < 10 and event.delta() > 0:
+        if detail < 100 and event.delta() > 0:
             self.scale(zoomFactor, zoomFactor)
-        if detail > .1 and event.delta() < 0:
+        if detail > 10 and event.delta() < 0:
             self.scale((1 / zoomFactor), (1 / zoomFactor))
 
         newPos = event.scenePos()
@@ -59,35 +42,83 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
-    pix = pixels([[Qt.magenta]*8]*8)
-    pen_color = Qt.black
+    update_pixel = pyqtSignal(str, int, int, int)
 
-    def __init__(self, parent=None):
+    def __init__(self, data, parent=None):
         QGraphicsScene.__init__(self, parent)
-        self.setSceneRect(0, 0, 700, 700)
+        self.sprite = QImage(bytes([0]*64), 8, 8, QImage.Format_Indexed8)
+        self.sprite.setColorCount(16)
+        spriteItem = QGraphicsPixmapItem(QPixmap.fromImage(self.sprite))
+        spriteItem.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+        spriteItem.mousePressEvent = self.draw
+        spriteItem.mouseReleaseEvent = self.release
+        spriteItem.mouseMoveEvent = self.drag
+        self.addItem(spriteItem)
+        self.data = data
+        self.data.spr_pix_updated.connect(self.updatePixel)
+        self.update_pixel.connect(self.data.setSprPix)
+        self.pen_color = 0
+        self.setTool(Tools.PEN)
+
+    def setSprite(self, source):
+        self.sprite_name = source
+        sprite = self.data.getSprite(source)
         for row in range(8):
-            for column in range(8):
-                self.addRect(row*100, column*100, 100, 100, self.pix[row,column], self.pix[row,column])
-        self.tool = Tools.PEN
-        self.pix.data_changed.connect(self.update)
+            for col in range(8):
+                self.sprite.setPixel(col, row, sprite[row][col])
+        self.updateSprite()
 
-    @pyqtSlot(QColor)
-    def changeColor(self, color):
-        self.pen_color = color
+    pyqtSlot(str)
+    def setPalette(self, source):
+        palette = self.data.getSprColPal(source)
+        self.sprite.setColorTable([color.rgba() for color in palette])
+        self.updateSprite()
 
-    @pyqtSlot(int, int)
-    def update(self, row, col):
-        pen = QPen(self.pix[row, col], Qt.MiterJoin)
-        brush = QBrush(self.pix[row, col])
-        pixel = self.itemAt(row*100, col*100, QtGui.QTransform())
-        pixel.setPen(pen)
-        pixel.setBrush(brush)
+    pyqtSlot(int, int)
+    def updatePixel(self, row, col):
+        self.sprite.setPixel(col, row, self.data.getSprite(self.sprite_name)[row][col])
+        self.updateSprite()
+
+    def updateSprite(self):
+        self.items()[0].setPixmap(QPixmap.fromImage(self.sprite))
 
     def setTool(self, tool):
         self.tool = tool
 
-    def mousePressEvent(self, event):
-        if self.tool is Tools.PEN and 0 < event.scenePos().x() < 800 and 0 < event.scenePos().y() < 800:
-            x = math.floor(event.scenePos().x()/100)
-            y = math.floor(event.scenePos().y()/100)
-            self.pix[x,y] = self.pen_color
+    pyqtSlot(int)
+    def setPenColor(self, color):
+        self.pen_color = color
+
+    def drag(self, event):
+        col = math.floor(event.pos().x())
+        row = math.floor(event.pos().y())
+        if self.drawing and (row, col) != self.last_pos and 0 <= col < 8 and 0 <= row < 8:
+            self.draw(event)
+
+    def draw(self, event):
+        self.drawing = True
+        col = math.floor(event.pos().x())
+        row = math.floor(event.pos().y())
+        self.last_pos = (row, col)
+        self.update_pixel.emit(self.sprite_name, row, col, self.pen_color)
+
+    def release(self, event):
+        self.drawing = False
+
+    def drawForeground(self, painter, rect):
+        pen = QPen(Qt.darkCyan)
+        pen.setWidth(0)
+        painter.setPen(pen)
+        lines = []
+        for longitude in range(9):
+            line = QLineF(0, longitude, 8, longitude)
+            lines.append(line)
+        for latitude in range(9):
+            line = QLineF(latitude, 0, latitude, 8)
+            lines.append(line)
+        painter.drawLines(lines)
+
+    def drawBackground(self, painter, rect):
+        painter.setBrush(QBrush(Qt.magenta, Qt.SolidPattern))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(0, 0, 8, 8)
