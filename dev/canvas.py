@@ -46,21 +46,19 @@ class GraphicsScene(QGraphicsScene):
 
     def __init__(self, parent=None):
         QGraphicsScene.__init__(self, parent)
-        self.canvas = None
         self.pixels = [[0]*8]*8
         self.palette = [qRgb(0,0,0)]*16
-        self.pen_color = Qt.black
+        self.pen_color = 0
         self.setTool(Tools.PEN)
 
     def setCanvas(self, source):
-        self.pixels = source
+        self.canvas = QImage(bytes([pix for sub in source for pix in sub]), 8, 8, QImage.Format_Indexed8)
 
     def setPalette(self, source):
-        self.palette = source
+        self.canvas.setColorTable([color.rgba() for color in source])
+        self.items()[0].setPixmap(QPixmap.fromImage(self.canvas))
 
     def showSprite(self):
-        self.canvas = QImage(bytes([pix for sub in self.pixels for pix in sub]), 8, 8, QImage.Format_Indexed8)
-        self.canvas.setColorTable(self.palette)
         sprite = QGraphicsPixmapItem(QPixmap.fromImage(self.canvas))
         sprite.mousePressEvent = self.draw
         self.addItem(sprite)
@@ -71,13 +69,13 @@ class GraphicsScene(QGraphicsScene):
     def draw(self, event):
         col = math.floor(event.pos().x())
         row = math.floor(event.pos().y())
-        value = 2
-        self.draw_pixel.emit("sprite80", row, col, value)
+        self.draw_pixel.emit("sprite80", row, col, self.pen_color)
 
-    @pyqtSlot(QColor)
-    def changeColor(self, color):
-        self.pen_color = color
+    @pyqtSlot(int, QColor)
+    def changeColor(self, index, color):
+        self.pen_color = index
 
-    @pyqtSlot(int, int)
-    def update(self, row, col):
-        pass
+    @pyqtSlot(int, int, int)
+    def update_pixel(self, row, col, value):
+        print((row,col))
+        self.canvas.setPixel(col, row, value)

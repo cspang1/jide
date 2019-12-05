@@ -1,43 +1,46 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-
-SWATCH_SIZE = 25
-
-def upsample(red, green, blue):
-    red = round((red/7)*255)
-    green = round((green/7)*255)
-    blue = round((blue/3)*255)
-    return (red, green, blue)
+from colorpicker import *
 
 class Color(QLabel):
     color = QColor()
-    clicked = pyqtSignal(QColor)
+    clicked = pyqtSignal(int, QColor)
+    double_clicked = pyqtSignal(int, QColor)
 
-    def __init__(self, parent=None):
+    def __init__(self, index, parent=None):
         QLabel.__init__(self, parent)
-        self.setPixmap(QPixmap(SWATCH_SIZE,SWATCH_SIZE))
+        self.index = index
+        self.setPixmap(QPixmap(100, 100))
 
     def fill(self, color):
         self.color = color
         self.pixmap().fill(self.color)
+        self.update()
+
+    def mouseDoubleClickEvent(self, event):
+        picker = ColorPicker()
+        picker.exec()
 
     def mousePressEvent(self, event):
-        self.clicked.emit(self.color)
+        print("Set pen color to {}".format(self.index))
 
 class ColorPalette(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(SWATCH_SIZE*16, SWATCH_SIZE*16)
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(0)
-        grid.setVerticalSpacing(0)
-        self.setLayout(grid)
-        self.swatches = [Color() for n in range(256)]
+        self.setFixedSize(400, 400)
+        self.grid = QGridLayout()
+        self.grid.setHorizontalSpacing(0)
+        self.grid.setVerticalSpacing(0)
+        self.setLayout(self.grid)
+        self.palette = [Color(n) for n in range(16)]
+        positions = [(row,col) for row in range(4) for col in range(4)]
+        for position, swatch in zip(positions, self.palette):
+            swatch.fill(QColor(0,0,0))
+            self.grid.addWidget(swatch, *position)
+        self.enabled = False
 
-        positions = [(row,col) for row in range(16) for col in range(16)]
-        colors = [(red, green, blue) for red in range(8) for green in range(8) for blue in range(4)]
-
-        for position, color, swatch in zip(positions,colors, self.swatches):
-            swatch.fill(QColor(*upsample(*color)))
-            grid.addWidget(swatch, *position)
+    def setPalette(self, colors):
+        widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
+        for color, widget in zip(colors, widgets):
+            widget.widget().fill(QColor(*color))
