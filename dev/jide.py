@@ -10,10 +10,9 @@ import os
 class jide(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.setupWindow()
         self.setupDocks()
-        self.setupMenuBar()
+        self.setupActions()
         self.setupStatusBar()
 
     def setupWindow(self):
@@ -26,19 +25,34 @@ class jide(QtWidgets.QMainWindow):
         self.colorPaletteDock = ColorPaletteDock("Color Palettes", self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
 
-    def setupMenuBar(self):
-        exitAct = QAction('&Exit', self)
-        exitAct.setShortcut('Ctrl+Q')
-        exitAct.setStatusTip('Exit application')
-        exitAct.triggered.connect(qApp.quit)
-        openFile = QAction('&Open', self)
-        openFile.setShortcut('Ctrl+O')
-        openFile.setStatusTip('Open file')
-        openFile.triggered.connect(self.openFile)
-        menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&File')
-        fileMenu.addAction(exitAct)
-        fileMenu.addAction(openFile)
+    def setupActions(self):
+        # Exit
+        exit_act = QAction("&Exit", self)
+        exit_act.setShortcut("Ctrl+Q")
+        exit_act.setStatusTip("Exit application")
+        exit_act.triggered.connect(qApp.quit)
+
+        # Open file
+        open_file = QAction("&Open", self)
+        open_file.setShortcut("Ctrl+O")
+        open_file.setStatusTip("Open file")
+        open_file.triggered.connect(self.openFile)
+
+        # Undo/redo
+        self.undo_stack = QUndoStack(self)
+        undo_action = self.undo_stack.createUndoAction(self, "&Undo")
+        undo_action.setShortcut(QKeySequence.Undo)
+        redo_action = self.undo_stack.createUndoAction(self, "&Redo")
+        redo_action.setShortcut(QKeySequence.Redo)
+
+        # Build menu bar
+        menu_bar = self.menuBar()
+        file_menu = menu_bar.addMenu("&File")
+        file_menu.addAction(open_file)
+        file_menu.addAction(exit_act)
+        edit_menu = menu_bar.addMenu("&Edit")
+        edit_menu.addAction(undo_action)
+        edit_menu.addAction(redo_action)
 
     def setupStatusBar(self):
         self.statusBar()
@@ -47,7 +61,7 @@ class jide(QtWidgets.QMainWindow):
         file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
         if file_name:
             try:
-                self.data = GameData.from_filename(file_name)
+                self.data = GameData.from_filename(file_name, self)
             except KeyError:
                 QMessageBox(QMessageBox.Critical, "Error", "Unable to load project due to malformed data").exec()
             except OSError:
