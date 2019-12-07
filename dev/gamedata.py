@@ -10,7 +10,7 @@ class GameData(QObject):
     spr_pix_updated = pyqtSignal(int, int)
 
     def __init__(self, data):
-        QObject.__init__(self)
+        super().__init__()
         self.sprite_color_palettes = {}
         for spr_pal in data["spriteColorPalettes"]:
             palette = spr_pal["contents"]

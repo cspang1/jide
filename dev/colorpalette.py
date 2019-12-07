@@ -8,7 +8,7 @@ class Color(QLabel):
     pen_changed = pyqtSignal(int)
 
     def __init__(self, index, parent=None):
-        QLabel.__init__(self, parent)
+        super().__init__(parent)
         self.index = index
         self.setPixmap(QPixmap(100, 100))
 
@@ -44,9 +44,8 @@ class ColorPalette(QWidget):
     color_changed = pyqtSignal(str, int, QColor)
     palette_updated = pyqtSignal(str)
 
-    def __init__(self, data):
+    def __init__(self):
         super().__init__()
-        self.data = data
         self.setFixedSize(400, 400)
         self.grid = QGridLayout()
         self.grid.setSpacing(0)
@@ -55,13 +54,16 @@ class ColorPalette(QWidget):
         self.palette = [Color(n) for n in range(16)]
         positions = [(row,col) for row in range(4) for col in range(4)]
         for position, swatch in zip(positions, self.palette):
-            swatch.fill(QColor(0,0,0))
+            swatch.fill(QColor(211, 211, 211))
             self.grid.addWidget(swatch, *position)
         for swatch in self.palette:
             swatch.color_changed.connect(self.sendColorUpdate)
+        self.enabled = False
+
+    def setup(self, data):
+        self.data = data
         self.color_changed.connect(self.data.setSprCol)
         self.data.spr_col_updated.connect(self.setPalette)
-        self.enabled = False
 
     pyqtSlot(int, QColor)
     def sendColorUpdate(self, index, color):
@@ -75,3 +77,40 @@ class ColorPalette(QWidget):
             widget.widget().fill(color)
         self.grid.itemAt(0).widget().fill(QColor(0,0,0))
         self.palette_updated.emit(self.current_palette)
+
+class ColorPaletteDock(QDockWidget):
+    color_changed = pyqtSignal(str, int, QColor)
+    palette_updated = pyqtSignal(str)
+
+    def __init__(self, title, parent=None):
+        super().__init__(title, parent)
+        self.setFloating(False)
+        self.docked_widget = QWidget(self)
+        self.setWidget(self.docked_widget)
+        self.docked_widget.setLayout(QVBoxLayout())
+        self.docked_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.color_palette = ColorPalette()
+        self.color_palette_list = QComboBox()
+        self.color_palette_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
+        self.palette_picker = QHBoxLayout()
+        self.palette_label = QLabel("Palette:")
+        self.palette_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.palette_picker.addWidget(self.palette_label)
+        self.palette_picker.addWidget(self.color_palette_list)
+        self.docked_widget.layout().addLayout(self.palette_picker)
+        self.docked_widget.layout().addWidget(self.color_palette)
+        self.color_palette_list.setEnabled(False)
+        self.color_palette.setEnabled(False)
+        self.color_palette.color_changed.connect(self.color_changed)
+        self.color_palette.palette_updated.connect(self.palette_updated)
+
+    def setup(self, data):
+        self.color_palette.setup(data)
+        self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
+        self.color_palette_list.setEnabled(True)
+        self.color_palette.setEnabled(True)
+        for palette in data.sprite_color_palettes:
+            self.color_palette_list.addItem(palette)
+
+    def setColorPalette(self, index):
+        self.color_palette.setPalette(self.color_palette_list.currentText())

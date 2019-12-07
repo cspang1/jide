@@ -11,36 +11,37 @@ class jide(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Setup main window
+        self.setupWindow()
+        self.setupDocks()
+        self.setupMenuBar()
+        self.setupStatusBar()
+
+    def setupWindow(self):
         self.setWindowTitle("JIDE")
         self.view = QGraphicsView()
         self.setCentralWidget(self.view)
         self.view.setStyleSheet("background-color: #494949;")
 
-        # Setup color palette dock
-        self.colorPaletteDock = QDockWidget("Color Palettes", self)
-        self.colorPaletteDock.setFloating(False)
-        self.dockedWidget = QWidget(self)
-        self.colorPaletteDock.setWidget(self.dockedWidget)
-        self.dockedWidget.setLayout(QGridLayout())
+    def setupDocks(self):
+        self.colorPaletteDock = ColorPaletteDock("Color Palettes", self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
 
-        # Setup menu bar
+    def setupMenuBar(self):
         exitAct = QAction('&Exit', self)
         exitAct.setShortcut('Ctrl+Q')
         exitAct.setStatusTip('Exit application')
         exitAct.triggered.connect(qApp.quit)
-
         openFile = QAction('&Open', self)
         openFile.setShortcut('Ctrl+O')
         openFile.setStatusTip('Open file')
         openFile.triggered.connect(self.openFile)
-
-        self.statusBar()
-
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(exitAct)
         fileMenu.addAction(openFile)
+
+    def setupStatusBar(self):
+        self.statusBar()
 
     def openFile(self):
         file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
@@ -48,32 +49,19 @@ class jide(QtWidgets.QMainWindow):
             try:
                 self.data = GameData.from_filename(file_name)
             except KeyError:
-                print("Malformed file")
+                QMessageBox(QMessageBox.Critical, "Error", "Unable to load project due to malformed data").exec()
             except OSError:
-                print("Error opening file")
+                QMessageBox(QMessageBox.Critical, "Error", "Unable to open project file").exec()
             else:
-                # Setup canvas
-                self.scene = GraphicsScene( self.data, self)
-                self.view = GraphicsView(self.scene, self)
-                self.setCentralWidget(self.view)
-                self.view.setStyleSheet("background-color: #494949;")
-                self.scene.setSprite("sprite80")
+                self.loadProject()
 
-                # Setup color palette
-                self.color_palette = ColorPalette(self.data)
-                self.color_palette.palette_updated.connect(self.scene.setPalette)
-                for swatch in self.color_palette.palette:
-                    swatch.pen_changed.connect(self.scene.setPenColor)
-                self.color_palette_list = QComboBox()
-                self.color_palette_list.setEnabled(False)
-                self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
-                self.dockedWidget.layout().addWidget(self.color_palette_list)
-                self.dockedWidget.layout().addWidget(self.color_palette)
-                self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
-                self.color_palette_list.setEnabled(True)
-                for palette in self.data.sprite_color_palettes:
-                    self.color_palette_list.addItem(palette)
-
-    def setColorPalette(self, index):
-        item_name = self.color_palette_list.currentText()
-        self.color_palette.setPalette(item_name)
+    def loadProject(self):
+        self.scene = GraphicsScene(self.data, self)
+        self.view = GraphicsView(self.scene, self)
+        self.setCentralWidget(self.view)
+        self.view.setStyleSheet("background-color: #494949;")
+        self.scene.setSprite("sprite80")
+        self.colorPaletteDock.palette_updated.connect(self.scene.setPalette)
+        for swatch in self.colorPaletteDock.color_palette.palette:
+            swatch.pen_changed.connect(self.scene.setPenColor)
+        self.colorPaletteDock.setup(self.data)

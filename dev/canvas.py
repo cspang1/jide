@@ -12,12 +12,10 @@ import math
 
 class GraphicsView(QGraphicsView):
     def __init__(self, scene=None, parent=None):
-        QGraphicsView.__init__(self, parent)
-        self.scene = scene
-        self.setScene(self.scene)
+        super().__init__(scene, parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
-        self.scene.installEventFilter(self)
+        self.scene().installEventFilter(self)
         self.scale(50, 50)
 
     def eventFilter(self, source, event):
@@ -45,7 +43,7 @@ class GraphicsScene(QGraphicsScene):
     update_pixel = pyqtSignal(str, int, int, int)
 
     def __init__(self, data, parent=None):
-        QGraphicsScene.__init__(self, parent)
+        super().__init__(parent)
         self.sprite = QImage(bytes([0]*64), 8, 8, QImage.Format_Indexed8)
         self.sprite.setColorCount(16)
         spriteItem = QGraphicsPixmapItem(QPixmap.fromImage(self.sprite))
