@@ -9,8 +9,8 @@ class GameData(QObject):
     spr_col_updated = pyqtSignal(str)
     spr_pix_updated = pyqtSignal(int, int)
 
-    def __init__(self, data):
-        super().__init__()
+    def __init__(self, data, parent=None):
+        super().__init__(parent)
         self.sprite_color_palettes = {}
         for spr_pal in data["spriteColorPalettes"]:
             palette = spr_pal["contents"]
@@ -55,6 +55,6 @@ class GameData(QObject):
         self.spr_pix_updated.emit(row, col)
 
     @classmethod
-    def from_filename(cls, file_name):
+    def from_filename(cls, file_name, parent=None):
         with open(file_name, 'r') as data_file:
-                return cls(json.load(data_file))
+                return cls(json.load(data_file), parent)
