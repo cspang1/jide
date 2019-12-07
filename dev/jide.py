@@ -42,7 +42,7 @@ class jide(QtWidgets.QMainWindow):
         self.undo_stack = QUndoStack(self)
         undo_action = self.undo_stack.createUndoAction(self, "&Undo")
         undo_action.setShortcut(QKeySequence.Undo)
-        redo_action = self.undo_stack.createUndoAction(self, "&Redo")
+        redo_action = self.undo_stack.createRedoAction(self, "&Redo")
         redo_action.setShortcut(QKeySequence.Redo)
 
         # Build menu bar
@@ -61,7 +61,7 @@ class jide(QtWidgets.QMainWindow):
         file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
         if file_name:
             try:
-                self.data = GameData.from_filename(file_name, self)
+                self.data = GameData.fromFilename(file_name, self)
             except KeyError:
                 QMessageBox(QMessageBox.Critical, "Error", "Unable to load project due to malformed data").exec()
             except OSError:
@@ -70,6 +70,7 @@ class jide(QtWidgets.QMainWindow):
                 self.loadProject()
 
     def loadProject(self):
+        self.data.setUndoStack(self.undo_stack)
         self.scene = GraphicsScene(self.data, self)
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)

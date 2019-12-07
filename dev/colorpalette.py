@@ -41,7 +41,6 @@ class Color(QLabel):
         self.pen_changed.emit(self.index)
 
 class ColorPalette(QWidget):
-    color_changed = pyqtSignal(str, int, QColor)
     palette_updated = pyqtSignal(str)
 
     def __init__(self):
@@ -62,12 +61,11 @@ class ColorPalette(QWidget):
 
     def setup(self, data):
         self.data = data
-        self.color_changed.connect(self.data.setSprCol)
         self.data.spr_col_updated.connect(self.setPalette)
 
     pyqtSlot(int, QColor)
     def sendColorUpdate(self, index, color):
-        self.color_changed.emit(self.current_palette, index, color)
+        self.data.setSprCol(self.current_palette, index, color)
 
     pyqtSlot(str)
     def setPalette(self, palette):
@@ -79,7 +77,6 @@ class ColorPalette(QWidget):
         self.palette_updated.emit(self.current_palette)
 
 class ColorPaletteDock(QDockWidget):
-    color_changed = pyqtSignal(str, int, QColor)
     palette_updated = pyqtSignal(str)
 
     def __init__(self, title, parent=None):
@@ -101,16 +98,20 @@ class ColorPaletteDock(QDockWidget):
         self.docked_widget.layout().addWidget(self.color_palette)
         self.color_palette_list.setEnabled(False)
         self.color_palette.setEnabled(False)
-        self.color_palette.color_changed.connect(self.color_changed)
-        self.color_palette.palette_updated.connect(self.palette_updated)
+        self.color_palette.palette_updated.connect(self.verifyCurrentPalette)
 
     def setup(self, data):
         self.color_palette.setup(data)
         self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
         self.color_palette_list.setEnabled(True)
         self.color_palette.setEnabled(True)
-        for palette in data.sprite_color_palettes:
-            self.color_palette_list.addItem(palette)
+        for name, palette in data.sprite_color_palettes.items():
+            self.color_palette_list.addItem(name)
+
+    pyqtSlot(str)
+    def verifyCurrentPalette(self, name):
+        self.color_palette_list.setCurrentIndex(self.color_palette_list.findText(name))
+        self.palette_updated.emit(name)
 
     def setColorPalette(self, index):
         self.color_palette.setPalette(self.color_palette_list.currentText())

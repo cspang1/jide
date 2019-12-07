@@ -40,7 +40,6 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
-    update_pixel = pyqtSignal(str, int, int, int)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -54,9 +53,9 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(spriteItem)
         self.data = data
         self.data.spr_pix_updated.connect(self.updatePixel)
-        self.update_pixel.connect(self.data.setSprPix)
         self.pen_color = 0
         self.setTool(Tools.PEN)
+        self.drawing = False
 
     def setSprite(self, source):
         self.sprite_name = source
@@ -94,14 +93,17 @@ class GraphicsScene(QGraphicsScene):
             self.draw(event)
 
     def draw(self, event):
-        self.drawing = True
+        if not self.drawing:
+            self.data.undo_stack.beginMacro("Draw pixels")
+            self.drawing = True
         col = math.floor(event.pos().x())
         row = math.floor(event.pos().y())
         self.last_pos = (row, col)
-        self.update_pixel.emit(self.sprite_name, row, col, self.pen_color)
+        self.data.setSprPix(self.sprite_name, row, col, self.pen_color)
 
     def release(self, event):
         self.drawing = False
+        self.data.undo_stack.endMacro()
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
