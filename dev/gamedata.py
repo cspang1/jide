@@ -2,8 +2,55 @@ from PyQt5 import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from undosys import *
 from colorpalette import upsample
 import json
+
+class ColorPalettes(QObject):
+    color_changed = pyqtSignal(str)
+
+    def __init__(self, data):
+        super().__init__()
+        self.palettes = {}
+        for spr_pal in data:
+            palette = spr_pal["contents"]
+            palette[:] = [QColor(*upsample(color>>5, (color>>2)&7, color&3)) for color in palette]
+            palette[0] = QColor(0,0,0,0)
+            self.palettes[spr_pal["name"]] = palette
+
+    def items(self):
+        return self.palettes.items()
+
+    def __getitem__(self, index):
+        if not isinstance(index, tuple):
+            return self.palettes[index]
+        name, index = index
+        return self.palettes[name][index]
+
+    def __setitem__(self, index, value):
+        name, index = index
+        self.palettes[name][index] = value
+        self.color_changed.emit(name)
+
+class PixelPalettes(QObject):
+    pixel_changed = pyqtSignal(int, int)
+
+    def __init__(self, data):
+        super().__init__()
+        self.palettes = {}
+        for sprite in data:
+            self.palettes[sprite["name"]] = sprite["contents"]
+
+    def __getitem__(self, index):
+        if not isinstance(index, tuple):
+            return self.palettes[index]
+        name, row, col = index
+        return self.palettes[name][row][col]
+
+    def __setitem__(self, index, value):
+        name, row, col = index
+        self.palettes[name][row][col] = value
+        self.pixel_changed.emit(row, col)
 
 class GameData(QObject):
     spr_col_updated = pyqtSignal(str)
@@ -11,24 +58,11 @@ class GameData(QObject):
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
-        self.sprite_color_palettes = {}
-        for spr_pal in data["spriteColorPalettes"]:
-            palette = spr_pal["contents"]
-            palette[:] = [QColor(*upsample(color>>5, (color>>2)&7, color&3)) for color in palette]
-            palette[0] = QColor(0,0,0,0)
-            self.sprite_color_palettes[spr_pal["name"]] = palette
-        self.tile_color_palettes = {}
-        for tile_pal in data["tileColorPalettes"]:
-            self.tile_color_palettes[tile_pal["name"]] = tile_pal["contents"]
-        self.sprite_pixel_palettes = {}
-        for sprite in data["sprites"]:
-            self.sprite_pixel_palettes[sprite["name"]] = sprite["contents"]
-        self.tile_pixel_palettes = {}
-        for tile in data["tiles"]:
-            self.tile_pixel_palettes[tile["name"]] = tile["contents"]
-        self.tile_maps = {}
-        for tile_map in data["tileMaps"]:
-            self.tile_maps[tile_map["name"]] = tile_map["contents"]
+        self.undo_stack = QUndoStack(self)
+        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"])
+        self.sprite_pixel_palettes = PixelPalettes(data["sprites"])
+        self.sprite_color_palettes.color_changed.connect(self.spr_col_updated)
+        self.sprite_pixel_palettes.pixel_changed.connect(self.spr_pix_updated)
 
     def getSprite(self, name):
         return self.sprite_pixel_palettes[name]
@@ -45,16 +79,18 @@ class GameData(QObject):
     def getTileMap(self, name):
         return self.tile_maps[name]
 
-    @pyqtSlot(str, int, QColor)
-    def setSprCol(self, palette, index, color):
-        self.sprite_color_palettes[palette][index] = color
-        self.spr_col_updated.emit(palette)
+    def setSprCol(self, name, index, color):
+        command = cmdSetSprCol(self.sprite_color_palettes, name, index, color, "Set palette color")
+        self.undo_stack.push(command)
 
-    def setSprPix(self, target, row, col, value):
-        self.sprite_pixel_palettes[target][row][col] = value
-        self.spr_pix_updated.emit(row, col)
+    def setSprPix(self, name, row, col, value):
+        command = cmdSetSprPix(self.sprite_pixel_palettes, name, row, col, value, "Draw pixel")
+        self.undo_stack.push(command)
+
+    def setUndoStack(self, undo_stack):
+        self.undo_stack = undo_stack
 
     @classmethod
-    def from_filename(cls, file_name, parent=None):
+    def fromFilename(cls, file_name, parent=None):
         with open(file_name, 'r') as data_file:
                 return cls(json.load(data_file), parent)
