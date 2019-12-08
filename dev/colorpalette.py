@@ -6,10 +6,12 @@ from colorpicker import *
 class Color(QLabel):
     color_changed = pyqtSignal(int, QColor)
     pen_changed = pyqtSignal(int)
+    color_selected = pyqtSignal(int)
 
     def __init__(self, index, parent=None):
         super().__init__(parent)
         self.index = index
+        self.selected = False
         self.setPixmap(QPixmap(100, 100))
 
     def paintEvent(self, event):
@@ -20,8 +22,12 @@ class Color(QLabel):
             pen.setWidth(5)
             painter.setPen(pen)
             painter.drawLine(QLineF(0,0,100,100))
-        pen = QPen(Qt.black)
-        pen.setWidth(1)
+        if self.selected:
+            pen = QPen(Qt.red)
+            pen.setWidth(10)
+        else:
+            pen = QPen(Qt.black)
+            pen.setWidth(1)
         painter.setPen(pen)
         painter.drawRect(0, 0, 99, 99)
 
@@ -39,6 +45,13 @@ class Color(QLabel):
 
     def mousePressEvent(self, event):
         self.pen_changed.emit(self.index)
+        self.color_selected.emit(self.index)
+        self.selected = True
+        self.setFocus(Qt.MouseFocusReason)
+
+    def deselect(self):
+        self.selected = False
+        self.update()
 
 class ColorPalette(QWidget):
     palette_updated = pyqtSignal(str)
@@ -54,9 +67,9 @@ class ColorPalette(QWidget):
         positions = [(row,col) for row in range(4) for col in range(4)]
         for position, swatch in zip(positions, self.palette):
             swatch.fill(QColor(211, 211, 211))
-            self.grid.addWidget(swatch, *position)
-        for swatch in self.palette:
             swatch.color_changed.connect(self.sendColorUpdate)
+            swatch.color_selected.connect(self.selectColor)
+            self.grid.addWidget(swatch, *position)
         self.enabled = False
 
     def setup(self, data):
@@ -75,6 +88,13 @@ class ColorPalette(QWidget):
             widget.widget().fill(color)
         self.grid.itemAt(0).widget().fill(QColor(0,0,0))
         self.palette_updated.emit(self.current_palette)
+
+    pyqtSlot(int)
+    def selectColor(self, index):
+        widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
+        for idx in range(self.grid.count()):
+            if idx != index:
+                self.grid.itemAt(idx).widget().deselect()
 
 class ColorPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)
