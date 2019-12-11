@@ -47,7 +47,7 @@ class Color(QLabel):
         self.pen_changed.emit(self.index)
         self.color_selected.emit(self.index)
         self.selected = True
-        self.setFocus(Qt.MouseFocusReason)
+        self.update()
 
     def deselect(self):
         self.selected = False
@@ -91,7 +91,6 @@ class ColorPalette(QWidget):
 
     pyqtSlot(int)
     def selectColor(self, index):
-        widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
         for idx in range(self.grid.count()):
             if idx != index:
                 self.grid.itemAt(idx).widget().deselect()
@@ -102,6 +101,7 @@ class ColorPaletteDock(QDockWidget):
     def __init__(self, title, parent=None):
         super().__init__(title, parent)
         self.setFloating(False)
+        self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
         self.docked_widget = QWidget(self)
         self.setWidget(self.docked_widget)
         self.docked_widget.setLayout(QVBoxLayout())
@@ -135,3 +135,6 @@ class ColorPaletteDock(QDockWidget):
 
     def setColorPalette(self, index):
         self.color_palette.setPalette(self.color_palette_list.currentText())
+
+    def closeEvent(self, event):
+        event.ignore()

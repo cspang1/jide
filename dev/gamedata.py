@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from undosys import *
 from colorpalette import upsample
 import json
+from palettize import palettize
 
 class ColorPalettes(QObject):
     color_changed = pyqtSignal(str)
@@ -17,6 +18,9 @@ class ColorPalettes(QObject):
             palette[:] = [QColor(*upsample(color>>5, (color>>2)&7, color&3)) for color in palette]
             palette[0] = QColor(0,0,0,0)
             self.palettes[spr_pal["name"]] = palette
+
+    def values(self):
+        return self.palettes.values()
 
     def items(self):
         return self.palettes.items()
@@ -41,6 +45,12 @@ class PixelPalettes(QObject):
         for sprite in data:
             self.palettes[sprite["name"]] = sprite["contents"]
 
+    def values(self):
+        return self.palettes.values()
+
+    def items(self):
+        return self.palettes.items()
+
     def __getitem__(self, index):
         if not isinstance(index, tuple):
             return self.palettes[index]
@@ -59,10 +69,11 @@ class GameData(QObject):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.undo_stack = QUndoStack(self)
-        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"])
+
         self.sprite_pixel_palettes = PixelPalettes(data["sprites"])
-        self.sprite_color_palettes.color_changed.connect(self.spr_col_updated)
+        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"])
         self.sprite_pixel_palettes.pixel_changed.connect(self.spr_pix_updated)
+        self.sprite_color_palettes.color_changed.connect(self.spr_col_updated)
 
     def getSprite(self, name):
         return self.sprite_pixel_palettes[name]
