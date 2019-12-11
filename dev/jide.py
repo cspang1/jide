@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, uic
 from canvas import *
 from PyQt5 import QtCore
 from colorpalette import *
+from pixelpalette import *
 from gamedata import GameData
 import json
 import sys
@@ -23,7 +24,9 @@ class jide(QtWidgets.QMainWindow):
 
     def setupDocks(self):
         self.colorPaletteDock = ColorPaletteDock("Color Palettes", self)
+        self.pixelPaletteDock = PixelPaletteDock("Sprite Palettes", self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
 
     def setupActions(self):
         # Exit
@@ -80,3 +83,4 @@ class jide(QtWidgets.QMainWindow):
         for swatch in self.colorPaletteDock.color_palette.palette:
             swatch.pen_changed.connect(self.scene.setPenColor)
         self.colorPaletteDock.setup(self.data)
+        self.pixelPaletteDock.setup(self.data)

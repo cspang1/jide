@@ -11,11 +11,13 @@ def upsample(red, green, blue):
 class Color(QLabel):
     color = QColor()
     clicked = pyqtSignal(QColor)
+    color_selected = pyqtSignal(int)
 
     def __init__(self, index, parent=None):
         QLabel.__init__(self, parent)
         self.index = index
         self.setPixmap(QPixmap(25, 25))
+        self.selected = False
 
     def fill(self, color):
         self.color = color
@@ -24,17 +26,32 @@ class Color(QLabel):
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
-        pen = QPen(Qt.black)
-        pen.setWidth(1)
+        if self.selected:
+            pen = QPen(Qt.red)
+            pen.setWidth(5)
+        else:
+            pen = QPen(Qt.black)
+            pen.setWidth(1)
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
         painter.drawRect(0, 0, 24, 24)
 
     def mousePressEvent(self, event):
+        self.selected = True
         self.clicked.emit(self.color)
+        self.color_selected.emit(self.index)
+        self.update()
+
+    def select(self):
+        self.selected = True
+        self.update()
+
+    def deselect(self):
+        self.selected = False
+        self.update()
 
 class ColorPalette(QWidget):
-    def __init__(self):
+    def __init__(self, init_color=None):
         super().__init__()
         self.setFixedSize(400, 400)
         self.grid = QGridLayout()
@@ -45,9 +62,20 @@ class ColorPalette(QWidget):
         positions = [(row,col) for row in range(16) for col in range(16)]
         colors = [(red, green, blue) for red in range(8) for green in range(8) for blue in range(4)]
         for position, color, swatch in zip(positions,colors, self.palette):
-            swatch.fill(QColor(*upsample(*color)))
+            color = QColor(*upsample(*color))
+            if init_color == color:
+                swatch.select()
+            swatch.fill(color)
+            swatch.color_selected.connect(self.selectColor)
             self.grid.addWidget(swatch, *position)
         self.enabled = False
+
+    pyqtSlot(int)
+    def selectColor(self, index):
+        widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
+        for idx in range(self.grid.count()):
+            if idx != index:
+                self.grid.itemAt(idx).widget().deselect()
 
 class ColorPicker(QDialog):
     def __init__(self, color):
@@ -60,7 +88,7 @@ class ColorPicker(QDialog):
         actions.accepted.connect(self.accept)
         actions.rejected.connect(self.reject)
 
-        color_palette = ColorPalette()
+        color_palette = ColorPalette(self.color)
         for swatch in color_palette.palette:
             swatch.clicked.connect(self.colorChosen)
 
