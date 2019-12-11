@@ -71,8 +71,8 @@ class ColorPalette(QFrame):
         self.setLineWidth(3)
         self.setFixedSize(400 + self.lineWidth()*2, 400 + self.lineWidth()*2)
         positions = [(row,col) for row in range(16) for col in range(16)]
-        colors = [(red, green, blue) for red in range(8) for green in range(8) for blue in range(4)]
-        for position, color, swatch in zip(positions,colors, self.palette):
+        colors = [(red, green, blue) for blue in range(4) for red in range(8) for green in range(8)]
+        for position, color, swatch in zip(positions, colors, self.palette):
             color = QColor(*upsample(*color))
             if init_color == color:
                 swatch.select()
