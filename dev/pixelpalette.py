@@ -5,12 +5,18 @@ from PyQt5.QtWidgets import *
 class Tile(QLabel):
     tile_selected = pyqtSignal(str)
  
-    def __init__(self, name, tile, parent=None):
+    def __init__(self, name, tile, pixels, parent=None):
         super().__init__(parent)
         self.setFixedSize(25, 25)
-        self.setPixmap(tile)
+        self.original = tile
+        self.setPixmap(QPixmap.fromImage(self.original))
         self.name = name
         self.selected = False
+        self.pixels = pixels
+
+    def setColors(self, palette):
+        self.original.setColorTable([color.rgba() for color in palette])
+        self.setPixmap(QPixmap.fromImage(self.original))
 
     def deselect(self):
         self.selected = False
@@ -55,9 +61,9 @@ class PixelPalette(QFrame):
         for name,sprite in self.data.sprite_pixel_palettes.items():
             sprite = QImage(bytes([pix for sub in sprite for pix in sub]), 8, 8, QImage.Format_Indexed8)
             color_palette = list(self.data.sprite_color_palettes.values())[0]
-            sprite.setColorTable([color.rgba() for color in color_palette])
-            sprite = QPixmap.fromImage(sprite.scaled(25, 25))
+            sprite = sprite.scaled(25, 25)
             tile = Tile(name, sprite, self)
+            tile.setColors(color_palette)
             tile.tile_selected.connect(self.selectTile)
             self.grid.addWidget(tile, row, col)
             col = col + 1 if col < 15 else 0
@@ -71,7 +77,16 @@ class PixelPalette(QFrame):
             if(widget.name != name):
                 widget.deselect()
 
+    pyqtSlot(str)
+    def setColorPalette(self, palette):
+        self.current_palette = palette
+        widgets = (self.grid.itemAt(index).widget() for index in range(self.grid.count()))
+        for widget in widgets:
+            widget.setColors(self.data.sprite_color_palettes[palette])
+
 class PixelPaletteDock(QDockWidget):
+    palette_updated = pyqtSignal(str)
+
     def __init__(self, title, parent=None):
         super().__init__(title, parent)
         self.setFloating(False)
@@ -82,6 +97,7 @@ class PixelPaletteDock(QDockWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.pixel_palette = PixelPalette()
+        self.palette_updated.connect(self.pixel_palette.setColorPalette)
         self.scroll_area.setWidget(self.pixel_palette)
         self.setWidget(self.scroll_area)
 

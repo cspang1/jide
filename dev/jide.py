@@ -25,6 +25,7 @@ class jide(QtWidgets.QMainWindow):
     def setupDocks(self):
         self.colorPaletteDock = ColorPaletteDock("Color Palettes", self)
         self.pixelPaletteDock = PixelPaletteDock("Sprite Palettes", self)
+        self.colorPaletteDock.palette_updated.connect(self.pixelPaletteDock.palette_updated)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
 
