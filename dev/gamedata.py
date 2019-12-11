@@ -65,15 +65,21 @@ class PixelPalettes(QObject):
 class GameData(QObject):
     spr_col_updated = pyqtSignal(str)
     spr_pix_updated = pyqtSignal(int, int)
+    tile_col_updated = pyqtSignal(str)
+    tile_pix_updated = pyqtSignal(int, int)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.undo_stack = QUndoStack(self)
 
         self.sprite_pixel_palettes = PixelPalettes(data["sprites"])
+        self.tile_pixel_palettes = PixelPalettes(data["tiles"])
         self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"])
+        self.tile_color_palettes = ColorPalettes(data["tileColorPalettes"])
         self.sprite_pixel_palettes.pixel_changed.connect(self.spr_pix_updated)
+        self.tile_pixel_palettes.pixel_changed.connect(self.tile_pix_updated)
         self.sprite_color_palettes.color_changed.connect(self.spr_col_updated)
+        self.tile_color_palettes.color_changed.connect(self.tile_col_updated)
 
     def getSprite(self, name):
         return self.sprite_pixel_palettes[name]
