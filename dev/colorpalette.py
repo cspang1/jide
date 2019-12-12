@@ -80,16 +80,19 @@ class ColorPalette(QWidget):
         self.palette[0].select()
 
     pyqtSlot(int, QColor)
-    def openPicker(self, index, color):
-        self.picker.setColor(color)
-        self.picker.preview_color.connect(lambda color : self.previewColor(index, color))
-        color = self.picker.getColor() if self.picker.exec() else color
-        self.sendColorUpdate(index, color)
+    def openPicker(self, index, orig_color):
+        self.picker.setColor(orig_color)
+        self.picker.preview_color.connect(lambda orig_color : self.previewColor(index, orig_color))
+        if self.picker.exec():
+            new_color = self.picker.getColor()
+            self.sendColorUpdate(index, new_color, orig_color)
+        else:
+            self.data.previewSprCol(self.current_palette, index, orig_color)
         self.picker.preview_color.disconnect()
 
     pyqtSlot(int, QColor)
-    def sendColorUpdate(self, index, color):
-        self.data.setSprCol(self.current_palette, index, color)
+    def sendColorUpdate(self, index, new_color, orig_color=None):
+        self.data.setSprCol(self.current_palette, index, new_color, orig_color)
 
     pyqtSlot(QColor)
     def previewColor(self, index, color):
