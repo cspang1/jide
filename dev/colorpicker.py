@@ -115,17 +115,19 @@ class ColorPicker(QDialog):
         actions.accepted.connect(self.accept)
         actions.rejected.connect(self.reject)
 
-        main_layout = QVBoxLayout()
-        value_layout = QHBoxLayout()
+        dialog_layout = QVBoxLayout()
+        main_layout = QHBoxLayout()
+        value_layout = QVBoxLayout()
         eight_bit_form = QFormLayout()
         full_color_form = QFormLayout()
 
         self.preview = QLabel()
-        self.preview_pixmap = QPixmap(100, 100)
+        self.preview_pixmap = QPixmap(100, 50)
         self.preview.setFrameShape(QFrame.Panel)
         self.preview.setFrameShadow(QFrame.Sunken)
         self.preview.setLineWidth(3)
         self.preview.setScaledContents(True)
+        value_layout.addWidget(self.preview)
 
         header = QFont()
         header.setBold(True)
@@ -135,22 +137,22 @@ class ColorPicker(QDialog):
         eight_bit_form.itemAt(0).setAlignment(Qt.AlignCenter)
         eight_bit_form.itemAt(0).widget().setFont(header)
         self.r8 = QLineEdit()
-        self.r8.setFixedWidth(125)
+        self.r8.setFixedWidth(60)
         self.r8.setValidator(ColorValidator(7))
         self.r8.editingFinished.connect(self.set8BitColors)
         self.g8 = QLineEdit()
-        self.g8.setFixedWidth(125)
+        self.g8.setFixedWidth(60)
         self.g8.setValidator(ColorValidator(7))
         self.g8.editingFinished.connect(self.set8BitColors)
         self.b8 = QLineEdit()
-        self.b8.setFixedWidth(125)
+        self.b8.setFixedWidth(60)
         self.b8.setValidator(ColorValidator(3))
         self.b8.editingFinished.connect(self.set8BitColors)
         self.hex8 = QLineEdit()
         self.hex8.setValidator(QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{2})")))
-        self.hex8.setFixedWidth(125)
+        self.hex8.setFixedWidth(60)
         self.hex8.editingFinished.connect(self.set8BitHex)
-        self.hex8.focusOutEvent = self.set8BitHex
+        self.hex8.installEventFilter(self)
         eight_bit_form.addRow(QLabel("Red:"), self.r8)
         eight_bit_form.addRow(QLabel("Green:"), self.g8)
         eight_bit_form.addRow(QLabel("Blue:"), self.b8)
@@ -164,21 +166,21 @@ class ColorPicker(QDialog):
         full_color_form.itemAt(0).setAlignment(Qt.AlignCenter)
         full_color_form.itemAt(0).widget().setFont(header)
         self.r24 = QLineEdit()
-        self.r24.setFixedWidth(125)
+        self.r24.setFixedWidth(60)
         self.r24.setValidator(ColorValidator(255))
         self.r24.editingFinished.connect(self.set24BitColors)
         self.g24 = QLineEdit()
         self.g24.setValidator(ColorValidator(255))
-        self.g24.setFixedWidth(125)
+        self.g24.setFixedWidth(60)
         self.g24.editingFinished.connect(self.set24BitColors)
         self.b24 = QLineEdit()
         self.b24.setValidator(ColorValidator(255))
-        self.b24.setFixedWidth(125)
+        self.b24.setFixedWidth(60)
         self.b24.editingFinished.connect(self.set24BitColors)
         self.hex24 = QLineEdit()
         self.hex24.setValidator(QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{6})")))
-        self.hex24.setFixedWidth(125)
-        self.hex24.focusOutEvent = self.set24BitHex
+        self.hex24.setFixedWidth(60)
+        self.hex24.installEventFilter(self)
         full_color_form.addRow(QLabel("Red:"), self.r24)
         full_color_form.addRow(QLabel("Green:"), self.g24)
         full_color_form.addRow(QLabel("Blue:"), self.b24)
@@ -190,13 +192,21 @@ class ColorPicker(QDialog):
         for swatch in self.color_palette.palette:
             swatch.clicked.connect(self.setColor)
         self.setColor(color.red(), color.green(), color.blue())
-        main_layout.setSizeConstraint(QLayout.SetFixedSize)
         main_layout.addWidget(self.color_palette)
-        main_layout.addWidget(self.preview)
         main_layout.addLayout(value_layout)
-        main_layout.addWidget(actions)
+        dialog_layout.setSizeConstraint(QLayout.SetFixedSize)
+        dialog_layout.addLayout(main_layout)
+        dialog_layout.addWidget(actions)
 
-        self.setLayout(main_layout)
+        self.setLayout(dialog_layout)
+
+    def eventFilter(self, source, event):
+        if event.type() == QEvent.FocusOut:
+            if source is self.hex8:
+                self.set8BitHex()
+            else:
+                self.set24BitHex()
+        return False
 
     def getColor(self):
         return self.color
@@ -214,7 +224,7 @@ class ColorPicker(QDialog):
         b = self.cur_b24 if self.b24.text() == "" else int(self.b24.text())
         self.setColor(r, g, b)
 
-    def set8BitHex(self, event=None):
+    def set8BitHex(self):
         hex = self.hex8.text().lstrip("#")
         hex = int(self.cur_hex8, 16) if hex == "" else int(hex, 16)
         r = (hex >> 5) & 7
@@ -223,7 +233,7 @@ class ColorPicker(QDialog):
         color = QColor(*upsample(r, g, b))
         self.setColor(color.red(), color.green(), color.blue())
 
-    def set24BitHex(self, event=None):
+    def set24BitHex(self):
         hex = self.hex24.text().lstrip("#")
         hex = self.cur_hex24 if hex == "" else "#" + hex.zfill(6)
         color = QColor(hex)

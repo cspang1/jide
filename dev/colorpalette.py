@@ -53,6 +53,10 @@ class Color(QLabel):
         self.selected = False
         self.update()
 
+    def select(self):
+        self.selected = True
+        self.update()
+
 class ColorPalette(QWidget):
     palette_updated = pyqtSignal(str)
 
@@ -75,6 +79,7 @@ class ColorPalette(QWidget):
     def setup(self, data):
         self.data = data
         self.data.spr_col_updated.connect(self.setPalette)
+        self.palette[0].select()
 
     pyqtSlot(int, QColor)
     def sendColorUpdate(self, index, color):
