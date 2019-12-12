@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 class cmdSetSprCol(QUndoCommand):
-    def __init__(self, palette, name, index, color, orig=None, description, parent=None):
+    def __init__(self, palette, name, index, color, orig, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
         self.name = name
