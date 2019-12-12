@@ -4,9 +4,9 @@ from PyQt5.QtWidgets import *
 from colorpicker import *
 
 class Color(QLabel):
-    color_changed = pyqtSignal(int, QColor)
     pen_changed = pyqtSignal(int)
     color_selected = pyqtSignal(int)
+    edit = pyqtSignal(int, QColor)
 
     def __init__(self, index, parent=None):
         super().__init__(parent)
@@ -38,10 +38,7 @@ class Color(QLabel):
 
     def mouseDoubleClickEvent(self, event):
         if self.index != 0:
-            picker = ColorPicker(self.color)
-            if picker.exec():
-                self.color = picker.getColor()
-                self.color_changed.emit(self.index, self.color)
+            self.edit.emit(self.index, self.color)
 
     def mousePressEvent(self, event):
         self.pen_changed.emit(self.index)
@@ -67,12 +64,13 @@ class ColorPalette(QWidget):
         self.grid.setSpacing(0)
         self.grid.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.grid)
+        self.picker = ColorPicker()
         self.palette = [Color(n) for n in range(16)]
         positions = [(row,col) for row in range(4) for col in range(4)]
         for position, swatch in zip(positions, self.palette):
             swatch.fill(QColor(211, 211, 211))
-            swatch.color_changed.connect(self.sendColorUpdate)
             swatch.color_selected.connect(self.selectColor)
+            swatch.edit.connect(self.openPicker)
             self.grid.addWidget(swatch, *position)
         self.enabled = False
 
@@ -82,8 +80,20 @@ class ColorPalette(QWidget):
         self.palette[0].select()
 
     pyqtSlot(int, QColor)
+    def openPicker(self, index, color):
+        self.picker.setColor(color)
+        self.picker.preview_color.connect(lambda color : self.previewColor(index, color))
+        color = self.picker.getColor() if self.picker.exec() else color
+        self.sendColorUpdate(index, color)
+        self.picker.preview_color.disconnect()
+
+    pyqtSlot(int, QColor)
     def sendColorUpdate(self, index, color):
         self.data.setSprCol(self.current_palette, index, color)
+
+    pyqtSlot(QColor)
+    def previewColor(self, index, color):
+        self.data.previewSprCol(self.current_palette, index, color)
 
     pyqtSlot(str)
     def setPalette(self, palette):
