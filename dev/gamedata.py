@@ -107,6 +107,9 @@ class GameData(QObject):
     def setUndoStack(self, undo_stack):
         self.undo_stack = undo_stack
 
+    def previewSprCol(self, name, index, color):
+        self.sprite_color_palettes[name, index] = color
+
     @classmethod
     def fromFilename(cls, file_name, parent=None):
         with open(file_name, 'r') as data_file:
