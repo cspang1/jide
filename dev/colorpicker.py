@@ -19,7 +19,7 @@ def normalize(red, green, blue):
 
 class Color(QLabel):
     color = QColor()
-    clicked = pyqtSignal(QColor)
+    clicked = pyqtSignal(int, int, int)
     color_selected = pyqtSignal(int)
 
     def __init__(self, index, parent=None):
@@ -46,11 +46,11 @@ class Color(QLabel):
         painter.drawRect(0, 0, 24, 24)
 
     def mousePressEvent(self, event):
+        self.clicked.emit(self.color.red(), self.color.green(), self.color.blue())
         self.select()
 
     def select(self):
         self.selected = True
-        self.clicked.emit(self.color)
         self.color_selected.emit(self.index)
         self.update()
 
@@ -111,14 +111,9 @@ class ColorPicker(QDialog):
     def __init__(self, color):
         super().__init__()
         self.setWindowTitle("Select Color")
-        self.color = color
         actions = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         actions.accepted.connect(self.accept)
         actions.rejected.connect(self.reject)
-
-        self.color_palette = ColorPalette(self.color)
-        for swatch in self.color_palette.palette:
-            swatch.clicked.connect(self.colorChosen)
 
         main_layout = QVBoxLayout()
         value_layout = QHBoxLayout()
@@ -127,8 +122,6 @@ class ColorPicker(QDialog):
 
         self.preview = QLabel()
         self.preview_pixmap = QPixmap(100, 100)
-        self.preview_pixmap.fill(self.color)
-        self.preview.setPixmap(self.preview_pixmap)
         self.preview.setFrameShape(QFrame.Panel)
         self.preview.setFrameShadow(QFrame.Sunken)
         self.preview.setLineWidth(3)
@@ -141,20 +134,19 @@ class ColorPicker(QDialog):
         eight_bit_form.addRow(QLabel("8-bit color"))
         eight_bit_form.itemAt(0).setAlignment(Qt.AlignCenter)
         eight_bit_form.itemAt(0).widget().setFont(header)
-        r, g, b = downsample(self.color.red(), self.color.green(), self.color.blue())
-        self.r8 = QLineEdit(str(r))
+        self.r8 = QLineEdit()
         self.r8.setFixedWidth(125)
         self.r8.setValidator(ColorValidator(7))
         self.r8.editingFinished.connect(self.set8BitColors)
-        self.g8 = QLineEdit(str(g))
+        self.g8 = QLineEdit()
         self.g8.setFixedWidth(125)
         self.g8.setValidator(ColorValidator(7))
         self.g8.editingFinished.connect(self.set8BitColors)
-        self.b8 = QLineEdit(str(b))
+        self.b8 = QLineEdit()
         self.b8.setFixedWidth(125)
         self.b8.setValidator(ColorValidator(3))
         self.b8.editingFinished.connect(self.set8BitColors)
-        self.hex8 = QLineEdit("#" + format((r << 5) | (g << 2) | b, 'X').zfill(2))
+        self.hex8 = QLineEdit()
         self.hex8.setValidator(QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{2})")))
         self.hex8.setFixedWidth(125)
         self.hex8.editingFinished.connect(self.set8BitHex)
@@ -171,19 +163,19 @@ class ColorPicker(QDialog):
         full_color_form.addRow(QLabel("Full color"))
         full_color_form.itemAt(0).setAlignment(Qt.AlignCenter)
         full_color_form.itemAt(0).widget().setFont(header)
-        self.r24 = QLineEdit(str(self.color.red()))
+        self.r24 = QLineEdit()
         self.r24.setFixedWidth(125)
         self.r24.setValidator(ColorValidator(255))
         self.r24.editingFinished.connect(self.set24BitColors)
-        self.g24 = QLineEdit(str(self.color.green()))
+        self.g24 = QLineEdit()
         self.g24.setValidator(ColorValidator(255))
         self.g24.setFixedWidth(125)
         self.g24.editingFinished.connect(self.set24BitColors)
-        self.b24 = QLineEdit(str(self.color.blue()))
+        self.b24 = QLineEdit()
         self.b24.setValidator(ColorValidator(255))
         self.b24.setFixedWidth(125)
         self.b24.editingFinished.connect(self.set24BitColors)
-        self.hex24 = QLineEdit(self.color.name().upper())
+        self.hex24 = QLineEdit()
         self.hex24.setValidator(QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{6})")))
         self.hex24.setFixedWidth(125)
         self.hex24.focusOutEvent = self.set24BitHex
@@ -194,6 +186,10 @@ class ColorPicker(QDialog):
         fcframe.setLayout(full_color_form)
         value_layout.addWidget(fcframe)
 
+        self.color_palette = ColorPalette()
+        for swatch in self.color_palette.palette:
+            swatch.clicked.connect(self.setColor)
+        self.setColor(color.red(), color.green(), color.blue())
         main_layout.setSizeConstraint(QLayout.SetFixedSize)
         main_layout.addWidget(self.color_palette)
         main_layout.addWidget(self.preview)
@@ -205,111 +201,55 @@ class ColorPicker(QDialog):
     def getColor(self):
         return self.color
 
-    pyqtSlot
     def set8BitColors(self):
-        r = 0 if self.r8.text() == "" else int(self.r8.text())
-        g = 0 if self.g8.text() == "" else int(self.g8.text())
-        b = 0 if self.b8.text() == "" else int(self.b8.text())
-        self.r8.setText(str(r))
-        self.g8.setText(str(g))
-        self.b8.setText(str(b))
+        r = self.cur_r8 if self.r8.text() == "" else int(self.r8.text())
+        g = self.cur_g8 if self.g8.text() == "" else int(self.g8.text())
+        b = self.cur_b8 if self.b8.text() == "" else int(self.b8.text())
+        r, g, b = upsample(r, g, b)
+        self.setColor(r, g, b)
 
-        new_color = QColor(*upsample(r, g, b))
-        for swatch in self.color_palette.palette:
-            if swatch.color == new_color:
-                swatch.select()
-
-        self.hex8.setText("#" + format((r << 5) | (g << 2) | b, 'X').zfill(2))
-        self.r24.setText(str(new_color.red()))
-        self.g24.setText(str(new_color.green()))
-        self.b24.setText(str(new_color.blue()))
-        self.hex24.setText(new_color.name().upper())
-
-    pyqtSlot
     def set24BitColors(self):
-        r = 0 if self.r24.text() == "" else int(self.r24.text())
-        g = 0 if self.g24.text() == "" else int(self.g24.text())
-        b = 0 if self.b24.text() == "" else int(self.b24.text())
+        r = self.cur_r24 if self.r24.text() == "" else int(self.r24.text())
+        g = self.cur_g24 if self.g24.text() == "" else int(self.g24.text())
+        b = self.cur_b24 if self.b24.text() == "" else int(self.b24.text())
+        self.setColor(r, g, b)
 
-        r, g, b = normalize(r, g, b)
-
-        self.r24.setText(str(r))
-        self.g24.setText(str(g))
-        self.b24.setText(str(b))
-
-        new_color = QColor(r, g, b)
-        for swatch in self.color_palette.palette:
-            if swatch.color == new_color:
-                swatch.select()
-
-        r, g, b = downsample(r, g, b)
-
-        self.hex24.setText(new_color.name().upper())
-        self.r8.setText(str(r))
-        self.g8.setText(str(g))
-        self.b8.setText(str(b))
-        self.hex8.setText("#" + format((r << 5) | (g << 2) | b, 'X').zfill(2))
-
-    pyqtSlot
     def set8BitHex(self, event=None):
-        hex = self.hex8.text().replace("#", "")
-        hex = 0 if hex == "" else int(hex, 16)
+        hex = self.hex8.text().lstrip("#")
+        hex = int(self.cur_hex8, 16) if hex == "" else int(hex, 16)
         r = (hex >> 5) & 7
         g = (hex >> 2) & 7
         b = hex & 3
+        color = QColor(*upsample(r, g, b))
+        self.setColor(color.red(), color.green(), color.blue())
 
-        new_color = QColor(*upsample(r, g, b))
-        for swatch in self.color_palette.palette:
-            if swatch.color == new_color:
-                swatch.select()
-
-        self.r8.setText(str(r))
-        self.g8.setText(str(g))
-        self.b8.setText(str(b))
-        self.hex8.setText("#" + format((r << 5) | (g << 2) | b, 'X').zfill(2))
-        self.r24.setText(str(new_color.red()))
-        self.g24.setText(str(new_color.green()))
-        self.b24.setText(str(new_color.blue()))
-        self.hex24.setText(new_color.name().upper())
-
-    pyqtSlot
     def set24BitHex(self, event=None):
-        hex = self.hex24.text().replace("#", "")
-        hex = 0 if hex == "" else int(hex, 16)
+        hex = self.hex24.text().lstrip("#")
+        hex = self.cur_hex24 if hex == "" else "#" + hex.zfill(6)
+        color = QColor(hex)
+        self.setColor(color.red(), color.green(), color.blue())
 
-        r, g, b = normalize((hex >> 16) & 255, (hex >> 8) & 255, hex & 255)
-
-        new_color = QColor(r, g, b)
-        for swatch in self.color_palette.palette:
-            if swatch.color == new_color:
-                swatch.select()
-
-        r, g, b = downsample(r, g, b)
-
-        self.r8.setText(str(r))
-        self.g8.setText(str(g))
-        self.b8.setText(str(b))
-        self.hex8.setText("#" + format((r << 5) | (g << 2) | b, 'X').zfill(2))
-        self.r24.setText(str(new_color.red()))
-        self.g24.setText(str(new_color.green()))
-        self.b24.setText(str(new_color.blue()))
-        self.hex24.setText(new_color.name().upper())
-
-    @pyqtSlot(QColor)
-    def colorChosen(self, color):
-        self.color = color
+    @pyqtSlot(int, int, int)
+    def setColor(self, red, green, blue):
+        self.color = QColor(*normalize(red, green, blue))
         self.preview_pixmap.fill(self.color)
         self.preview.setPixmap(self.preview_pixmap)
-        r = self.color.red()
-        g = self.color.green()
-        b = self.color.blue()
-        hex = self.color.name().upper()
-        self.r24.setText(str(r))
-        self.g24.setText(str(g))
-        self.b24.setText(str(b))
-        self.hex24.setText(hex)
-        r, g, b = downsample(r, g, b)
-        self.r8.setText(str(r))
-        self.g8.setText(str(g))
-        self.b8.setText(str(b))
-        self.hex8.setText("#" + format((r << 5) | (g << 2) | b, 'X').zfill(2))
+        self.cur_r24 = self.color.red()
+        self.cur_g24 = self.color.green()
+        self.cur_b24 = self.color.blue()
+        self.cur_hex24 = self.color.name().upper()
+        self.r24.setText(str(self.cur_r24))
+        self.g24.setText(str(self.cur_g24))
+        self.b24.setText(str(self.cur_b24))
+        self.hex24.setText(self.cur_hex24)
+
+        for swatch in self.color_palette.palette:
+            if swatch.color == self.color:
+                swatch.select()
+
+        self.cur_r8, self.cur_g8, self.cur_b8 = downsample(self.cur_r24, self.cur_g24, self.cur_b24)
+        self.cur_hex8 = format((self.cur_r8 << 5) | (self.cur_g8 << 2) | self.cur_b8, 'X').zfill(2)
+        self.r8.setText(str(self.cur_r8))
+        self.g8.setText(str(self.cur_g8))
+        self.b8.setText(str(self.cur_b8))
+        self.hex8.setText("#" + self.cur_hex8)
