@@ -4,13 +4,13 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 class cmdSetSprCol(QUndoCommand):
-    def __init__(self, palette, name, index, color, description, parent=None):
+    def __init__(self, palette, name, index, color, orig=None, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
         self.name = name
         self.index = index
         self.color = color
-        self.original_color = self.palette[name][index]
+        self.original_color = orig if orig is not None else self.palette[name][index]
 
     def redo(self):
         self.palette[self.name, self.index] = self.color

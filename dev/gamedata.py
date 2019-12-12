@@ -96,8 +96,8 @@ class GameData(QObject):
     def getTileMap(self, name):
         return self.tile_maps[name]
 
-    def setSprCol(self, name, index, color):
-        command = cmdSetSprCol(self.sprite_color_palettes, name, index, color, "Set palette color")
+    def setSprCol(self, name, index, color, orig=None):
+        command = cmdSetSprCol(self.sprite_color_palettes, name, index, color, orig, "Set palette color")
         self.undo_stack.push(command)
 
     def setSprPix(self, name, row, col, value):
