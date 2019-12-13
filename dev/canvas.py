@@ -92,17 +92,19 @@ class GraphicsScene(QGraphicsScene):
             self.draw(event)
 
     def draw(self, event):
-        if not self.drawing:
-            self.data.undo_stack.beginMacro("Draw pixels")
-            self.drawing = True
-        col = math.floor(event.pos().x())
-        row = math.floor(event.pos().y())
-        self.last_pos = (row, col)
-        self.data.setSprPix(self.sprite_name, row, col, self.pen_color)
+        if event.buttons() == Qt.LeftButton:
+            if not self.drawing:
+                self.data.undo_stack.beginMacro("Draw pixels")
+                self.drawing = True
+            col = math.floor(event.pos().x())
+            row = math.floor(event.pos().y())
+            self.last_pos = (row, col)
+            self.data.setSprPix(self.sprite_name, row, col, self.pen_color)
 
     def release(self, event):
-        self.drawing = False
-        self.data.undo_stack.endMacro()
+        if event.button() == Qt.LeftButton:
+            self.drawing = False
+            self.data.undo_stack.endMacro()
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
