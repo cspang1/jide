@@ -92,8 +92,9 @@ class Color(QLabel):
     def mousePressEvent(self, event):
         if event.button() in [Qt.LeftButton, Qt.RightButton]:
             self.color_selected.emit(self.index, self.color, event.button())
-            self.selected = True
-            self.update()
+            if event.button() == Qt.LeftButton:
+                self.selected = True
+                self.update()
 
     def deselect(self):
         self.selected = False
@@ -105,6 +106,7 @@ class Color(QLabel):
 
 class ColorPalette(QWidget):
     palette_updated = pyqtSignal(str)
+    color_selected = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -161,7 +163,12 @@ class ColorPalette(QWidget):
         widgets = [self.grid.itemAt(index) for index in range(self.grid.count())]
         for color, widget in zip(self.data.sprite_color_palettes[self.current_palette], widgets):
             widget.widget().fill(color)
-            self.color_preview.setPrimaryColor(widgets.index(widget), color)
+            index = widgets.index(widget)
+            if index == 0:
+                color = QColor(0, 0, 0)
+                if self.color_preview.secondary_index == 0:
+                    self.color_preview.setSecondaryColor(color)
+            self.color_preview.setPrimaryColor(index, color)
         self.grid.itemAt(0).widget().fill(QColor(0,0,0))
         self.palette_updated.emit(self.current_palette)
 
@@ -170,12 +177,13 @@ class ColorPalette(QWidget):
         if button == Qt.LeftButton:
             self.color_preview.setPrimaryIndex(index)
             self.color_preview.setPrimaryColor(index, color)
+            for idx in range(self.grid.count()):
+                if idx != index:
+                    self.grid.itemAt(idx).widget().deselect()
+            self.color_selected.emit(index)
         elif button == Qt.RightButton:
             self.color_preview.setSecondaryIndex(index)
             self.color_preview.setSecondaryColor(color)
-        for idx in range(self.grid.count()):
-            if idx != index:
-                self.grid.itemAt(idx).widget().deselect()
 
 class ColorPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)

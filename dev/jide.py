@@ -81,7 +81,6 @@ class jide(QtWidgets.QMainWindow):
         self.view.setStyleSheet("background-color: #494949;")
         self.scene.setSprite("sprite80")
         self.colorPaletteDock.palette_updated.connect(self.scene.setPalette)
-        for swatch in self.colorPaletteDock.color_palette.palette:
-            swatch.color_selected.connect(self.scene.setPenColor)
+        self.colorPaletteDock.color_palette.color_selected.connect(self.scene.setPenColor)
         self.colorPaletteDock.setup(self.data)
         self.pixelPaletteDock.setup(self.data)
