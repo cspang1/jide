@@ -64,13 +64,13 @@ class GraphicsScene(QGraphicsScene):
                 self.sprite.setPixel(col, row, sprite[row][col])
         self.updateSprite()
 
-    pyqtSlot(str)
+    @pyqtSlot(str)
     def setPalette(self, source):
         palette = self.data.getSprColPal(source)
         self.sprite.setColorTable([color.rgba() for color in palette])
         self.updateSprite()
 
-    pyqtSlot(int, int)
+    @pyqtSlot(int, int)
     def updatePixel(self, row, col):
         self.sprite.setPixel(col, row, self.data.getSprite(self.sprite_name)[row][col])
         self.updateSprite()
@@ -81,7 +81,7 @@ class GraphicsScene(QGraphicsScene):
     def setTool(self, tool):
         self.tool = tool
 
-    pyqtSlot(int)
+    @pyqtSlot(int)
     def setPenColor(self, color):
         self.pen_color = color
 
