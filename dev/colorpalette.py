@@ -2,6 +2,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from colorpicker import *
+import resources
 
 class Color(QLabel):
     pen_changed = pyqtSignal(int)
@@ -76,7 +77,7 @@ class ColorPalette(QWidget):
 
     def setup(self, data):
         self.data = data
-        self.data.spr_col_updated.connect(self.setPalette)
+        self.data.spr_col_pal_updated.connect(self.setPalette)
         self.palette[0].select()
 
     pyqtSlot(int, QColor)
@@ -132,6 +133,30 @@ class ColorPaletteDock(QDockWidget):
         self.palette_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.palette_picker.addWidget(self.palette_label)
         self.palette_picker.addWidget(self.color_palette_list)
+        self.add_palette = QToolButton(self)
+        self.add_palette.mousePressEvent = self.addPaletteReq
+        self.add_palette.setToolTip("Add new palette")
+        add_icon = QIcon()
+        add_icon.addPixmap(QPixmap(":/icons/add.png"))
+        self.add_palette.setIcon(add_icon)
+        self.add_palette.setEnabled(False)
+        self.remove_palette = QToolButton(self)
+        self.remove_palette.mousePressEvent = self.removePaletteReq
+        self.remove_palette.setToolTip("Remove current palette")
+        remove_icon = QIcon()
+        remove_icon.addPixmap(QPixmap(":/icons/remove.png"))
+        self.remove_palette.setIcon(remove_icon)
+        self.remove_palette.setEnabled(False)
+        self.rename_palette = QToolButton(self)
+        self.rename_palette.mousePressEvent = self.renamePaletteReq
+        self.rename_palette.setToolTip("Rename current palette")
+        rename_icon = QIcon()
+        rename_icon.addPixmap(QPixmap(":/icons/rename.png"))
+        self.rename_palette.setIcon(rename_icon)
+        self.rename_palette.setEnabled(False)
+        self.palette_picker.addWidget(self.add_palette)
+        self.palette_picker.addWidget(self.remove_palette)
+        self.palette_picker.addWidget(self.rename_palette)
         self.docked_widget.layout().addLayout(self.palette_picker)
         self.docked_widget.layout().addWidget(self.color_palette)
         self.color_palette_list.setEnabled(False)
@@ -139,12 +164,63 @@ class ColorPaletteDock(QDockWidget):
         self.color_palette.palette_updated.connect(self.verifyCurrentPalette)
 
     def setup(self, data):
-        self.color_palette.setup(data)
+        self.data = data
+        self.data.spr_col_pal_renamed.connect(self.renamePalette)
+        self.data.spr_col_pal_added.connect(self.addPalette)
+        self.data.spr_col_pal_removed.connect(self.removePalette)
+        self.color_palette.setup(self.data)
         self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
         self.color_palette_list.setEnabled(True)
         self.color_palette.setEnabled(True)
-        for name, palette in data.sprite_color_palettes.items():
+        self.add_palette.setEnabled(True)
+        self.remove_palette.setEnabled(True)
+        self.rename_palette.setEnabled(True)
+        for name, palette in self.data.sprite_color_palettes.items():
             self.color_palette_list.addItem(name)
+
+    def addPaletteReq(self, event=None):
+        name, accepted = QInputDialog.getText(self, "Add", "Palette name:", QLineEdit.Normal, "New palette")
+        if accepted:
+            self.data.addSprColPal(name)
+
+    def removePaletteReq(self, event=None):
+        if self.color_palette_list.count() == 1:
+            QMessageBox(QMessageBox.Critical, "Error", "There must be at least one sprite color palette in the project").exec()
+        else:
+            name = self.color_palette_list.currentText()
+            self.data.remSprColPal(name)
+
+    def renamePaletteReq(self, event=None):
+        cur_name = self.color_palette_list.currentText()
+        new_name, accepted = QInputDialog.getText(self, "Rename", "Palette name:", QLineEdit.Normal, cur_name)
+        if accepted:
+            self.data.setSprColPalName(cur_name, new_name)
+
+    def addPalette(self, name, index):
+        if name != None:
+            self.color_palette_list.insertItem(index, name)
+            self.color_palette_list.setCurrentIndex(index)
+            self.color_palette.current_palette = name
+        else:
+            QMessageBox(QMessageBox.Critical, "Error", "Palette with that name already exists").exec()
+            self.addPaletteReq()
+
+    def removePalette(self, name):
+        if name != None:
+            index = self.color_palette_list.findText(name)
+            self.color_palette_list.removeItem(index)
+            name = self.color_palette_list.currentText()
+            self.color_palette.current_palette = name
+        else:
+            QMessageBox(QMessageBox.Critical, "Error", "Unable to remove palette {}".format(name)).exec()
+
+    def renamePalette(self, cur_name, new_name):
+        if cur_name != new_name:
+            self.color_palette_list.setItemText(self.color_palette_list.findText(cur_name), new_name)
+            self.color_palette.current_palette = new_name
+        else:
+            QMessageBox(QMessageBox.Critical, "Error", "Palette with that name already exists").exec()
+            self.renamePaletteReq()
 
     pyqtSlot(str)
     def verifyCurrentPalette(self, name):

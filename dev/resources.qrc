@@ -1,0 +1,7 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file>icons/add.png</file>
+        <file>icons/remove.png</file>
+        <file>icons/rename.png</file>
+    </qresource>
+</RCC>
