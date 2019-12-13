@@ -135,7 +135,7 @@ class ColorPalette(QWidget):
         self.color_preview.setPrimaryIndex(0)
         self.color_preview.setSecondaryIndex(0)
 
-    pyqtSlot(int, QColor)
+    @pyqtSlot(int, QColor)
     def openPicker(self, index, orig_color):
         self.picker.setColor(orig_color)
         self.picker.preview_color.connect(lambda orig_color : self.previewColor(index, orig_color))
@@ -148,16 +148,16 @@ class ColorPalette(QWidget):
             self.previewColor(index, orig_color)
         self.picker.preview_color.disconnect()
 
-    pyqtSlot(int, QColor)
+    @pyqtSlot(int, QColor)
     def sendColorUpdate(self, index, new_color, orig_color=None):
         self.data.setSprCol(self.current_palette, index, new_color, orig_color)
 
-    pyqtSlot(QColor)
+    @pyqtSlot(QColor)
     def previewColor(self, index, color):
         self.color_preview.setPrimaryColor(index, color)
         self.data.previewSprCol(self.current_palette, index, color)
 
-    pyqtSlot(str)
+    @pyqtSlot(str)
     def setPalette(self, palette):
         self.current_palette = palette
         widgets = [self.grid.itemAt(index) for index in range(self.grid.count())]
@@ -172,7 +172,7 @@ class ColorPalette(QWidget):
         self.grid.itemAt(0).widget().fill(QColor(0,0,0))
         self.palette_updated.emit(self.current_palette)
 
-    pyqtSlot(int, QColor, Qt.MouseButton)
+    @pyqtSlot(int, QColor, Qt.MouseButton)
     def selectColor(self, index, color, button):
         if button == Qt.LeftButton:
             self.color_preview.setPrimaryIndex(index)
@@ -293,7 +293,7 @@ class ColorPaletteDock(QDockWidget):
             QMessageBox(QMessageBox.Critical, "Error", "Palette with that name already exists").exec()
             self.renamePaletteReq()
 
-    pyqtSlot(str)
+    @pyqtSlot(str)
     def verifyCurrentPalette(self, name):
         self.color_palette_list.setCurrentIndex(self.color_palette_list.findText(name))
         self.palette_updated.emit(name)
