@@ -82,6 +82,6 @@ class jide(QtWidgets.QMainWindow):
         self.scene.setSprite("sprite80")
         self.colorPaletteDock.palette_updated.connect(self.scene.setPalette)
         for swatch in self.colorPaletteDock.color_palette.palette:
-            swatch.pen_changed.connect(self.scene.setPenColor)
+            swatch.color_selected.connect(self.scene.setPenColor)
         self.colorPaletteDock.setup(self.data)
         self.pixelPaletteDock.setup(self.data)

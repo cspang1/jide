@@ -110,8 +110,8 @@ class ColorValidator(QValidator):
 class ColorPicker(QDialog):
     preview_color = pyqtSignal(QColor)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setWindowTitle("Select Color")
         actions = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         actions.accepted.connect(self.accept)

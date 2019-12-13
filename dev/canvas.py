@@ -40,7 +40,6 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
-
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.sprite = QImage(bytes([0]*64), 8, 8, QImage.Format_Indexed8)
