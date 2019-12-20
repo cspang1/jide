@@ -5,6 +5,8 @@ from colorpicker import *
 import resources
 
 class ColorPreview(QWidget):
+    switch = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(95, 95)
@@ -12,6 +14,16 @@ class ColorPreview(QWidget):
         self.secondary_color = QColor(211, 211, 211, 255)
         self.primary_index = 0
         self.secondary_index = 0
+        switch_icon = QIcon()
+        switch_icon.addPixmap(QPixmap(":/icons/switch_color.png"))
+        self.switch_color = QToolButton(self)
+        self.switch_color.mousePressEvent = self.switchColors
+        self.switch_color.move(-1, 63)
+        self.switch_color.resize(28, 28)
+        self.switch_color.setIcon(switch_icon)
+
+    def switchColors(self, event):
+        self.switch.emit()
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -93,9 +105,6 @@ class Color(QLabel):
     def mousePressEvent(self, event):
         if event.button() in [Qt.LeftButton, Qt.RightButton]:
             self.color_selected.emit(self.index, self.color, event.button())
-            if event.button() == Qt.LeftButton:
-                self.selected = True
-                self.update()
 
     def deselect(self):
         self.selected = False
@@ -116,6 +125,7 @@ class ColorPalette(QWidget):
         self.grid.setContentsMargins(0, 0, 0, 0)
         self.picker = ColorPicker(self)
         self.color_preview = ColorPreview(self)
+        self.color_preview.switch.connect(self.switchColors)
         self.palette = [Color(n) for n in range(16)]
         positions = [(row,col) for row in range(4) for col in range(4)]
         for position, swatch in zip(positions, self.palette):
@@ -173,6 +183,15 @@ class ColorPalette(QWidget):
         self.grid.itemAt(0).widget().fill(QColor(0,0,0))
         self.palette_updated.emit(self.current_palette)
 
+    @pyqtSlot()
+    def switchColors(self):
+        pindex = self.color_preview.primary_index
+        pcolor = self.color_preview.primary_color
+        sindex = self.color_preview.secondary_index
+        scolor = self.color_preview.secondary_color
+        self.selectColor(sindex, scolor, Qt.LeftButton)
+        self.selectColor(pindex, pcolor, Qt.RightButton)
+
     @pyqtSlot(int, QColor, Qt.MouseButton)
     def selectColor(self, index, color, button):
         if button == Qt.LeftButton:
@@ -181,6 +200,8 @@ class ColorPalette(QWidget):
             for idx in range(self.grid.count()):
                 if idx != index:
                     self.grid.itemAt(idx).widget().deselect()
+                else:
+                    self.grid.itemAt(idx).widget().select()
             self.color_selected.emit(index)
         elif button == Qt.RightButton:
             self.color_preview.setSecondaryColor(color)
