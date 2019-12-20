@@ -33,8 +33,10 @@ class ColorPalettes(QObject):
 
     def setName(self, cur_name, new_name):
         replacement = {cur_name: new_name}
+        temp_palette_items = self.palettes.copy()
         for name, _ in self.palettes.items():
-            self.palettes[replacement.get(name, name)] = self.palettes.pop(name)
+            temp_palette_items[replacement.get(name, name)] = temp_palette_items.pop(name)
+        self.palettes = temp_palette_items
         self.name_changed.emit(cur_name, new_name)
 
     def addPalette(self, name, contents, index=None):
