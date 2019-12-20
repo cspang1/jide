@@ -19,11 +19,12 @@ class ColorPreview(QWidget):
         switch_color = QAction(self)
         switch_color.setShortcut("X")
         switch_color.triggered.connect(self.switch)
-        self.switch_button = QToolButton(self)
-        self.switch_button.setDefaultAction(switch_color)
-        self.switch_button.move(-1, 63)
-        self.switch_button.resize(28, 28)
-        self.switch_button.setIcon(switch_icon)
+        switch_button = QToolButton(self)
+        switch_color.setToolTip("Switch colors (X)")
+        switch_button.setDefaultAction(switch_color)
+        switch_button.move(-1, 63)
+        switch_button.resize(28, 28)
+        switch_button.setIcon(switch_icon)
 
     def paintEvent(self, event):
         super().paintEvent(event)
