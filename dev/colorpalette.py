@@ -16,14 +16,14 @@ class ColorPreview(QWidget):
         self.secondary_index = 0
         switch_icon = QIcon()
         switch_icon.addPixmap(QPixmap(":/icons/switch_color.png"))
-        self.switch_color = QToolButton(self)
-        self.switch_color.mousePressEvent = self.switchColors
-        self.switch_color.move(-1, 63)
-        self.switch_color.resize(28, 28)
-        self.switch_color.setIcon(switch_icon)
-
-    def switchColors(self, event):
-        self.switch.emit()
+        switch_color = QAction(self)
+        switch_color.setShortcut("X")
+        switch_color.triggered.connect(self.switch)
+        self.switch_button = QToolButton(self)
+        self.switch_button.setDefaultAction(switch_color)
+        self.switch_button.move(-1, 63)
+        self.switch_button.resize(28, 28)
+        self.switch_button.setIcon(switch_icon)
 
     def paintEvent(self, event):
         super().paintEvent(event)
