@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from colorpalette import *
 from pixelpalette import *
 from gamedata import GameData
+from sources import Sources
 import json
 import sys
 import os
@@ -75,11 +76,11 @@ class jide(QtWidgets.QMainWindow):
 
     def loadProject(self):
         self.data.setUndoStack(self.undo_stack)
-        self.scene = GraphicsScene(self.data, self)
+        self.scene = GraphicsScene(self.data, Sources.SPRITE, self)
+        self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)
         self.view.setStyleSheet("background-color: #494949;")
-        self.scene.setSprite("sprite80")
         self.colorPaletteDock.palette_updated.connect(self.scene.setPalette)
         self.colorPaletteDock.color_palette.color_selected.connect(self.scene.setPenColor)
         self.colorPaletteDock.setup(self.data)

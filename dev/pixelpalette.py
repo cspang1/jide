@@ -18,6 +18,14 @@ class Tile(QLabel):
         self.original.setColorTable([color.rgba() for color in palette])
         self.setPixmap(QPixmap.fromImage(self.original))
 
+    def mouseDoubleClickEvent(self, event):
+        self.select()
+
+    def select(self):
+        self.tile_selected.emit(self.name)
+        self.selected = True
+        self.update()
+
     def deselect(self):
         self.selected = False
         self.update()
@@ -40,12 +48,9 @@ class Tile(QLabel):
         painter.setBrush(Qt.NoBrush)
         painter.drawRect(0, 0, 24, 24)
 
-    def mousePressEvent(self, event):
-        self.tile_selected.emit(self.name)
-        self.selected = True
-        self.update()
-
 class PixelPalette(QFrame):
+    subject_selected = pyqtSignal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.grid = QGridLayout()
@@ -66,12 +71,15 @@ class PixelPalette(QFrame):
             tile.setColors(color_palette)
             tile.tile_selected.connect(self.selectTile)
             self.grid.addWidget(tile, row, col)
+            if row == col == 0:
+                tile.select()
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
         self.setEnabled(True)
 
     pyqtSlot(str)
     def selectTile(self, name):
+        self.subject_selected.emit(name)
         widgets = (self.grid.itemAt(index).widget() for index in range(self.grid.count()))
         for widget in widgets:
             if(widget.name != name):
