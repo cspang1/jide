@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from canvastools import Tools
+from sources import Sources
 from itertools import product
 from typing import List
 from dataclasses import dataclass, field
@@ -40,43 +41,46 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class GraphicsScene(QGraphicsScene):
-    def __init__(self, data, parent=None):
+    def __init__(self, data, source, parent=None):
         super().__init__(parent)
-        self.sprite = QImage(bytes([0]*64), 8, 8, QImage.Format_Indexed8)
-        self.sprite.setColorCount(16)
-        spriteItem = QGraphicsPixmapItem(QPixmap.fromImage(self.sprite))
-        spriteItem.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
-        spriteItem.mousePressEvent = self.draw
-        spriteItem.mouseReleaseEvent = self.release
-        spriteItem.mouseMoveEvent = self.drag
-        self.addItem(spriteItem)
+        self.subject = QImage(bytes([0]*64), 8, 8, QImage.Format_Indexed8)
+        self.subject.setColorCount(16)
+        self.source = source
+        subject_item = QGraphicsPixmapItem(QPixmap.fromImage(self.subject))
+        subject_item.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+        subject_item.mousePressEvent = self.draw
+        subject_item.mouseReleaseEvent = self.release
+        subject_item.mouseMoveEvent = self.drag
+        self.addItem(subject_item)
         self.data = data
         self.data.spr_pix_updated.connect(self.updatePixel)
         self.pen_color = 0
         self.setTool(Tools.PEN)
         self.drawing = False
 
-    def setSprite(self, source):
-        self.sprite_name = source
-        sprite = self.data.getSprite(source)
+    @pyqtSlot(str)
+    def setSubject(self, source):
+        self.subject_name = source
+        subject = self.data.getSprite(source) if self.source == Sources.SPRITE else self.data.getTile(source)
         for row in range(8):
             for col in range(8):
-                self.sprite.setPixel(col, row, sprite[row][col])
-        self.updateSprite()
+                self.subject.setPixel(col, row, subject[row][col])
+        self.updateSubject()
 
     @pyqtSlot(str)
     def setPalette(self, source):
         palette = self.data.getSprColPal(source)
-        self.sprite.setColorTable([color.rgba() for color in palette])
-        self.updateSprite()
+        self.subject.setColorTable([color.rgba() for color in palette])
+        self.updateSubject()
 
     @pyqtSlot(int, int)
     def updatePixel(self, row, col):
-        self.sprite.setPixel(col, row, self.data.getSprite(self.sprite_name)[row][col])
-        self.updateSprite()
+        data = self.data.getSprite(self.subject_name) if self.source == Sources.SPRITE else self.data.getTile(self.subject_name)
+        self.subject.setPixel(col, row, data[row][col])
+        self.updateSubject()
 
-    def updateSprite(self):
-        self.items()[0].setPixmap(QPixmap.fromImage(self.sprite))
+    def updateSubject(self):
+        self.items()[0].setPixmap(QPixmap.fromImage(self.subject))
 
     def setTool(self, tool):
         self.tool = tool
@@ -99,7 +103,7 @@ class GraphicsScene(QGraphicsScene):
             col = math.floor(event.pos().x())
             row = math.floor(event.pos().y())
             self.last_pos = (row, col)
-            self.data.setSprPix(self.sprite_name, row, col, self.pen_color)
+            self.data.setSprPix(self.subject_name, row, col, self.pen_color)
 
     def release(self, event):
         if event.button() == Qt.LeftButton:
