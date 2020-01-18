@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from undosys import *
+from sources import Sources
 from colorpalette import upsample
 import json
 from collections import OrderedDict
@@ -13,13 +14,14 @@ class ColorPalettes(QObject):
     palette_added = pyqtSignal(str, int)
     palette_removed = pyqtSignal(str)
 
-    def __init__(self, data):
-        super().__init__()
+    def __init__(self, data, source, parent=None):
+        super().__init__(parent)
         self.palettes = OrderedDict()
         for spr_pal in data:
             palette = spr_pal["contents"]
             palette[:] = [QColor(*upsample(color>>5, (color>>2)&7, color&3)) for color in palette]
-            palette[0] = QColor(0,0,0,0)
+            if source is Sources.SPRITE:
+                palette[0] = QColor(0,0,0,0)
             self.palettes[spr_pal["name"]] = palette
 
     def keys(self):
@@ -76,8 +78,8 @@ class ColorPalettes(QObject):
 class PixelPalettes(QObject):
     pixel_changed = pyqtSignal(str, int, int)
 
-    def __init__(self, data):
-        super().__init__()
+    def __init__(self, data, parent=None):
+        super().__init__(parent)
         self.palettes = OrderedDict()
         for sprite in data:
             self.palettes[sprite["name"]] = sprite["contents"]
@@ -114,8 +116,8 @@ class GameData(QObject):
 
         self.sprite_pixel_palettes = PixelPalettes(data["sprites"])
         self.tile_pixel_palettes = PixelPalettes(data["tiles"])
-        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"])
-        self.tile_color_palettes = ColorPalettes(data["tileColorPalettes"])
+        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"], Sources.SPRITE)
+        self.tile_color_palettes = ColorPalettes(data["tileColorPalettes"], Sources.TILE)
         self.sprite_pixel_palettes.pixel_changed.connect(self.spr_pix_updated)
         self.tile_pixel_palettes.pixel_changed.connect(self.tile_pix_updated)
         self.sprite_color_palettes.color_changed.connect(self.spr_col_pal_updated)
