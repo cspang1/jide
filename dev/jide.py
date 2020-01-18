@@ -8,6 +8,8 @@ from sources import Sources
 from pathlib import Path
 import json
 import sys
+import shutil
+import subprocess
 
 class jide(QtWidgets.QMainWindow):
     def __init__(self):
@@ -16,6 +18,9 @@ class jide(QtWidgets.QMainWindow):
         self.setupDocks()
         self.setupActions()
         self.setupStatusBar()
+        # DEMO
+        self.openFile()
+        # DEMO
 
     def setupWindow(self):
         self.setWindowTitle("JIDE")
@@ -42,6 +47,9 @@ class jide(QtWidgets.QMainWindow):
         open_file.setShortcut("Ctrl+O")
         open_file.setStatusTip("Open file")
         open_file.triggered.connect(self.openFile)
+        # DEMO
+        open_file.setEnabled(False)
+        # DEMO
 
         # Undo/redo
         self.undo_stack = QUndoStack(self)
@@ -56,6 +64,11 @@ class jide(QtWidgets.QMainWindow):
         self.gendat_act.setStatusTip("Generate DAT Files")
         self.gendat_act.triggered.connect(self.genDATFiles)
         self.gendat_act.setEnabled(False)
+        self.load_jcap = QAction("&Load JCAP System", self)
+        self.load_jcap.setShortcut("Ctrl+L")
+        self.load_jcap.setStatusTip("Load JCAP System")
+        self.load_jcap.setEnabled(False)
+        self.load_jcap.triggered.connect(self.loadJCAP)
 
         # Build menu bar
         menu_bar = self.menuBar()
@@ -67,12 +80,17 @@ class jide(QtWidgets.QMainWindow):
         edit_menu.addAction(redo_act)
         jcap_menu = menu_bar.addMenu("&JCAP")
         jcap_menu.addAction(self.gendat_act)
+        jcap_menu.addAction(self.load_jcap)
 
     def setupStatusBar(self):
-        self.statusBar()
+        self.statusBar = self.statusBar()
 
     def openFile(self):
-        file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
+        # DEMO
+        #file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
+        dir_path = Path(__file__).resolve().parent
+        file_name = dir_path / "demo.jrf"
+        #DEMO
         if file_name:
             try:
                 self.data = GameData.fromFilename(file_name, self)
@@ -85,6 +103,7 @@ class jide(QtWidgets.QMainWindow):
 
     def loadProject(self):
         self.gendat_act.setEnabled(True)
+        self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
         self.scene = GraphicsScene(self.data, Sources.SPRITE, self)
         self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
@@ -131,3 +150,21 @@ class jide(QtWidgets.QMainWindow):
                     r, g, b = downsample(color.red(), color.green(), color.blue())
                     rgb = (r << 5)|(g << 2)|(b)
                     dat_file.write(bytes([rgb]))
+
+    def loadJCAP(self):
+        self.statusBar.showMessage("Loading JCAP...")
+        self.genDATFiles()
+        dir_path = Path(__file__).resolve().parent
+        dat_path = dir_path / "DAT Files"
+        tcp_path = dat_path / "tile_color_palettes.dat"
+        tpp_path = dat_path / "tiles.dat"
+        scp_path = dat_path / "sprite_color_palettes.dat"
+        spp_path = dat_path / "sprites.dat"
+        jcap_path = Path(__file__).parents[2] / "jcap" / "dev" / "software"
+        sysload_path = jcap_path / "sysload.sh"
+
+        for dat_file in dat_path.glob("**/*"):
+            shutil.copy(str(dat_file), str(jcap_path))
+        
+        subprocess.run(["bash.exe", str(sysload_path), "-c", "COM4", "-g", "COM3"])
+        self.statusBar.showMessage("JCAP Loaded!", 5000)
