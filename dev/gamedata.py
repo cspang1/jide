@@ -124,6 +124,21 @@ class GameData(QObject):
         self.sprite_color_palettes.palette_removed.connect(self.spr_col_pal_removed)
         self.tile_color_palettes.color_changed.connect(self.tile_col_updated)
 
+    def getSprites(self):
+        return self.sprite_pixel_palettes.values()
+
+    def getTiles(self):
+        return self.tile_pixel_palettes.values()
+
+    def getSprColPals(self):
+        return self.sprite_color_palettes.values()
+
+    def getTileColPals(self):
+        return self.tile_color_palettes.values()
+
+    '''def getTileMaps(self):
+        return self.tile_maps.values()'''
+
     def getSprite(self, name):
         return self.sprite_pixel_palettes[name]
 
