@@ -6,12 +6,13 @@ from sources import Sources
 class Tile(QLabel):
     tile_selected = pyqtSignal(str)
  
-    def __init__(self, name, data, parent=None):
+    def __init__(self, name, data, index, parent=None):
         super().__init__(parent)
         self.setFixedSize(25, 25)
         self.original = data
         self.setPixmap(QPixmap.fromImage(self.original.scaled(25, 25)))
         self.name = name
+        self.index = index
         self.selected = False
 
     def getData(self):
@@ -38,7 +39,7 @@ class Tile(QLabel):
         self.update()
 
     def enterEvent(self, event):
-        QToolTip.showText(event.globalPos(), self.name)
+        QToolTip.showText(event.globalPos(), "{0}: {1}".format(hex(self.index), self.name))
 
     def leaveEvent(self, event):
         QToolTip.hideText()
@@ -72,11 +73,11 @@ class PixelPalette(QFrame):
     def setup(self, data):
         self.data = data
         self.data.spr_pix_updated.connect(self.updatePixel)
-        row = col = 0
+        row = col = index = 0
         for name,sprite in self.data.sprite_pixel_palettes.items():
             sprite = QImage(bytes([pix for sub in sprite for pix in sub]), 8, 8, QImage.Format_Indexed8)
             color_palette = list(self.data.sprite_color_palettes.values())[0]
-            tile = Tile(name, sprite, self)
+            tile = Tile(name, sprite, index, self)
             tile.setColors(color_palette)
             tile.tile_selected.connect(self.selectTile)
             self.contents[name] = tile
@@ -85,6 +86,7 @@ class PixelPalette(QFrame):
                 self.selectTile(name)
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
+            index += 1
         self.setEnabled(True)
 
     pyqtSlot(str, int, int)
