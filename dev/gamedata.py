@@ -74,7 +74,7 @@ class ColorPalettes(QObject):
         self.color_changed.emit(name)
 
 class PixelPalettes(QObject):
-    pixel_changed = pyqtSignal(int, int)
+    pixel_changed = pyqtSignal(str, int, int)
 
     def __init__(self, data):
         super().__init__()
@@ -97,16 +97,16 @@ class PixelPalettes(QObject):
     def __setitem__(self, index, value):
         name, row, col = index
         self.palettes[name][row][col] = value
-        self.pixel_changed.emit(row, col)
+        self.pixel_changed.emit(name, row, col)
 
 class GameData(QObject):
     spr_col_pal_updated = pyqtSignal(str)
     spr_col_pal_renamed = pyqtSignal(str, str)
     spr_col_pal_added = pyqtSignal(str, int)
     spr_col_pal_removed = pyqtSignal(str)
-    spr_pix_updated = pyqtSignal(int, int)
+    spr_pix_updated = pyqtSignal(str, int, int)
     tile_col_updated = pyqtSignal(str)
-    tile_pix_updated = pyqtSignal(int, int)
+    tile_pix_updated = pyqtSignal(str, int, int)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)

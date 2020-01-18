@@ -24,8 +24,8 @@ class jide(QtWidgets.QMainWindow):
         self.view.setStyleSheet("background-color: #494949;")
 
     def setupDocks(self):
-        self.colorPaletteDock = ColorPaletteDock("Color Palettes", self)
-        self.pixelPaletteDock = PixelPaletteDock("Sprite Palettes", self)
+        self.colorPaletteDock = ColorPaletteDock(self)
+        self.pixelPaletteDock = PixelPaletteDock(Sources.SPRITE, self)
         self.colorPaletteDock.palette_updated.connect(self.pixelPaletteDock.palette_updated)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
