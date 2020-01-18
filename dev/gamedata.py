@@ -151,7 +151,7 @@ class GameData(QObject):
             command = cmdSetSprColPalName(self.sprite_color_palettes, cur_name, new_name, "Set palette name")
             self.undo_stack.push(command)
         else:
-            self.spr_col_pal_renamed.emit(None)
+            self.spr_col_pal_renamed.emit(None, None)
 
     def addSprColPal(self, name):
         if name not in self.sprite_color_palettes.keys():

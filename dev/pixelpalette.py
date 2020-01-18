@@ -18,7 +18,7 @@ class Tile(QLabel):
         self.original.setColorTable([color.rgba() for color in palette])
         self.setPixmap(QPixmap.fromImage(self.original))
 
-    def mouseDoubleClickEvent(self, event):
+    def mousePressEvent(self, event):
         self.select()
 
     def select(self):
