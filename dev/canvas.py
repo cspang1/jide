@@ -73,9 +73,9 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setColorTable([color.rgba() for color in palette])
         self.updateSubject()
 
-    @pyqtSlot(int, int)
-    def updatePixel(self, row, col):
-        data = self.data.getSprite(self.subject_name) if self.source == Sources.SPRITE else self.data.getTile(self.subject_name)
+    @pyqtSlot(str, int, int)
+    def updatePixel(self, name, row, col):
+        data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
         self.subject.setPixel(col, row, data[row][col])
         self.updateSubject()
 

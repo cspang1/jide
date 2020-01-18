@@ -211,8 +211,8 @@ class ColorPalette(QWidget):
 class ColorPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)
 
-    def __init__(self, title, parent=None):
-        super().__init__(title, parent)
+    def __init__(self, parent=None):
+        super().__init__("Color Palettes", parent)
         self.setFloating(False)
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
         self.docked_widget = QWidget(self)
