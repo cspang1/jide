@@ -110,11 +110,10 @@ class GraphicsScene(QGraphicsScene):
         data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
         for row in range(height):
             for col in range(width):
-                cur_subject = data[root + col + (row * 16)] # STORE INSTEAD IN 2D ARRAY AS A BASIC CACHE
-                for y in range(8*row, 8*row+8):
-                    for x in range(8*col, 8*col+8):
-                        #print(cur_subject)
-                        self.subject.setPixel(x, y, cur_subject[row][col]) # MIGHT NEED TO SWITCH X & Y
+                cur_subject = data[root + col + (row * 16)] # STORE INSTEAD IN 2D ARRAY AS A BASIC CACHE FOR PIXEL EDITING
+                for y in range(8):
+                    for x in range(8):
+                        self.subject.setPixel(8*col+x, 8*row+y, cur_subject[y][x])
 
         self.subject.update()
 

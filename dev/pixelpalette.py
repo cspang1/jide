@@ -99,7 +99,7 @@ class PixelPalette(QFrame):
     pyqtSlot(str, int)
     def selectTile(self, name, index):
         self.selected = name
-        self.subject_selected.emit(index, 2, 2) # DEMO
+        self.subject_selected.emit(index, 4, 4) # DEMO
         for tile in self.contents.keys():
             if tile != name:
                 self.contents[tile].deselect()
