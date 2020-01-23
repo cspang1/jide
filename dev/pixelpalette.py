@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 from sources import Sources
 
 class Tile(QLabel):
-    tile_selected = pyqtSignal(str)
+    tile_selected = pyqtSignal(str, int) # DEMO
  
     def __init__(self, name, data, index, parent=None):
         super().__init__(parent)
@@ -27,7 +27,7 @@ class Tile(QLabel):
         self.setPixmap(QPixmap.fromImage(self.original.scaled(25, 25)))
 
     def mousePressEvent(self, event):
-        self.tile_selected.emit(self.name)
+        self.tile_selected.emit(self.name, self.index) # DEMO
         self.select()
 
     def select(self):
@@ -57,7 +57,7 @@ class Tile(QLabel):
         painter.drawRect(0, 0, 24, 24)
 
 class PixelPalette(QFrame):
-    subject_selected = pyqtSignal(str)
+    subject_selected = pyqtSignal(int, int, int)
 
     def __init__(self, source, parent=None):
         super().__init__(parent)
@@ -83,7 +83,7 @@ class PixelPalette(QFrame):
             self.contents[name] = tile
             self.grid.addWidget(self.contents[name], row, col)
             if row == col == 0:
-                self.selectTile(name)
+                self.selectTile(name, index) # DEMO
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
             index += 1
@@ -96,10 +96,10 @@ class PixelPalette(QFrame):
         data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
         self.contents[name].updatePixmap(col, row, data[row][col])
 
-    pyqtSlot(str)
-    def selectTile(self, name):
+    pyqtSlot(str, int)
+    def selectTile(self, name, index):
         self.selected = name
-        self.subject_selected.emit(name)
+        self.subject_selected.emit(index, 2, 2) # DEMO
         for tile in self.contents.keys():
             if tile != name:
                 self.contents[tile].deselect()
