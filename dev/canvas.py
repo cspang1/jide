@@ -40,47 +40,95 @@ class GraphicsView(QGraphicsView):
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
 
+class Subject(QGraphicsPixmapItem):
+    lmb_clicked = pyqtSignal(int, int, int)
+    lmb_released = pyqtSignal()
+
+    def __init__(self, parent=None):
+        self.root = 0
+        self.width = 8
+        self.height = 8
+        self.subject = QImage(bytes([0]*64), self.width, self.height, QImage.Format_Indexed8)
+        self.subject.setColorCount(16)
+        super().__init__(QPixmap.fromImage(self.subject), parent)
+        self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+
+    def setPixel(self, x, y, value):
+        self.subject.setPixel(x, y, value)
+
+    def setColorTable(self, colors):
+        self.subject.setColorTable(colors)
+
+    def update(self):
+        self.setPixmap(QPixmap.fromImage(self.subject))
+
+    def setRoot(self, root):
+        self.root = root
+
+    def setWidth(self, width):
+        self.width = width
+        self.subject = self.subject.scaledToWidth(self.width)
+
+    def setHeight(self, height):
+        self.height = height
+        self.subject = self.subject.scaledToHeight(self.height)
+
+    def mouseMoveEvent(self, event):
+        col = math.floor(event.pos().x())
+        row = math.floor(event.pos().y())
+        if (row, col) != self.last_pos and 0 <= col < self.width and 0 <= row < self.height:
+            self.mouseMoveEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            col = math.floor(event.pos().x())
+            row = math.floor(event.pos().y())
+            self.last_pos = (row, col)
+            self.lmb_clicked.emit(self.root, col, row)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.lmb_released.emit()
+
 class GraphicsScene(QGraphicsScene):
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
-        self.subject = QImage(bytes([0]*64), 8, 8, QImage.Format_Indexed8)
-        self.subject.setColorCount(16)
-        self.source = source
-        subject_item = QGraphicsPixmapItem(QPixmap.fromImage(self.subject))
-        subject_item.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
-        subject_item.mousePressEvent = self.draw
-        subject_item.mouseReleaseEvent = self.release
-        subject_item.mouseMoveEvent = self.drag
-        self.addItem(subject_item)
         self.data = data
+        self.source = source
+        self.subject = Subject()
+        self.addItem(self.subject)
         self.data.spr_pix_updated.connect(self.updatePixel)
         self.pen_color = 0
         self.setTool(Tools.PEN)
         self.drawing = False
 
-    @pyqtSlot(str)
-    def setSubject(self, source):
-        self.subject_name = source
-        subject = self.data.getSprite(source) if self.source == Sources.SPRITE else self.data.getTile(source)
-        for row in range(8):
-            for col in range(8):
-                self.subject.setPixel(col, row, subject[row][col])
-        self.updateSubject()
+    @pyqtSlot(int, int, int)
+    def setSubject(self, root, width, height):
+        self.subject.setRoot(root)
+        self.subject.setWidth(width * 8)
+        self.subject.setHeight(height * 8)
+        data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
+        for row in range(height):
+            for col in range(width):
+                cur_subject = data[root + col + (row * 16)] # STORE INSTEAD IN 2D ARRAY AS A BASIC CACHE
+                for y in range(8*row, 8*row+8):
+                    for x in range(8*col, 8*col+8):
+                        #print(cur_subject)
+                        self.subject.setPixel(x, y, cur_subject[row][col]) # MIGHT NEED TO SWITCH X & Y
+
+        self.subject.update()
 
     @pyqtSlot(str)
     def setPalette(self, source):
         palette = self.data.getSprColPal(source)
         self.subject.setColorTable([color.rgba() for color in palette])
-        self.updateSubject()
+        self.subject.update()
 
     @pyqtSlot(str, int, int)
     def updatePixel(self, name, row, col):
         data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
         self.subject.setPixel(col, row, data[row][col])
-        self.updateSubject()
-
-    def updateSubject(self):
-        self.items()[0].setPixmap(QPixmap.fromImage(self.subject))
+        self.subject.update()
 
     def setTool(self, tool):
         self.tool = tool
@@ -115,15 +163,15 @@ class GraphicsScene(QGraphicsScene):
         pen.setWidth(0)
         painter.setPen(pen)
         lines = []
-        for longitude in range(9):
-            line = QLineF(0, longitude, 8, longitude)
+        for longitude in range(self.subject.height + 1):
+            line = QLineF(0, longitude, self.subject.height, longitude)
             lines.append(line)
-        for latitude in range(9):
-            line = QLineF(latitude, 0, latitude, 8)
+        for latitude in range(self.subject.width + 1):
+            line = QLineF(latitude, 0, latitude, self.subject.width)
             lines.append(line)
         painter.drawLines(lines)
 
     def drawBackground(self, painter, rect):
         painter.setBrush(QBrush(Qt.magenta, Qt.SolidPattern))
         painter.setPen(Qt.NoPen)
-        painter.drawRect(0, 0, 8, 8)
+        painter.drawRect(0, 0, self.subject.height, self.subject.width)
