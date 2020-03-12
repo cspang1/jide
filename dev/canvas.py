@@ -41,9 +41,6 @@ class GraphicsView(QGraphicsView):
         self.translate(delta.x(), delta.y())
 
 class Subject(QGraphicsPixmapItem):
-    lmb_clicked = pyqtSignal(int, int, int)
-    lmb_released = pyqtSignal()
-
     def __init__(self, parent=None):
         self.root = 0
         self.width = 8
@@ -77,18 +74,18 @@ class Subject(QGraphicsPixmapItem):
         col = math.floor(event.pos().x())
         row = math.floor(event.pos().y())
         if (row, col) != self.last_pos and 0 <= col < self.width and 0 <= row < self.height:
-            self.mouseMoveEvent(event)
+            self.mousePressEvent(event)
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton:
             col = math.floor(event.pos().x())
             row = math.floor(event.pos().y())
             self.last_pos = (row, col)
-            self.lmb_clicked.emit(self.root, col, row)
+            self.scene.pixelClicked(self.root, row, col)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.lmb_released.emit()
+            self.scene.pixelReleased()
 
 class GraphicsScene(QGraphicsScene):
     def __init__(self, data, source, parent=None):
@@ -96,6 +93,8 @@ class GraphicsScene(QGraphicsScene):
         self.data = data
         self.source = source
         self.subject = Subject()
+        self.subject.scene = self
+        self.subject.data = self.data
         self.addItem(self.subject)
         self.data.spr_pix_updated.connect(self.updatePixel)
         self.pen_color = 0
@@ -108,6 +107,15 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setWidth(width * 8)
         self.subject.setHeight(height * 8)
         data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
+        num_rows = math.floor(data.__len__() / 16)
+        initial_row = math.floor(root/16)
+        initial_root = root
+        print("Initial row = {}".format(initial_row))
+        print("Wide condition = {}".format(math.floor((root + width - 1) / 16)))
+        if initial_row + height > num_rows:
+            root -= 16 * (initial_row + height - num_rows)
+        if math.floor((initial_root + width - 1) / 16) > initial_row:
+            root = math.floor(root/16) * 16 + 15 - width
         for row in range(height):
             for col in range(width):
                 cur_subject = data[root + col + (row * 16)] # STORE INSTEAD IN 2D ARRAY AS A BASIC CACHE FOR PIXEL EDITING
@@ -135,6 +143,12 @@ class GraphicsScene(QGraphicsScene):
     @pyqtSlot(int)
     def setPenColor(self, color):
         self.pen_color = color
+
+    def pixelClicked(self, root, row, col):
+        pass
+
+    def pixelReleased(self):
+        pass
 
     def drag(self, event):
         col = math.floor(event.pos().x())
