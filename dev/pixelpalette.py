@@ -2,9 +2,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from sources import Sources
+import math
 
 class Tile(QLabel):
-    tile_selected = pyqtSignal(str, int) # DEMO
+    tile_selected = pyqtSignal(str, int)
  
     def __init__(self, name, data, index, parent=None):
         super().__init__(parent)
@@ -27,8 +28,7 @@ class Tile(QLabel):
         self.setPixmap(QPixmap.fromImage(self.original.scaled(25, 25)))
 
     def mousePressEvent(self, event):
-        self.tile_selected.emit(self.name, self.index) # DEMO
-        self.select()
+        self.tile_selected.emit(self.name, self.index)
 
     def select(self):
         self.selected = True
@@ -69,42 +69,57 @@ class PixelPalette(QFrame):
         self.grid.setAlignment(Qt.AlignTop)
         self.setLayout(self.grid)
         self.enabled = False
+        self.width = 4 # DEMO
+        self.height = 4 # DEMO
 
     def setup(self, data):
         self.data = data
         self.data.spr_pix_updated.connect(self.updatePixel)
         row = col = index = 0
+        initial = ""
         for name,sprite in self.data.sprite_pixel_palettes.items():
             sprite = QImage(bytes([pix for sub in sprite for pix in sub]), 8, 8, QImage.Format_Indexed8)
             color_palette = list(self.data.sprite_color_palettes.values())[0]
             tile = Tile(name, sprite, index, self)
             tile.setColors(color_palette)
-            tile.tile_selected.connect(self.selectTile)
+            tile.tile_selected.connect(self.selectTiles)
             self.contents[name] = tile
             self.grid.addWidget(self.contents[name], row, col)
-            if row == col == 0:
-                self.selectTile(name, index) # DEMO
+            if index == 0:
+                initial = name
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
             index += 1
+        self.selectTiles(initial)
         self.setEnabled(True)
 
     pyqtSlot(str, int, int)
     def updatePixel(self, name, row, col):
         if name != self.selected:
-            self.selectTile(name)
+            self.selectTiles(name)
         data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
         self.contents[name].updatePixmap(col, row, data[row][col])
 
-    pyqtSlot(str, int)
-    def selectTile(self, name, index):
+    pyqtSlot(str)
+    def selectTiles(self, name):
         self.selected = name
-        self.subject_selected.emit(index, 4, 4) # DEMO
-        for tile in self.contents.keys():
-            if tile != name:
-                self.contents[tile].deselect()
+        index = list(self.contents.keys()).index(name)
+        data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
+        num_rows = math.floor(data.__len__() / 16)
+        initial_row = math.floor(index/16)
+        if math.floor((index + self.width - 1) / 16) > initial_row:
+            index = math.floor(index/16) * 16 + 16 - self.width
+        if initial_row + self.height > num_rows:
+            index -= 16 * (initial_row + self.height - num_rows)
+        self.subject_selected.emit(index, self.width, self.height)
+
+        selected = sum([[x+16*y for x in range(index, index+self.width)] for y in range(self.height)], [])
+
+        for tile in range(0, data.__len__()):
+            if tile in selected:
+                list(self.contents.values())[tile].select()
             else:
-                self.contents[tile].select()
+                list(self.contents.values())[tile].deselect()
 
     pyqtSlot(str)
     def setColorPalette(self, palette):
