@@ -107,12 +107,6 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setWidth(width * 8)
         self.subject.setHeight(height * 8)
         data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
-        num_rows = math.floor(data.__len__() / 16)
-        initial_row = math.floor(root/16)
-        if math.floor((root + width - 1) / 16) > initial_row:
-            root = math.floor(root/16) * 16 + 16 - width
-        if initial_row + height > num_rows:
-            root -= 16 * (initial_row + height - num_rows)
         for row in range(height):
             for col in range(width):
                 cur_subject = data[root + col + (row * 16)] # STORE INSTEAD IN 2D ARRAY AS A BASIC CACHE FOR PIXEL EDITING
