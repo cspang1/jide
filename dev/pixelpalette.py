@@ -145,7 +145,8 @@ class PixelPalette(QFrame):
         self.current_palette = palette
         widgets = (self.grid.itemAt(index).widget() for index in range(self.grid.count()))
         for widget in widgets:
-            widget.setColors(self.data.sprite_color_palettes[palette])
+            if not isinstance(widget, Overlay):
+                widget.setColors(self.data.sprite_color_palettes[palette])
 
 class Contents(QWidget):
     def __init__(self, source, palette, parent=None):
