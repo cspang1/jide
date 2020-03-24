@@ -45,8 +45,9 @@ class Subject(QGraphicsPixmapItem):
         self.root = 0
         self.width = 8
         self.height = 8
+        self.color_table = [0]*16
         self.subject = QImage(bytes([0]*64), self.width, self.height, QImage.Format_Indexed8)
-        self.subject.setColorCount(16)
+        self.setColorTable(self.color_table)
         super().__init__(QPixmap.fromImage(self.subject), parent)
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
 
@@ -54,7 +55,9 @@ class Subject(QGraphicsPixmapItem):
         self.subject.setPixel(x, y, value)
 
     def setColorTable(self, colors):
-        self.subject.setColorTable(colors)
+        self.color_table = colors
+        self.subject.setColorCount(16)
+        self.subject.setColorTable(self.color_table)
 
     def update(self):
         self.setPixmap(QPixmap.fromImage(self.subject))
@@ -64,11 +67,15 @@ class Subject(QGraphicsPixmapItem):
 
     def setWidth(self, width):
         self.width = width
-        self.subject = self.subject.scaledToWidth(self.width)
+        self.resizeSubject()
 
     def setHeight(self, height):
         self.height = height
-        self.subject = self.subject.scaledToHeight(self.height)
+        self.resizeSubject()
+
+    def resizeSubject(self):
+        self.subject = QImage(bytes([0]*64), self.width, self.height, QImage.Format_Indexed8)
+        self.setColorTable(self.color_table)
 
     def mouseMoveEvent(self, event):
         col = math.floor(event.pos().x())
@@ -144,7 +151,7 @@ class GraphicsScene(QGraphicsScene):
     def drag(self, event):
         col = math.floor(event.pos().x())
         row = math.floor(event.pos().y())
-        if self.drawing and (row, col) != self.last_pos and 0 <= col < 8 and 0 <= row < 8:
+        if self.drawing and (row, col) != self.last_pos and 0 <= col < 8 and 0 <= row < 8: # FIX!!!!!!!!!!
             self.draw(event)
 
     def draw(self, event):
@@ -167,15 +174,15 @@ class GraphicsScene(QGraphicsScene):
         pen.setWidth(0)
         painter.setPen(pen)
         lines = []
-        for longitude in range(self.subject.height + 1):
-            line = QLineF(0, longitude, self.subject.height, longitude)
+        for longitude in range(self.subject.width + 1):
+            line = QLineF(longitude, 0, longitude, self.subject.height)
             lines.append(line)
-        for latitude in range(self.subject.width + 1):
-            line = QLineF(latitude, 0, latitude, self.subject.width)
+        for latitude in range(self.subject.height + 1):
+            line = QLineF(0, latitude, self.subject.width, latitude)
             lines.append(line)
         painter.drawLines(lines)
 
     def drawBackground(self, painter, rect):
         painter.setBrush(QBrush(Qt.magenta, Qt.SolidPattern))
         painter.setPen(Qt.NoPen)
-        painter.drawRect(0, 0, self.subject.height, self.subject.width)
+        painter.drawRect(0, 0, self.subject.width, self.subject.height)
