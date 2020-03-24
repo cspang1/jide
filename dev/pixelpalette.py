@@ -7,16 +7,13 @@ import math
 class Overlay(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.width = 16
-        self.height = 8
+        self.height = 0
         self.selected = (0, 0, 0)
-        self.setFixedSize(self.width*25, self.height*25)
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
-    def setDims(self, width, height):
-        self.width = width
+    def setDims(self, height):
         self.height = height
-        self.setFixedSize(self.width*25, self.height*25)
+        self.setFixedSize(16*25, self.height*25)
 
     def selectTiles(self, root, width, height):
         self.selected = (root, width, height)
@@ -29,13 +26,13 @@ class Overlay(QLabel):
         pen.setWidth(1)
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
-        painter.drawRect(0,0,self.width*25-1,self.height*25-1)
+        painter.drawRect(0,0,16*25-1,self.height*25-1)
         lines = []
-        for longitude in range(self.width):
+        for longitude in range(16):
             line = QLineF(longitude*25, 0, longitude*25, self.height*25)
             lines.append(line)
         for latitude in range(self.height):
-            line = QLineF(0, latitude*25, self.width*25, latitude*25)
+            line = QLineF(0, latitude*25, 16*25, latitude*25)
             lines.append(line)
         painter.drawLines(lines)
         s_root, s_width, s_height = self.selected
@@ -113,6 +110,7 @@ class PixelPalette(QFrame):
             index += 1
         self.setEnabled(True)
         self.overlay = Overlay(self)
+        self.overlay.setDims(math.floor(self.contents.__len__()/16))
         self.selectTiles(next(iter(self.contents)))
 
     pyqtSlot(str, int, int)
