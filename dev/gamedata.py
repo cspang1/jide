@@ -84,6 +84,9 @@ class PixelPalettes(QObject):
         for sprite in data:
             self.palettes[sprite["name"]] = sprite["contents"]
 
+    def keys(self):
+        return self.palettes.keys()
+
     def values(self):
         return self.palettes.values()
 
@@ -128,6 +131,9 @@ class GameData(QObject):
 
     def getSprites(self):
         return self.sprite_pixel_palettes.values()
+
+    def getSpriteNames(self):
+        return self.sprite_pixel_palettes.keys()
 
     def getTiles(self):
         return self.tile_pixel_palettes.values()
