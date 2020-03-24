@@ -27,7 +27,7 @@ class GraphicsView(QGraphicsView):
         return False
 
     def zoomCanvas(self, event):
-        zoomFactor = 1.25
+        zoomFactor = 2
         oldPos = event.scenePos()
 
         detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(self.transform())
