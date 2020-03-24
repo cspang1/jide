@@ -122,6 +122,7 @@ class GraphicsScene(QGraphicsScene):
                         self.subject.setPixel(8*col+x, 8*row+y, cur_subject[y][x])
 
         self.subject.update()
+        self.setSceneRect(self.itemsBoundingRect())
 
     @pyqtSlot(str)
     def setPalette(self, source):
