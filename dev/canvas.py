@@ -43,6 +43,7 @@ class GraphicsView(QGraphicsView):
 class Overlay(QGraphicsPixmapItem):
     def __init__(self, parent=None):
         self.start_pos = None
+        self.last_pos = None
         self.tool = None
         self.width = 8
         self.height = 8
@@ -83,10 +84,12 @@ class Overlay(QGraphicsPixmapItem):
         if event.buttons() == Qt.LeftButton:
             if self.start_pos is None:
                 self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
+                self.last_pos = self.start_pos
 
     def mouseMoveEvent(self, event):
         if event.buttons() == Qt.LeftButton:
-            self.clear()
+            if self.tool in [Tools.LINE, Tools.RECTANGLE, Tools.ELLIPSE]:
+                self.clear()
             pixmap = self.pixmap()
             painter = QPainter(pixmap)
             cur_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
@@ -102,7 +105,10 @@ class Overlay(QGraphicsPixmapItem):
                 painter.drawEllipse(QRectF(self.start_pos, cur_pos))
             elif self.tool is Tools.RECTANGLE:
                 painter.drawRect(QRectF(self.start_pos, cur_pos))
+            elif self.tool is Tools.PEN:
+                painter.drawLine(self.last_pos, cur_pos)
             self.setPixmap(pixmap)
+            self.last_pos = cur_pos
             painter.end()
 
     def mouseReleaseEvent(self, event):
@@ -161,7 +167,7 @@ class GraphicsScene(QGraphicsScene):
         self.subject = Subject()
         self.overlay = Overlay()
         self.overlay.scene = self
-        self.overlay.setTool(Tools.RECTANGLE)
+        self.overlay.setTool(Tools.PEN)
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.data.spr_pix_updated.connect(self.updatePixel)
