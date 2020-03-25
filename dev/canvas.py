@@ -47,10 +47,14 @@ class Overlay(QGraphicsPixmapItem):
         self.width = 8
         self.height = 8
         self.color = 0
+        self.filled = False
         self.overlay = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
         self.setColor(self.color)
         super().__init__(QPixmap.fromImage(self.overlay), parent)
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+
+    def setFill(self, filled):
+        self.filled = filled
 
     def setTool(self, tool):
         self.tool = tool
@@ -89,6 +93,9 @@ class Overlay(QGraphicsPixmapItem):
             pen = QPen(QColor.fromRgba(self.color))
             pen.setWidth(1)
             painter.setPen(pen)
+            if(self.filled):
+                brush = QBrush(QColor.fromRgba(self.color))
+                painter.setBrush(brush)
             if self.tool is Tools.LINE:
                 painter.drawLine(self.start_pos, cur_pos)
             elif self.tool is Tools.ELLIPSE:
@@ -158,7 +165,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.data.spr_pix_updated.connect(self.updatePixel)
-        self.pen_color = 0
+        self.primary_color = 0
         self.setTool(Tools.PEN)
         self.drawing = False
 
@@ -198,8 +205,8 @@ class GraphicsScene(QGraphicsScene):
 
     @pyqtSlot(int)
     def setPrimaryColor(self, color):
-        self.overlay.setColor(self.current_color_palette[color].rgba())
-        self.pen_color = color
+        self.primary_color = color
+        self.overlay.setColor(self.current_color_palette[self.primary_color].rgba())
 
     def pixelClicked(self, root, row, col):
         if not self.drawing:
@@ -209,7 +216,7 @@ class GraphicsScene(QGraphicsScene):
         row = row % 8
         col = col % 8
         name = list(self.data.getSpriteNames())[index]
-        self.data.setSprPix(name, row, col, self.pen_color)
+        self.data.setSprPix(name, row, col, self.primary_color)
 
     def pixelReleased(self):
         self.drawing = False
