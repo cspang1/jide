@@ -2,7 +2,12 @@ from enum import Enum
 
 class Tools(Enum):
     PEN = 0
-    ZOOM_IN = 1
-    ZOOM_OUT = 2
-    PAN = 3
-    SELECT = 4
+    LINE = 1
+    RECTANGLE = 2
+    ELLIPSE = 3
+    # Text?
+    # Polygon?
+    ZOOM_IN = 4
+    ZOOM_OUT = 5
+    PAN = 6
+    SELECT = 7
