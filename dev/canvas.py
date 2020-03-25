@@ -40,6 +40,74 @@ class GraphicsView(QGraphicsView):
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
 
+class Overlay(QGraphicsPixmapItem):
+    def __init__(self, parent=None):
+        self.start_pos = None
+        self.tool = None
+        self.width = 8
+        self.height = 8
+        self.color = 0
+        self.overlay = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.setColor(self.color)
+        super().__init__(QPixmap.fromImage(self.overlay), parent)
+        self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+
+    def setTool(self, tool):
+        self.tool = tool
+
+    def setWidth(self, width):
+        self.width = width
+        self.resizeOverlay()
+
+    def setHeight(self, height):
+        self.height = height
+        self.resizeOverlay()
+
+    def resizeOverlay(self):
+        self.overlay = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.setColor(self.color)
+
+    def setColor(self, color):
+        self.color = color
+        self.overlay.setColorCount(2)
+        self.overlay.setColorTable([0, color])
+
+    def update(self):
+        self.setPixmap(QPixmap.fromImage(self.overlay))
+
+    def mousePressEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            if self.start_pos is None:
+                self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self.clear()
+            pixmap = self.pixmap()
+            painter = QPainter(pixmap)
+            cur_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
+            pen = QPen(QColor.fromRgba(self.color))
+            pen.setWidth(1)
+            painter.setPen(pen)
+            if self.tool is Tools.LINE:
+                painter.drawLine(self.start_pos, cur_pos)
+            elif self.tool is Tools.ELLIPSE:
+                painter.drawEllipse(QRectF(self.start_pos, cur_pos))
+            elif self.tool is Tools.RECTANGLE:
+                painter.drawRect(QRectF(self.start_pos, cur_pos))
+            self.setPixmap(pixmap)
+            painter.end()
+
+    def mouseReleaseEvent(self, event):
+        self.start_pos = None
+        #if event.button() == Qt.LeftButton:
+        #    self.scene.pixelReleased()
+
+    def clear(self):
+        pixmap = self.pixmap()
+        pixmap.fill(Qt.transparent)
+        self.setPixmap(pixmap)
+
 class Subject(QGraphicsPixmapItem):
     def __init__(self, parent=None):
         self.root = 0
@@ -77,32 +145,18 @@ class Subject(QGraphicsPixmapItem):
         self.subject = QImage(bytes([0]*64), self.width, self.height, QImage.Format_Indexed8)
         self.setColorTable(self.color_table)
 
-    def mouseMoveEvent(self, event):
-        col = math.floor(event.pos().x())
-        row = math.floor(event.pos().y())
-        if (row, col) != self.last_pos and 0 <= col < self.width and 0 <= row < self.height:
-            self.mousePressEvent(event)
-
-    def mousePressEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
-            col = math.floor(event.pos().x())
-            row = math.floor(event.pos().y())
-            self.last_pos = (row, col)
-            self.scene.pixelClicked(self.root, row, col)
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.scene.pixelReleased()
-
 class GraphicsScene(QGraphicsScene):
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
         self.data = data
         self.source = source
+        self.current_color_palette = None
         self.subject = Subject()
-        self.subject.scene = self
-        self.subject.data = self.data
+        self.overlay = Overlay()
+        self.overlay.scene = self
+        self.overlay.setTool(Tools.RECTANGLE)
         self.addItem(self.subject)
+        self.addItem(self.overlay)
         self.data.spr_pix_updated.connect(self.updatePixel)
         self.pen_color = 0
         self.setTool(Tools.PEN)
@@ -113,21 +167,24 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setRoot(root)
         self.subject.setWidth(width * 8)
         self.subject.setHeight(height * 8)
+        self.overlay.setWidth(width * 8)
+        self.overlay.setHeight(height * 8)
         data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
         for row in range(height):
             for col in range(width):
-                cur_subject = data[root + col + (row * 16)] # STORE INSTEAD IN 2D ARRAY AS A BASIC CACHE FOR PIXEL EDITING
+                cur_subject = data[root + col + (row * 16)]
                 for y in range(8):
                     for x in range(8):
                         self.subject.setPixel(8*col+x, 8*row+y, cur_subject[y][x])
 
         self.subject.update()
+        self.overlay.update()
         self.setSceneRect(self.itemsBoundingRect())
 
     @pyqtSlot(str)
     def setPalette(self, source):
-        palette = self.data.getSprColPal(source)
-        self.subject.setColorTable([color.rgba() for color in palette])
+        self.current_color_palette = self.data.getSprColPal(source)
+        self.subject.setColorTable([color.rgba() for color in self.current_color_palette])
         self.subject.update()
 
     @pyqtSlot(str, int, int)
@@ -140,7 +197,8 @@ class GraphicsScene(QGraphicsScene):
         self.tool = tool
 
     @pyqtSlot(int)
-    def setPenColor(self, color):
+    def setPrimaryColor(self, color):
+        self.overlay.setColor(self.current_color_palette[color].rgba())
         self.pen_color = color
 
     def pixelClicked(self, root, row, col):
