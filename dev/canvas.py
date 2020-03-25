@@ -49,9 +49,10 @@ class Overlay(QGraphicsPixmapItem):
         self.height = 8
         self.color = 0
         self.filled = False
-        self.overlay = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
         self.setColor(self.color)
-        super().__init__(QPixmap.fromImage(self.overlay), parent)
+        pixmap = QPixmap(self.width, self.height)
+        pixmap.fill(Qt.transparent)
+        super().__init__(pixmap, parent)
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
 
     def setFill(self, filled):
@@ -60,31 +61,36 @@ class Overlay(QGraphicsPixmapItem):
     def setTool(self, tool):
         self.tool = tool
 
+    def setColor(self, color):
+        self.color = color
+
     def setWidth(self, width):
         self.width = width
-        self.resizeOverlay()
+        self.setPixmap(self.pixmap().scaled(self.width, self.height))
 
     def setHeight(self, height):
         self.height = height
-        self.resizeOverlay()
+        self.setPixmap(self.pixmap().scaled(self.width, self.height))
 
-    def resizeOverlay(self):
-        self.overlay = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
-        self.setColor(self.color)
-
-    def setColor(self, color):
-        self.color = color
-        self.overlay.setColorCount(2)
-        self.overlay.setColorTable([0, color])
-
-    def update(self):
-        self.setPixmap(QPixmap.fromImage(self.overlay))
+    def clear(self):
+        pixmap = self.pixmap()
+        pixmap.fill(Qt.transparent)
+        self.setPixmap(pixmap)
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton:
             if self.start_pos is None:
                 self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
                 self.last_pos = self.start_pos
+                if self.tool is Tools.PEN:
+                    pixmap = self.pixmap()
+                    painter = QPainter(pixmap)
+                    pen = QPen(QColor.fromRgba(self.color))
+                    pen.setWidth(1)
+                    painter.setPen(pen)
+                    painter.drawPoint(self.start_pos)
+                    self.setPixmap(pixmap)
+                    painter.end()
 
     def mouseMoveEvent(self, event):
         if event.buttons() == Qt.LeftButton:
@@ -113,13 +119,8 @@ class Overlay(QGraphicsPixmapItem):
 
     def mouseReleaseEvent(self, event):
         self.start_pos = None
-        #if event.button() == Qt.LeftButton:
-        #    self.scene.pixelReleased()
-
-    def clear(self):
-        pixmap = self.pixmap()
-        pixmap.fill(Qt.transparent)
-        self.setPixmap(pixmap)
+        if event.button() == Qt.LeftButton:
+            self.scene.bakeOverlay(self.pixmap().toImage())
 
 class Subject(QGraphicsPixmapItem):
     def __init__(self, parent=None):
@@ -127,7 +128,7 @@ class Subject(QGraphicsPixmapItem):
         self.width = 8
         self.height = 8
         self.color_table = [0]*16
-        self.subject = QImage(bytes([0]*64), self.width, self.height, QImage.Format_Indexed8)
+        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
         self.setColorTable(self.color_table)
         super().__init__(QPixmap.fromImage(self.subject), parent)
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
@@ -155,7 +156,7 @@ class Subject(QGraphicsPixmapItem):
         self.resizeSubject()
 
     def resizeSubject(self):
-        self.subject = QImage(bytes([0]*64), self.width, self.height, QImage.Format_Indexed8)
+        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
         self.setColorTable(self.color_table)
 
 class GraphicsScene(QGraphicsScene):
@@ -170,7 +171,6 @@ class GraphicsScene(QGraphicsScene):
         self.overlay.setTool(Tools.PEN)
         self.addItem(self.subject)
         self.addItem(self.overlay)
-        self.data.spr_pix_updated.connect(self.updatePixel)
         self.primary_color = 0
         self.setTool(Tools.PEN)
         self.drawing = False
@@ -200,12 +200,7 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setColorTable([color.rgba() for color in self.current_color_palette])
         self.subject.update()
 
-    @pyqtSlot(str, int, int)
-    def updatePixel(self, name, row, col):
-        data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
-        self.subject.setPixel(col, row, data[row][col])
-        self.subject.update()
-
+    @pyqtSlot(Tools)
     def setTool(self, tool):
         self.tool = tool
 
@@ -214,19 +209,11 @@ class GraphicsScene(QGraphicsScene):
         self.primary_color = color
         self.overlay.setColor(self.current_color_palette[self.primary_color].rgba())
 
-    def pixelClicked(self, root, row, col):
-        if not self.drawing:
-                self.data.undo_stack.beginMacro("Draw pixels")
-                self.drawing = True
-        index = root + 16*math.floor(row/8) + math.floor(col/8)
-        row = row % 8
-        col = col % 8
-        name = list(self.data.getSpriteNames())[index]
-        self.data.setSprPix(name, row, col, self.primary_color)
-
-    def pixelReleased(self):
-        self.drawing = False
-        self.data.undo_stack.endMacro()
+    def bakeOverlay(self, overlay):
+        for row in range(overlay.height()):
+            for col in range(overlay.width()):
+                if overlay.pixel(col, row) != 0:
+                    pass
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
