@@ -106,6 +106,7 @@ class jide(QtWidgets.QMainWindow):
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
         self.scene = GraphicsScene(self.data, Sources.SPRITE, self)
+        self.scene.set_pixel_palette.connect(self.pixelPaletteDock.pixel_palette.setPixel)
         self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)

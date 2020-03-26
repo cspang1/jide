@@ -90,12 +90,15 @@ class PixelPalette(QFrame):
         self.grid.setAlignment(Qt.AlignTop)
         self.setLayout(self.grid)
         self.enabled = False
+        self.loc_cache = {}
+        self.cur_index = 0
+        self.top_left = (0,0)
+        self.bottom_right = (0,0)
         self.select_width = 1 # DEMO
         self.select_height = 1 # DEMO
 
     def setup(self, data):
         self.data = data
-        self.data.spr_pix_updated.connect(self.updatePixel)
         row = col = index = 0
         for name,sprite in self.data.sprite_pixel_palettes.items():
             sprite = QImage(bytes([pix for sub in sprite for pix in sub]), 8, 8, QImage.Format_Indexed8)
@@ -112,14 +115,30 @@ class PixelPalette(QFrame):
         self.overlay = Overlay()
         self.overlay.setDims(math.floor(self.contents.__len__()/16))
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
+        self.genLocCache(math.floor(self.contents.__len__()/16))
         self.selectTiles(next(iter(self.contents)))
 
     pyqtSlot(str, int, int)
-    def updatePixel(self, name, row, col):
-        if name != self.selected:
+    def setPixel(self, name, row, col):
+        index = list(self.contents.keys()).index(name)
+        if not self.inSelection(index):
             self.selectTiles(name)
         data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
         self.contents[name].updatePixmap(col, row, data[row][col])
+
+    def inSelection(self, index):
+        x1, y1 = self.top_left
+        x2, y2 = self.bottom_right
+        x, y = self.loc_cache[index]
+        return x1 <= x <= x2 and y1 <= y <= y2
+
+    # NEEDS TO BE CALLED AGAIN WHENEVER # OF SPRITES/TILES CHANGES!
+    def genLocCache(self, height):
+        for loc in range(height*16):
+            self.loc_cache[loc] = self.genCoords(loc)
+
+    def genCoords(self, index):
+        return (index % 16, math.floor(index/16))
 
     def changeSelectionSize(self, width, height):
         self.select_width = width
@@ -129,16 +148,18 @@ class PixelPalette(QFrame):
     pyqtSlot(str)
     def selectTiles(self, name):
         self.selected = name
-        index = list(self.contents.keys()).index(name)
+        self.cur_index = list(self.contents.keys()).index(name)
         data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
         num_rows = math.floor(data.__len__() / 16)
-        initial_row = math.floor(index/16)
-        if math.floor((index + self.select_width - 1) / 16) > initial_row:
-            index = math.floor(index/16) * 16 + 16 - self.select_width
+        initial_row = math.floor(self.cur_index/16)
+        if math.floor((self.cur_index + self.select_width - 1) / 16) > initial_row:
+            self.cur_index = math.floor(self.cur_index/16) * 16 + 16 - self.select_width
         if initial_row + self.select_height > num_rows:
-            index -= 16 * (initial_row + self.select_height - num_rows)
-        self.subject_selected.emit(index, self.select_width, self.select_height)
-        self.overlay.selectTiles(index, self.select_width, self.select_height)
+            self.cur_index -= 16 * (initial_row + self.select_height - num_rows)
+        self.top_left = self.genCoords(self.cur_index)
+        self.bottom_right = self.genCoords(self.cur_index + 16 * self.select_height + self.select_width)
+        self.subject_selected.emit(self.cur_index, self.select_width, self.select_height)
+        self.overlay.selectTiles(self.cur_index, self.select_width, self.select_height)
 
     pyqtSlot(str)
     def setColorPalette(self, palette):
