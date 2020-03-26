@@ -121,10 +121,10 @@ class Overlay(QGraphicsPixmapItem):
         self.start_pos = None
         if event.button() == Qt.LeftButton:
             self.scene.bakeOverlay(self.pixmap().toImage())
+            self.clear()
 
 class Subject(QGraphicsPixmapItem):
     def __init__(self, parent=None):
-        self.root = 0
         self.width = 8
         self.height = 8
         self.color_table = [0]*16
@@ -144,9 +144,6 @@ class Subject(QGraphicsPixmapItem):
     def update(self):
         self.setPixmap(QPixmap.fromImage(self.subject))
 
-    def setRoot(self, root):
-        self.root = root
-
     def setWidth(self, width):
         self.width = width
         self.resizeSubject()
@@ -160,10 +157,13 @@ class Subject(QGraphicsPixmapItem):
         self.setColorTable(self.color_table)
 
 class GraphicsScene(QGraphicsScene):
+    set_pixel_palette = pyqtSignal(str, int, int)
+
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
         self.data = data
         self.source = source
+        self.root = None
         self.current_color_palette = None
         self.subject = Subject()
         self.overlay = Overlay()
@@ -173,11 +173,11 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.overlay)
         self.primary_color = 0
         self.setTool(Tools.PEN)
-        self.drawing = False
+        self.data.spr_pix_updated.connect(self.setPixel)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
-        self.subject.setRoot(root)
+        self.root = root
         self.subject.setWidth(width * 8)
         self.subject.setHeight(height * 8)
         self.overlay.setWidth(width * 8)
@@ -193,6 +193,16 @@ class GraphicsScene(QGraphicsScene):
         self.subject.update()
         self.overlay.update()
         self.setSceneRect(self.itemsBoundingRect())
+
+    @pyqtSlot(str, int, int)
+    def setPixel(self, name, row, col):
+        self.set_pixel_palette.emit(name, row, col)
+        diff = list(self.data.getSpriteNames()).index(name) - self.root
+        new_row = 8 * math.floor(diff/16) + row
+        new_col = 8 * (diff % 16) + col
+        data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
+        self.subject.setPixel(new_col, new_row, data[row][col])
+        self.subject.update()
 
     @pyqtSlot(str)
     def setPalette(self, source):
@@ -210,10 +220,17 @@ class GraphicsScene(QGraphicsScene):
         self.overlay.setColor(self.current_color_palette[self.primary_color].rgba())
 
     def bakeOverlay(self, overlay):
+        self.data.undo_stack.beginMacro("Draw pixels")
+        names = list(self.data.getSpriteNames())
         for row in range(overlay.height()):
             for col in range(overlay.width()):
                 if overlay.pixel(col, row) != 0:
-                    pass
+                    index = self.root + math.floor(col/8) + 16*math.floor(row/8)
+                    row_norm = row % 8
+                    col_norm = col % 8
+                    name = names[index]
+                    self.data.setSprPix(name, row_norm, col_norm, self.primary_color)
+        self.data.undo_stack.endMacro()
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
