@@ -146,6 +146,8 @@ class PixelPalette(QFrame):
             lowest = subject if tile.index < self.contents[lowest].index else lowest
             if not self.inSelection(self.contents[lowest].index):
                 self.selectSubjects(lowest)
+            else:
+                self.subject_selected.emit(self.cur_index, self.select_width, self.select_height)
 
     pyqtSlot(str)
     def setColorPalette(self, palette):

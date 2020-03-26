@@ -81,17 +81,16 @@ class cmdSetSprPixBatch(QUndoCommand):
         self.palette = palette
         self.batch = batch
         self.original_batch = defaultdict(list)
-        for name in self.batch.keys():
-            original = [temp[:] for temp in self.palette[name]]
-            self.original_batch[name] = original
 
     def redo(self):
         for name, updates in self.batch.items():
             for row, col, val in updates:
+                self.original_batch[name].append((row, col, self.palette[name, row, col]))
                 self.palette[name, row, col] = val
         self.palette.batchUpdate()
 
     def undo(self):
-        for name, data in self.original_batch.items():
-            self.palette[name] = data
+        for name, updates in self.original_batch.items():
+            for row, col, val in updates:
+                self.palette[name, row, col] = val
         self.palette.batchUpdate()
