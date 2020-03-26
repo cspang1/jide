@@ -7,6 +7,7 @@ from sources import Sources
 from itertools import product
 from typing import List
 from dataclasses import dataclass, field
+from collections import defaultdict
 import sys
 import os
 import math
@@ -39,6 +40,38 @@ class GraphicsView(QGraphicsView):
         newPos = event.scenePos()
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
+
+class Subject(QGraphicsPixmapItem):
+    def __init__(self, parent=None):
+        self.width = 8
+        self.height = 8
+        self.color_table = [0]*16
+        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.setColorTable(self.color_table)
+        super().__init__(QPixmap.fromImage(self.subject), parent)
+        self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+
+    def setPixel(self, x, y, value):
+        self.subject.setPixel(x, y, value)
+
+    def setColorTable(self, colors):
+        self.color_table = colors
+        self.subject.setColorTable(self.color_table)
+
+    def update(self):
+        self.setPixmap(QPixmap.fromImage(self.subject))
+
+    def setWidth(self, width):
+        self.width = width
+        self.resizeSubject()
+
+    def setHeight(self, height):
+        self.height = height
+        self.resizeSubject()
+
+    def resizeSubject(self):
+        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.setColorTable(self.color_table)
 
 class Overlay(QGraphicsPixmapItem):
     def __init__(self, parent=None):
@@ -123,39 +156,6 @@ class Overlay(QGraphicsPixmapItem):
             self.scene.bakeOverlay(self.pixmap().toImage())
             self.clear()
 
-class Subject(QGraphicsPixmapItem):
-    def __init__(self, parent=None):
-        self.width = 8
-        self.height = 8
-        self.color_table = [0]*16
-        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
-        self.setColorTable(self.color_table)
-        super().__init__(QPixmap.fromImage(self.subject), parent)
-        self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
-
-    def setPixel(self, x, y, value):
-        self.subject.setPixel(x, y, value)
-
-    def setColorTable(self, colors):
-        self.color_table = colors
-        self.subject.setColorCount(16)
-        self.subject.setColorTable(self.color_table)
-
-    def update(self):
-        self.setPixmap(QPixmap.fromImage(self.subject))
-
-    def setWidth(self, width):
-        self.width = width
-        self.resizeSubject()
-
-    def setHeight(self, height):
-        self.height = height
-        self.resizeSubject()
-
-    def resizeSubject(self):
-        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
-        self.setColorTable(self.color_table)
-
 class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(str, int, int)
 
@@ -171,8 +171,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.ELLIPSE)
-        self.data.spr_pix_updated.connect(self.setPixel)
+        self.setTool(Tools.PEN)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -203,16 +202,17 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setPixel(new_col, new_row, data[row][col])
         self.subject.update()
 
-    @pyqtSlot(str)
-    def setPalette(self, source):
-        self.current_color_palette = self.data.getSprColPal(source)
-        self.subject.setColorTable([color.rgba() for color in self.current_color_palette])
-        self.subject.update()
-
     @pyqtSlot(Tools)
     def setTool(self, tool):
         self.tool = tool
         self.overlay.setTool(self.tool)
+
+    @pyqtSlot(str)
+    def setColorPalette(self, source):
+        self.current_color_palette = self.data.getSprColPal(source)
+        self.subject.setColorTable([color.rgba() for color in self.current_color_palette])
+        self.setPrimaryColor(self.primary_color)
+        self.subject.update()
 
     @pyqtSlot(int)
     def setPrimaryColor(self, color):
@@ -220,8 +220,8 @@ class GraphicsScene(QGraphicsScene):
         self.overlay.setColor(self.current_color_palette[self.primary_color].rgba())
 
     def bakeOverlay(self, overlay):
-        self.data.undo_stack.beginMacro("Draw pixels")
         names = list(self.data.getSpriteNames())
+        batch = defaultdict(list)
         for row in range(overlay.height()):
             for col in range(overlay.width()):
                 if overlay.pixel(col, row) != 0:
@@ -229,8 +229,8 @@ class GraphicsScene(QGraphicsScene):
                     row_norm = row % 8
                     col_norm = col % 8
                     name = names[index]
-                    self.data.setSprPix(name, row_norm, col_norm, self.primary_color)
-        self.data.undo_stack.endMacro()
+                    batch[name].append((row_norm, col_norm, self.primary_color))
+        self.data.setSprPixBatch(batch)        
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
