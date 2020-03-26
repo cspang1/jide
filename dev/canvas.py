@@ -168,11 +168,10 @@ class GraphicsScene(QGraphicsScene):
         self.subject = Subject()
         self.overlay = Overlay()
         self.overlay.scene = self
-        self.overlay.setTool(Tools.PEN)
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN)
+        self.setTool(Tools.ELLIPSE)
         self.data.spr_pix_updated.connect(self.setPixel)
 
     @pyqtSlot(int, int, int)
@@ -213,6 +212,7 @@ class GraphicsScene(QGraphicsScene):
     @pyqtSlot(Tools)
     def setTool(self, tool):
         self.tool = tool
+        self.overlay.setTool(self.tool)
 
     @pyqtSlot(int)
     def setPrimaryColor(self, color):
