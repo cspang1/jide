@@ -2,6 +2,7 @@ from PyQt5 import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from collections import defaultdict
 
 class cmdSetSprCol(QUndoCommand):
     def __init__(self, palette, name, index, color, orig, description, parent=None):
@@ -73,3 +74,23 @@ class cmdSetSprPix(QUndoCommand):
 
     def undo(self):
         self.palette[self.name, self.row, self.col] = self.original_value
+
+class cmdSetSprPixBatch(QUndoCommand):
+    def __init__(self, palette, batch, description, parent=None):
+        super().__init__(description, parent)
+        self.palette = palette
+        self.batch = batch
+        self.original_batch = defaultdict(list)
+
+    def redo(self):
+        for name, updates in self.batch.items():
+            for row, col, val in updates:
+                self.original_batch[name].append((row, col, self.palette[name, row, col]))
+                self.palette[name, row, col] = val
+        self.palette.batchUpdate()
+
+    def undo(self):
+        for name, updates in self.original_batch.items():
+            for row, col, val in updates:
+                self.palette[name, row, col] = val
+        self.palette.batchUpdate()
