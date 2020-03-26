@@ -81,7 +81,7 @@ class Overlay(QGraphicsPixmapItem):
         self.width = 8
         self.height = 8
         self.color = 0
-        self.filled = False
+        self.filled = True
         self.setColor(self.color)
         pixmap = QPixmap(self.width, self.height)
         pixmap.fill(Qt.transparent)
@@ -171,7 +171,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN)
+        self.setTool(Tools.RECTANGLE)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -230,7 +230,8 @@ class GraphicsScene(QGraphicsScene):
                     col_norm = col % 8
                     name = names[index]
                     batch[name].append((row_norm, col_norm, self.primary_color))
-        self.data.setSprPixBatch(batch)        
+        if batch:
+            self.data.setSprPixBatch(batch)
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)
