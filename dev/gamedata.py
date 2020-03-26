@@ -76,10 +76,11 @@ class ColorPalettes(QObject):
         self.color_changed.emit(name)
 
 class PixelPalettes(QObject):
-    pixel_changed = pyqtSignal(str, int, int)
+    batch_updated = pyqtSignal(set)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
+        self.update_manifest = set()
         self.palettes = OrderedDict()
         for sprite in data:
             self.palettes[sprite["name"]] = sprite["contents"]
@@ -93,6 +94,10 @@ class PixelPalettes(QObject):
     def items(self):
         return self.palettes.items()
 
+    def batchUpdate(self):
+        self.batch_updated.emit(self.update_manifest)
+        self.update_manifest.clear()
+
     def __getitem__(self, index):
         if not isinstance(index, tuple):
             return self.palettes[index]
@@ -100,67 +105,47 @@ class PixelPalettes(QObject):
         return self.palettes[name][row][col]
 
     def __setitem__(self, index, value):
-        name, row, col = index
-        self.palettes[name][row][col] = value
-        self.pixel_changed.emit(name, row, col)
+        if not isinstance(index, tuple):
+            self.update_manifest.add(index)
+            self.palettes[index] = value
+        else:
+            name, row, col = index
+            self.palettes[name][row][col] = value
+            self.update_manifest.add(name)
 
 class GameData(QObject):
     spr_col_pal_updated = pyqtSignal(str)
     spr_col_pal_renamed = pyqtSignal(str, str)
     spr_col_pal_added = pyqtSignal(str, int)
     spr_col_pal_removed = pyqtSignal(str)
-    spr_pix_updated = pyqtSignal(str, int, int)
-    tile_col_updated = pyqtSignal(str)
-    tile_pix_updated = pyqtSignal(str, int, int)
+    spr_batch_updated = pyqtSignal(set)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.undo_stack = QUndoStack(self)
 
         self.sprite_pixel_palettes = PixelPalettes(data["sprites"])
-        self.tile_pixel_palettes = PixelPalettes(data["tiles"])
         self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"], Sources.SPRITE)
-        self.tile_color_palettes = ColorPalettes(data["tileColorPalettes"], Sources.TILE)
-        self.sprite_pixel_palettes.pixel_changed.connect(self.spr_pix_updated)
-        self.tile_pixel_palettes.pixel_changed.connect(self.tile_pix_updated)
+        self.sprite_pixel_palettes.batch_updated.connect(self.spr_batch_updated)
         self.sprite_color_palettes.color_changed.connect(self.spr_col_pal_updated)
         self.sprite_color_palettes.name_changed.connect(self.spr_col_pal_renamed)
         self.sprite_color_palettes.palette_added.connect(self.spr_col_pal_added)
         self.sprite_color_palettes.palette_removed.connect(self.spr_col_pal_removed)
-        self.tile_color_palettes.color_changed.connect(self.tile_col_updated)
 
     def getSprites(self):
         return self.sprite_pixel_palettes.values()
 
+    def getSprite(self, name):
+        return self.sprite_pixel_palettes[name]
+
     def getSpriteNames(self):
         return self.sprite_pixel_palettes.keys()
-
-    def getTiles(self):
-        return self.tile_pixel_palettes.values()
 
     def getSprColPals(self):
         return self.sprite_color_palettes.values()
 
-    def getTileColPals(self):
-        return self.tile_color_palettes.values()
-
-    '''def getTileMaps(self):
-        return self.tile_maps.values()'''
-
-    def getSprite(self, name):
-        return self.sprite_pixel_palettes[name]
-
-    def getTile(self, name):
-        return self.tile_pixel_palettes[name]
-
     def getSprColPal(self, name):
         return self.sprite_color_palettes[name]
-
-    def getTileColPal(self, name):
-        return self.tile_color_palettes[name]
-
-    def getTileMap(self, name):
-        return self.tile_maps[name]
 
     def setSprCol(self, name, index, color, orig=None):
         command = cmdSetSprCol(self.sprite_color_palettes, name, index, color, orig, "Set palette color")
@@ -190,8 +175,8 @@ class GameData(QObject):
         else:
             self.spr_col_pal_removed.emit(None)
 
-    def setSprPix(self, name, row, col, value):
-        command = cmdSetSprPix(self.sprite_pixel_palettes, name, row, col, value, "Draw pixel")
+    def setSprPixBatch(self, batch):
+        command = cmdSetSprPixBatch(self.sprite_pixel_palettes, batch, "Draw pixels")
         self.undo_stack.push(command)
 
     def setUndoStack(self, undo_stack):
