@@ -123,6 +123,10 @@ class Overlay(QGraphicsPixmapItem):
                 self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
                 self.start_scene_pos = QPointF(math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
             self.last_pos = self.start_pos
+            if self.tool is Tools.SELECT:
+                self.selecting = False
+                self.select_timer.stop()
+                self.scene.update()
             if self.tool is Tools.PEN:
                 pixmap = self.pixmap()
                 painter = QPainter(pixmap)
@@ -140,7 +144,7 @@ class Overlay(QGraphicsPixmapItem):
             pixmap = self.pixmap()
             painter = QPainter(pixmap)
             self.cur_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
-            self.cur_scene_pos = QPointF(math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
+            self.cur_scene_pos = QPointF(math.ceil(event.scenePos().x()), math.ceil(event.scenePos().y()))
             pen = QPen(QColor.fromRgba(self.color))
             pen.setWidth(1)
             painter.setPen(pen)
@@ -159,30 +163,35 @@ class Overlay(QGraphicsPixmapItem):
                 self.selecting = True
                 if not self.select_timer.isActive():
                     self.select_timer.start(500)
-                self.updateSceneForground()
+                self.updateSceneForeground()
 
             self.setPixmap(pixmap)
             self.last_pos = self.cur_pos
             painter.end()
 
-    def mouseReleaseEvent(self, event):
-        self.start_pos = None
-        self.selecting = False
-        self.select_timer.stop()
-        if event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
-            self.scene.bakeOverlay(self.pixmap().toImage())
-        self.clear()
-
     def marchAnts(self):
         self.ants_offset += 4
-        self.updateSceneForground()
+        self.updateSceneForeground()
 
-    def updateSceneForground(self):
-        if self.start_pos.x() != self.cur_pos.x() and self.start_pos.y() != self.cur_pos.y():
+    def updateSceneForeground(self):
+        ssx = self.start_scene_pos.x()
+        ssy = self.start_scene_pos.y()
+        csx = self.cur_scene_pos.x()
+        csy = self.cur_scene_pos.y()
+        scene_rect = self.scene.itemsBoundingRect()
+        self.start_scene_pos = QPointF(max(min(ssx, scene_rect.right()), scene_rect.left()), max(min(ssy, scene_rect.bottom()), scene_rect.top()))
+        self.cur_scene_pos = QPointF(max(min(csx, scene_rect.right()), scene_rect.left()), max(min(csy, scene_rect.bottom()), scene_rect.top()))
+        if self.start_scene_pos.x() != self.cur_scene_pos.x() and self.start_scene_pos.y() != self.cur_scene_pos.y():
             self.selecting = True
             self.scene.update()
         else:
             self.selecting = False
+
+    def mouseReleaseEvent(self, event):
+        self.start_pos = None
+        if event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
+            self.scene.bakeOverlay(self.pixmap().toImage())
+        self.clear()
 
 class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(str, int, int)
@@ -217,7 +226,7 @@ class GraphicsScene(QGraphicsScene):
                         self.subject.setPixel(8*col+x, 8*row+y, cur_subject[y][x])
 
         self.subject.update()
-        self.overlay.update()
+        if self.overlay.selecting: self.overlay.updateSceneForeground()
         self.setSceneRect(self.itemsBoundingRect())
 
     @pyqtSlot(str, int, int)
