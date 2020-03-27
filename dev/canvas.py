@@ -77,11 +77,18 @@ class Overlay(QGraphicsPixmapItem):
     def __init__(self, parent=None):
         self.start_pos = None
         self.last_pos = None
+        self.cur_pos = None
+        self.start_scene_pos = None
+        self.cur_scene_pos = None
+        self.selecting = False
         self.tool = None
         self.width = 8
         self.height = 8
         self.color = 0
         self.filled = True
+        self.select_timer = QTimer()
+        self.select_timer.timeout.connect(self.marchAnts)
+        self.ants_offset = 0
         self.setColor(self.color)
         pixmap = QPixmap(self.width, self.height)
         pixmap.fill(Qt.transparent)
@@ -114,24 +121,26 @@ class Overlay(QGraphicsPixmapItem):
         if event.buttons() == Qt.LeftButton:
             if self.start_pos is None:
                 self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
-                self.last_pos = self.start_pos
-                if self.tool is Tools.PEN:
-                    pixmap = self.pixmap()
-                    painter = QPainter(pixmap)
-                    pen = QPen(QColor.fromRgba(self.color))
-                    pen.setWidth(1)
-                    painter.setPen(pen)
-                    painter.drawPoint(self.start_pos)
-                    self.setPixmap(pixmap)
-                    painter.end()
+                self.start_scene_pos = QPointF(math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
+            self.last_pos = self.start_pos
+            if self.tool is Tools.PEN:
+                pixmap = self.pixmap()
+                painter = QPainter(pixmap)
+                pen = QPen(QColor.fromRgba(self.color))
+                pen.setWidth(1)
+                painter.setPen(pen)
+                painter.drawPoint(self.start_pos)
+                self.setPixmap(pixmap)
+                painter.end()
 
     def mouseMoveEvent(self, event):
         if event.buttons() == Qt.LeftButton:
-            if self.tool in [Tools.LINE, Tools.RECTANGLE, Tools.ELLIPSE]:
+            if self.tool is not Tools.PEN:
                 self.clear()
             pixmap = self.pixmap()
             painter = QPainter(pixmap)
-            cur_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
+            self.cur_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
+            self.cur_scene_pos = QPointF(math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
             pen = QPen(QColor.fromRgba(self.color))
             pen.setWidth(1)
             painter.setPen(pen)
@@ -139,22 +148,41 @@ class Overlay(QGraphicsPixmapItem):
                 brush = QBrush(QColor.fromRgba(self.color))
                 painter.setBrush(brush)
             if self.tool is Tools.LINE:
-                painter.drawLine(self.start_pos, cur_pos)
+                painter.drawLine(self.start_pos, self.cur_pos)
             elif self.tool is Tools.ELLIPSE:
-                painter.drawEllipse(QRectF(self.start_pos, cur_pos))
+                painter.drawEllipse(QRectF(self.start_pos, self.cur_pos))
             elif self.tool is Tools.RECTANGLE:
-                painter.drawRect(QRectF(self.start_pos, cur_pos))
+                painter.drawRect(QRectF(self.start_pos, self.cur_pos))
             elif self.tool is Tools.PEN:
-                painter.drawLine(self.last_pos, cur_pos)
+                painter.drawLine(self.last_pos, self.cur_pos)
+            elif self.tool is Tools.SELECT:
+                self.selecting = True
+                if not self.select_timer.isActive():
+                    self.select_timer.start(500)
+                self.updateSceneForground()
+
             self.setPixmap(pixmap)
-            self.last_pos = cur_pos
+            self.last_pos = self.cur_pos
             painter.end()
 
     def mouseReleaseEvent(self, event):
         self.start_pos = None
-        if event.button() == Qt.LeftButton:
+        self.selecting = False
+        self.select_timer.stop()
+        if event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
             self.scene.bakeOverlay(self.pixmap().toImage())
-            self.clear()
+        self.clear()
+
+    def marchAnts(self):
+        self.ants_offset += 4
+        self.updateSceneForground()
+
+    def updateSceneForground(self):
+        if self.start_pos.x() != self.cur_pos.x() and self.start_pos.y() != self.cur_pos.y():
+            self.selecting = True
+            self.scene.update()
+        else:
+            self.selecting = False
 
 class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(str, int, int)
@@ -171,7 +199,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.RECTANGLE)
+        self.setTool(Tools.SELECT)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -245,6 +273,18 @@ class GraphicsScene(QGraphicsScene):
             line = QLineF(0, latitude, self.subject.width, latitude)
             lines.append(line)
         painter.drawLines(lines)
+        if self.overlay.selecting:
+            pen = QPen(Qt.white)
+            pen.setJoinStyle(Qt.MiterJoin)
+            pen.setWidth(3)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.drawRect(QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos))
+            pen.setColor(Qt.black)
+            pen.setStyle(Qt.DotLine)
+            pen.setDashOffset(self.overlay.ants_offset)
+            painter.setPen(pen)
+            painter.drawRect(QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos))
 
     def drawBackground(self, painter, rect):
         painter.setBrush(QBrush(Qt.magenta, Qt.SolidPattern))
