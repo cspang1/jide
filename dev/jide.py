@@ -119,18 +119,18 @@ class jide(QtWidgets.QMainWindow):
         dir_path = Path(__file__).resolve().parent
         dat_path = dir_path / "DAT Files"
         dat_path.mkdir(exist_ok=True)
-        tcp_path = dat_path / "tile_color_palettes.dat"
-        tpp_path = dat_path / "tiles.dat"
+        #tcp_path = dat_path / "tile_color_palettes.dat"
+        #tpp_path = dat_path / "tiles.dat"
         scp_path = dat_path / "sprite_color_palettes.dat"
         spp_path = dat_path / "sprites.dat"
 
-        tile_pixel_data = self.data.getTiles()
-        tile_color_data = self.data.getTileColPals()
+        #tile_pixel_data = self.data.getTiles()
+        #tile_color_data = self.data.getTileColPals()
         sprite_pixel_data = self.data.getSprites()
         sprite_color_data = self.data.getSprColPals()
 
-        self.genPixelDATFile(tile_pixel_data, tpp_path)
-        self.genColorDATFile(tile_color_data, tcp_path)
+        #self.genPixelDATFile(tile_pixel_data, tpp_path)
+        #self.genColorDATFile(tile_color_data, tcp_path)
         self.genPixelDATFile(sprite_pixel_data, spp_path)
         self.genColorDATFile(sprite_color_data, scp_path)
 
@@ -166,5 +166,5 @@ class jide(QtWidgets.QMainWindow):
         for dat_file in dat_path.glob("**/*"):
             shutil.copy(str(dat_file), str(jcap_path))
         
-        subprocess.run(["bash.exe", str(sysload_path), "-c", "COM4", "-g", "COM3"])
+        subprocess.run(["bash.exe", str(sysload_path), "-c", "COM3", "-g", "COM4"])
         self.statusBar.showMessage("JCAP Loaded!", 5000)
