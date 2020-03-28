@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, uic
 from canvas import *
 from PyQt5 import QtCore
+from PyQt5.Qt import QApplication, QClipboard
 from colorpalette import *
 from pixelpalette import *
 from gamedata import GameData
@@ -57,6 +58,12 @@ class jide(QtWidgets.QMainWindow):
         redo_act = self.undo_stack.createRedoAction(self, "&Redo")
         redo_act.setShortcut(QKeySequence.Redo)
 
+        # Copy/paste
+        self.copy_act = QAction("&Copy", self)
+        self.copy_act.setShortcut("Ctrl+C")
+        self.copy_act.setStatusTip("Copy")
+        self.copy_act.setEnabled(False)
+
         # JCAP compile/load
         self.gendat_act = QAction("&Generate DAT Files", self)
         self.gendat_act.setShortcut("Ctrl+D")
@@ -77,12 +84,17 @@ class jide(QtWidgets.QMainWindow):
         edit_menu = menu_bar.addMenu("&Edit")
         edit_menu.addAction(undo_act)
         edit_menu.addAction(redo_act)
+        edit_menu.addAction(self.copy_act)
         jcap_menu = menu_bar.addMenu("&JCAP")
         jcap_menu.addAction(self.gendat_act)
         jcap_menu.addAction(self.load_jcap)
 
     def setupStatusBar(self):
         self.statusBar = self.statusBar()
+
+    @pyqtSlot(bool)
+    def setCopyActive(self, active):
+        self.copy_act.isEnabled(active)
 
     def openFile(self):
         # DEMO
@@ -114,6 +126,8 @@ class jide(QtWidgets.QMainWindow):
         self.colorPaletteDock.color_palette.color_selected.connect(self.scene.setPrimaryColor)
         self.colorPaletteDock.setup(self.data)
         self.pixelPaletteDock.setup(self.data)
+        self.copy_act.triggered.connect(self.scene.copy)
+        self.scene.region_selected.connect(self.copy_act.setEnabled)
 
     def genDATFiles(self):
         dir_path = Path(__file__).resolve().parent
@@ -166,5 +180,7 @@ class jide(QtWidgets.QMainWindow):
         for dat_file in dat_path.glob("**/*"):
             shutil.copy(str(dat_file), str(jcap_path))
         
-        subprocess.run(["bash.exe", str(sysload_path), "-c", "COM3", "-g", "COM4"])
+        result = subprocess.run(["bash.exe", str(sysload_path), "-c", "COM3", "-g", "COM4"], capture_output=True)
+        print(result.stdout)
+        print(result.stderr)
         self.statusBar.showMessage("JCAP Loaded!", 5000)

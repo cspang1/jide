@@ -191,10 +191,13 @@ class Overlay(QGraphicsPixmapItem):
         self.start_pos = None
         if event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
             self.scene.bakeOverlay(self.pixmap().toImage())
+        if self.selecting: self.scene.selectRegion(QRectF(self.start_scene_pos, self.cur_scene_pos).normalized())
+        else: self.scene.region_selected.emit(False)
         self.clear()
 
 class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(str, int, int)
+    region_selected = pyqtSignal(bool)
 
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
@@ -208,7 +211,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN)
+        self.setTool(Tools.SELECT)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -255,6 +258,14 @@ class GraphicsScene(QGraphicsScene):
     def setPrimaryColor(self, color):
         self.primary_color = color
         self.overlay.setColor(self.current_color_palette[self.primary_color].rgba())
+
+    @pyqtSlot()
+    def copy(self):
+        print("COPIED")
+
+    def selectRegion(self, region):
+        self.region_selected.emit(True)
+        print(region)
 
     def bakeOverlay(self, overlay):
         names = list(self.data.getSpriteNames())
