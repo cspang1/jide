@@ -204,6 +204,7 @@ class GraphicsScene(QGraphicsScene):
         self.data = data
         self.source = source
         self.root = None
+        self.selected_region = None
         self.current_color_palette = None
         self.subject = Subject()
         self.overlay = Overlay()
@@ -261,11 +262,12 @@ class GraphicsScene(QGraphicsScene):
 
     @pyqtSlot()
     def copy(self):
-        print("COPIED")
+        selection = self.subject.subject.copy(self.selected_region.toRect())
+        print(self.selected_region)
 
     def selectRegion(self, region):
+        self.selected_region = region
         self.region_selected.emit(True)
-        print(region)
 
     def bakeOverlay(self, overlay):
         names = list(self.data.getSpriteNames())
