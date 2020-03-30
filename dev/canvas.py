@@ -198,6 +198,7 @@ class Overlay(QGraphicsPixmapItem):
 class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(str, int, int)
     region_selected = pyqtSignal(bool)
+    region_copied = pyqtSignal(bool)
 
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
@@ -263,7 +264,12 @@ class GraphicsScene(QGraphicsScene):
     @pyqtSlot()
     def copy(self):
         selection = self.subject.subject.copy(self.selected_region.toRect())
-        print(self.selected_region)
+        self.region_copied.emit(True)
+        print("Copied: ", self.selected_region)
+
+    @pyqtSlot()
+    def paste(self):
+        print("Pasted: ", self.selected_region)
 
     def selectRegion(self, region):
         self.selected_region = region
