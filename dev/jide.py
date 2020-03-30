@@ -63,6 +63,10 @@ class jide(QtWidgets.QMainWindow):
         self.copy_act.setShortcut("Ctrl+C")
         self.copy_act.setStatusTip("Copy")
         self.copy_act.setEnabled(False)
+        self.paste_act = QAction("&Paste", self)
+        self.paste_act.setShortcut("Ctrl+V")
+        self.paste_act.setStatusTip("Paste")
+        self.paste_act.setEnabled(False)
 
         # JCAP compile/load
         self.gendat_act = QAction("&Generate DAT Files", self)
@@ -85,6 +89,7 @@ class jide(QtWidgets.QMainWindow):
         edit_menu.addAction(undo_act)
         edit_menu.addAction(redo_act)
         edit_menu.addAction(self.copy_act)
+        edit_menu.addAction(self.paste_act)
         jcap_menu = menu_bar.addMenu("&JCAP")
         jcap_menu.addAction(self.gendat_act)
         jcap_menu.addAction(self.load_jcap)
@@ -95,6 +100,10 @@ class jide(QtWidgets.QMainWindow):
     @pyqtSlot(bool)
     def setCopyActive(self, active):
         self.copy_act.isEnabled(active)
+
+    @pyqtSlot(bool)
+    def setPasteActive(self, active):
+        self.paste_act.isEnabled(active)
 
     def openFile(self):
         # DEMO
@@ -127,7 +136,9 @@ class jide(QtWidgets.QMainWindow):
         self.colorPaletteDock.setup(self.data)
         self.pixelPaletteDock.setup(self.data)
         self.copy_act.triggered.connect(self.scene.copy)
+        self.paste_act.triggered.connect(self.scene.paste)
         self.scene.region_selected.connect(self.copy_act.setEnabled)
+        self.scene.region_copied.connect(self.paste_act.setEnabled)
 
     def genDATFiles(self):
         dir_path = Path(__file__).resolve().parent
