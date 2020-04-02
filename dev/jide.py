@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, uic
 from canvas import *
 from PyQt5 import QtCore
-from PyQt5.Qt import QApplication, QClipboard
+from PyQt5.Qt import QApplication
 from colorpalette import *
 from pixelpalette import *
 from gamedata import GameData
@@ -136,7 +136,7 @@ class jide(QtWidgets.QMainWindow):
         self.colorPaletteDock.setup(self.data)
         self.pixelPaletteDock.setup(self.data)
         self.copy_act.triggered.connect(self.scene.copy)
-        self.paste_act.triggered.connect(self.scene.paste)
+        self.paste_act.triggered.connect(self.scene.startPasting)
         self.scene.region_selected.connect(self.copy_act.setEnabled)
         self.scene.region_copied.connect(self.paste_act.setEnabled)
 

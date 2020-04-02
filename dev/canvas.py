@@ -73,6 +73,9 @@ class Subject(QGraphicsPixmapItem):
         self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
         self.setColorTable(self.color_table)
 
+    def copy(self, selected_region):
+        QGuiApplication.clipboard().setImage(self.subject.copy(selected_region))
+
 class Overlay(QGraphicsPixmapItem):
     def __init__(self, parent=None):
         self.start_pos = None
@@ -81,11 +84,14 @@ class Overlay(QGraphicsPixmapItem):
         self.start_scene_pos = None
         self.cur_scene_pos = None
         self.selecting = False
+        self.pasting = False
+        self.pasted = None
+        self.copied = None
         self.tool = None
         self.width = 8
         self.height = 8
         self.color = 0
-        self.filled = True
+        self.filled = False
         self.select_timer = QTimer()
         self.select_timer.timeout.connect(self.marchAnts)
         self.ants_offset = 0
@@ -94,12 +100,11 @@ class Overlay(QGraphicsPixmapItem):
         pixmap.fill(Qt.transparent)
         super().__init__(pixmap, parent)
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
+        self.setAcceptHoverEvents(True)
 
-    def setFill(self, filled):
-        self.filled = filled
-
-    def setTool(self, tool):
+    def setTool(self, tool, filled=False):
         self.tool = tool
+        self.filled = filled
 
     def setColor(self, color):
         self.color = color
@@ -116,6 +121,28 @@ class Overlay(QGraphicsPixmapItem):
         pixmap = self.pixmap()
         pixmap.fill(Qt.transparent)
         self.setPixmap(pixmap)
+
+    def paste(self):
+        self.pasting = True
+        self.copied = QGuiApplication.clipboard().image()
+        self.scene.region_selected.emit(False)
+
+    def hoverMoveEvent(self, event):
+        if self.pasting:
+            self.selecting = False
+            self.select_timer.stop()
+            x = int(event.pos().x())
+            y = int(event.pos().y())
+            cur_x = cur_y = 0
+            self.pasted = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+            self.pasted.setColorTable(self.copied.colorTable())
+            for i in range(y, min(self.pasted.height(), self.copied.height() + y)):
+                for j in range(x, min(self.pasted.width(), self.copied.width() + x)):
+                    self.pasted.setPixel(j, i, self.copied.pixelIndex(cur_x, cur_y))
+                    cur_x += 1
+                cur_x = 0
+                cur_y += 1
+            self.setPixmap(QPixmap().fromImage(self.pasted))
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton:
@@ -193,6 +220,9 @@ class Overlay(QGraphicsPixmapItem):
             self.scene.bakeOverlay(self.pixmap().toImage())
         if self.selecting: self.scene.selectRegion(QRectF(self.start_scene_pos, self.cur_scene_pos).normalized())
         else: self.scene.region_selected.emit(False)
+        if event.button() == Qt.LeftButton and self.pasting:
+            self.scene.paste(self.pasted)
+            self.pasting = False
         self.clear()
 
 class GraphicsScene(QGraphicsScene):
@@ -206,6 +236,7 @@ class GraphicsScene(QGraphicsScene):
         self.source = source
         self.root = None
         self.selected_region = None
+        self.copied_region = None
         self.current_color_palette = None
         self.subject = Subject()
         self.overlay = Overlay()
@@ -213,7 +244,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.SELECT)
+        self.setTool(Tools.SELECT, True)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -245,9 +276,8 @@ class GraphicsScene(QGraphicsScene):
         self.subject.update()
 
     @pyqtSlot(Tools)
-    def setTool(self, tool):
-        self.tool = tool
-        self.overlay.setTool(self.tool)
+    def setTool(self, tool, filled=False):
+        self.overlay.setTool(tool, filled)
 
     @pyqtSlot(str)
     def setColorPalette(self, source):
@@ -263,16 +293,31 @@ class GraphicsScene(QGraphicsScene):
 
     @pyqtSlot()
     def copy(self):
-        selection = self.subject.subject.copy(self.selected_region.toRect())
         self.region_copied.emit(True)
-        print("Copied: ", self.selected_region)
+        self.subject.copy(self.selected_region)
 
     @pyqtSlot()
-    def paste(self):
-        print("Pasted: ", self.selected_region)
+    def startPasting(self):
+        self.overlay.paste()
+
+    def paste(self, image):
+        original = self.subject.subject
+        names = list(self.data.getSpriteNames())
+        batch = defaultdict(list)
+        for row in range(image.height()):
+            for col in range(image.width()):
+                new_pixel = image.pixelIndex(col, row)
+                if image.pixel(col, row) != new_pixel:
+                    index = self.root + math.floor(col/8) + 16*math.floor(row/8)
+                    row_norm = row % 8
+                    col_norm = col % 8
+                    name = names[index]
+                    batch[name].append((row_norm, col_norm, new_pixel))
+        if batch:
+            self.data.setSprPixBatch(batch)
 
     def selectRegion(self, region):
-        self.selected_region = region
+        self.selected_region = region.toRect()
         self.region_selected.emit(True)
 
     def bakeOverlay(self, overlay):
