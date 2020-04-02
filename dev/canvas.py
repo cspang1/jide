@@ -123,26 +123,32 @@ class Overlay(QGraphicsPixmapItem):
         self.setPixmap(pixmap)
 
     def paste(self):
+        self.selecting = False
         self.pasting = True
+        self.select_timer.stop()
+        self.scene.update()
         self.copied = QGuiApplication.clipboard().image()
         self.scene.region_selected.emit(False)
+        self.renderPaste(self.last_pos)
 
     def hoverMoveEvent(self, event):
+        self.last_pos = event.pos()
         if self.pasting:
-            self.selecting = False
-            self.select_timer.stop()
-            x = int(event.pos().x())
-            y = int(event.pos().y())
-            cur_x = cur_y = 0
-            self.pasted = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
-            self.pasted.setColorTable(self.copied.colorTable())
-            for i in range(y, min(self.pasted.height(), self.copied.height() + y)):
-                for j in range(x, min(self.pasted.width(), self.copied.width() + x)):
-                    self.pasted.setPixel(j, i, self.copied.pixelIndex(cur_x, cur_y))
-                    cur_x += 1
-                cur_x = 0
-                cur_y += 1
-            self.setPixmap(QPixmap().fromImage(self.pasted))
+            self.renderPaste(self.last_pos)
+
+    def renderPaste(self, position):
+        x = int(position.x())
+        y = int(position.y())
+        cur_x = cur_y = 0
+        self.pasted = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.pasted.setColorTable(self.copied.colorTable())
+        for i in range(y, min(self.pasted.height(), self.copied.height() + y)):
+            for j in range(x, min(self.pasted.width(), self.copied.width() + x)):
+                self.pasted.setPixel(j, i, self.copied.pixelIndex(cur_x, cur_y))
+                cur_x += 1
+            cur_x = 0
+            cur_y += 1
+        self.setPixmap(QPixmap().fromImage(self.pasted))
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton:
@@ -223,6 +229,8 @@ class Overlay(QGraphicsPixmapItem):
         if event.button() == Qt.LeftButton and self.pasting:
             self.scene.paste(self.pasted)
             self.pasting = False
+        elif event.button() != Qt.LeftButton and self.pasting:
+            self.pasting = False
         self.clear()
 
 class GraphicsScene(QGraphicsScene):
@@ -244,7 +252,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.SELECT, True)
+        self.setTool(Tools.PEN, True)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
