@@ -8,6 +8,7 @@ from itertools import product
 from typing import List
 from dataclasses import dataclass, field
 from collections import defaultdict
+from copy import deepcopy
 import sys
 import os
 import math
@@ -140,8 +141,11 @@ class Overlay(QGraphicsPixmapItem):
         x = int(position.x())
         y = int(position.y())
         cur_x = cur_y = 0
-        self.pasted = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
-        self.pasted.setColorTable(self.copied.colorTable())
+        self.pasted = QImage(bytes([16]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        color_table = deepcopy(self.copied.colorTable())
+        color_table.append(0)
+        color_table[0] = QColor(Qt.magenta).rgba()
+        self.pasted.setColorTable(color_table)
         for i in range(y, min(self.pasted.height(), self.copied.height() + y)):
             for j in range(x, min(self.pasted.width(), self.copied.width() + x)):
                 self.pasted.setPixel(j, i, self.copied.pixelIndex(cur_x, cur_y))
@@ -252,7 +256,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN, True)
+        self.setTool(Tools.SELECT, True)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -315,7 +319,8 @@ class GraphicsScene(QGraphicsScene):
         for row in range(image.height()):
             for col in range(image.width()):
                 new_pixel = image.pixelIndex(col, row)
-                if image.pixel(col, row) != new_pixel:
+                old_pixel = image.pixel(col, row)
+                if old_pixel != new_pixel and new_pixel != 16:
                     index = self.root + math.floor(col/8) + 16*math.floor(row/8)
                     row_norm = row % 8
                     col_norm = col % 8
