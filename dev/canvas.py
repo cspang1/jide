@@ -351,14 +351,26 @@ class GraphicsScene(QGraphicsScene):
         pen = QPen(Qt.darkCyan)
         pen.setWidth(0)
         painter.setPen(pen)
-        lines = []
+        thin_lines = []
+        thick_lines = []
         for longitude in range(self.subject.width + 1):
             line = QLineF(longitude, 0, longitude, self.subject.height)
-            lines.append(line)
+            if longitude % 8 == 0:
+                thick_lines.append(line)
+            thin_lines.append(line)
         for latitude in range(self.subject.height + 1):
             line = QLineF(0, latitude, self.subject.width, latitude)
-            lines.append(line)
-        painter.drawLines(lines)
+            if latitude % 8 == 0:
+                thick_lines.append(line)
+            thin_lines.append(line)
+        pen = QPen(Qt.darkCyan)
+        pen.setWidth(1)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.drawLines(thin_lines)
+        pen.setColor(Qt.white)
+        painter.setPen(pen)
+        painter.drawLines(thick_lines)
         if self.overlay.selecting:
             pen = QPen(Qt.white)
             pen.setJoinStyle(Qt.MiterJoin)
