@@ -160,7 +160,7 @@ class PixelPalette(QFrame):
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right
         x, y = self.loc_cache[index]
-        return x1 <= x <= x2 and y1 <= y <= y2
+        return x1 <= x <= x2-1 and y1 <= y <= y2-1
 
     # NEEDS TO BE CALLED AGAIN WHENEVER # OF SPRITES/TILES CHANGES!
     def genLocCache(self, height):

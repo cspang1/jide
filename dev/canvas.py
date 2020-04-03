@@ -108,7 +108,7 @@ class Overlay(QGraphicsPixmapItem):
         self.filled = filled
 
     def setColor(self, color):
-        self.color = color
+        self.color = color if color != 0 else QColor(Qt.magenta).rgba()
 
     def setWidth(self, width):
         self.width = width
@@ -256,7 +256,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.SELECT, True)
+        self.setTool(Tools.RECTANGLE, True)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
