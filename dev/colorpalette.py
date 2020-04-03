@@ -145,7 +145,7 @@ class ColorPalette(QWidget):
         self.data.spr_col_pal_updated.connect(self.setPalette)
         self.palette[0].select()
         index = 0
-        color = QColor(0, 0, 0)
+        color = QColor(Qt.magenta)
         self.color_preview.setSecondaryColor(color)
         self.color_preview.setSecondaryIndex(index)
         self.color_preview.setPrimaryColor(color)
@@ -178,10 +178,10 @@ class ColorPalette(QWidget):
             widget.widget().fill(color)
             index = widgets.index(widget)
             if index == self.color_preview.primary_index:
-                self.color_preview.setPrimaryColor(color if index != 0 else QColor(0, 0, 0))
+                self.color_preview.setPrimaryColor(color if index != 0 else QColor(Qt.magenta))
             if index == self.color_preview.secondary_index:
-                self.color_preview.setSecondaryColor(color if index != 0 else QColor(0, 0, 0))
-        self.grid.itemAt(0).widget().fill(QColor(0,0,0))
+                self.color_preview.setSecondaryColor(color if index != 0 else QColor(Qt.magenta))
+        self.grid.itemAt(0).widget().fill(QColor(Qt.magenta))
         self.palette_updated.emit(self.current_palette)
 
     @pyqtSlot()
