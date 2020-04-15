@@ -123,6 +123,22 @@ class Overlay(QGraphicsPixmapItem):
         pixmap.fill(Qt.transparent)
         self.setPixmap(pixmap)
 
+    def floodFill(self, x, y):
+        self.base_image = self.scene.subject.subject.copy()
+        old_color = self.base_image.pixelIndex(x, y)
+        new_color = self.base_image.colorTable().index(0 if self.color == QColor(Qt.magenta).rgba() else self.color)
+        self.fillPixel(x, y, old_color, new_color)
+
+    def fillPixel(self, x, y, old_color, new_color):
+        if not 0 <= x < self.base_image.width() or not 0 <= y < self.base_image.height(): return
+        if old_color == new_color: return
+        elif self.base_image.pixelIndex(x, y) != old_color: return
+        else: self.base_image.setPixel(x, y, new_color)
+        self.fillPixel(x+1, y, old_color, new_color)
+        self.fillPixel(x, y+1, old_color, new_color)
+        self.fillPixel(x-1, y, old_color, new_color)
+        self.fillPixel(x, y-1, old_color, new_color)
+
     def paste(self):
         self.selecting = False
         self.pasting = True
@@ -209,6 +225,22 @@ class Overlay(QGraphicsPixmapItem):
             else:
                 self.hoverMoveEvent(event)
 
+    def mouseReleaseEvent(self, event):
+        self.start_pos = None
+        if event.button() == Qt.LeftButton and self.tool is Tools.FLOODFILL:
+            self.floodFill(math.floor(event.pos().x()), math.floor(event.pos().y()))
+            self.scene.bakeDiff(self.base_image)
+        elif event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
+            self.scene.bakeOverlay(self.pixmap().toImage())
+        if self.selecting: self.scene.selectRegion(QRectF(self.start_scene_pos, self.cur_scene_pos).normalized())
+        else: self.scene.region_selected.emit(False)
+        if event.button() == Qt.LeftButton and self.pasting:
+            self.scene.bakeDiff(self.pasted)
+            self.pasting = False
+        elif event.button() != Qt.LeftButton and self.pasting:
+            self.pasting = False
+        self.clear()
+
     def marchAnts(self):
         self.ants_offset += 4
         self.updateSceneForeground()
@@ -226,19 +258,6 @@ class Overlay(QGraphicsPixmapItem):
             self.scene.update()
         else:
             self.selecting = False
-
-    def mouseReleaseEvent(self, event):
-        self.start_pos = None
-        if event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
-            self.scene.bakeOverlay(self.pixmap().toImage())
-        if self.selecting: self.scene.selectRegion(QRectF(self.start_scene_pos, self.cur_scene_pos).normalized())
-        else: self.scene.region_selected.emit(False)
-        if event.button() == Qt.LeftButton and self.pasting:
-            self.scene.paste(self.pasted)
-            self.pasting = False
-        elif event.button() != Qt.LeftButton and self.pasting:
-            self.pasting = False
-        self.clear()
 
 class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(str, int, int)
@@ -315,14 +334,18 @@ class GraphicsScene(QGraphicsScene):
     def startPasting(self):
         self.overlay.paste()
 
-    def paste(self, image):
+    def selectRegion(self, region):
+        self.selected_region = region.toRect()
+        self.region_selected.emit(True)
+
+    def bakeDiff(self, image):
         original = self.subject.subject
         names = list(self.data.getSpriteNames())
         batch = defaultdict(list)
         for row in range(image.height()):
             for col in range(image.width()):
                 new_pixel = image.pixelIndex(col, row)
-                old_pixel = image.pixel(col, row)
+                old_pixel = original.pixelIndex(col, row)
                 if old_pixel != new_pixel and new_pixel != 16:
                     index = self.root + math.floor(col/8) + 16*math.floor(row/8)
                     row_norm = row % 8
@@ -331,10 +354,6 @@ class GraphicsScene(QGraphicsScene):
                     batch[name].append((row_norm, col_norm, new_pixel))
         if batch:
             self.data.setSprPixBatch(batch)
-
-    def selectRegion(self, region):
-        self.selected_region = region.toRect()
-        self.region_selected.emit(True)
 
     def bakeOverlay(self, overlay):
         names = list(self.data.getSpriteNames())

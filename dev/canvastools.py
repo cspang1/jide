@@ -11,3 +11,4 @@ class Tools(Enum):
     ZOOM_OUT = 5
     PAN = 6
     SELECT = 7
+    FLOODFILL = 8
