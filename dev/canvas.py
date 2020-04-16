@@ -278,7 +278,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.SELECT, True)
+        self.setTool(Tools.FLOODFILL, True)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
