@@ -139,13 +139,13 @@ class PixelPalette(QFrame):
 
     pyqtSlot(set)
     def updateSubjects(self, subjects):
-        lowest = self.contents[-1]
+        lowest = len(self.contents) - 1
         for subject in subjects:
             tile = self.contents[subject]
             tile.setData(self.data.getSprite(subject))
             tile.update()
-            lowest = subject if tile.index < self.contents[lowest].index else lowest
-            if not self.inSelection(self.contents[lowest].index):
+            lowest = subject if tile.index < lowest else lowest
+            if not self.inSelection(lowest):
                 self.selectSubjects(lowest)
             else:
                 self.subject_selected.emit(self.selected, self.select_width, self.select_height)

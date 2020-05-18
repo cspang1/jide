@@ -59,22 +59,6 @@ class cmdRemSprColPal(QUndoCommand):
     def undo(self):
         self.palette.addPalette(self.name, self.contents, self.index)
 
-class cmdSetSprPix(QUndoCommand):
-    def __init__(self, palette, index, row, col, value, description, parent=None):
-        super().__init__(description, parent)
-        self.palette = palette
-        self.index = index
-        self.row = row
-        self.col = col
-        self.value = value
-        self.original_value = self.palette[index][row][col]
-
-    def redo(self):
-        self.palette[self.index][self.row][self.col] = self.value
-
-    def undo(self):
-        self.palette[self.index][self.row][self.col] = self.original_value
-
 class cmdSetSprPixBatch(QUndoCommand):
     def __init__(self, palette, batch, description, parent=None):
         super().__init__(description, parent)
@@ -86,11 +70,12 @@ class cmdSetSprPixBatch(QUndoCommand):
         for index, updates in self.batch.items():
             for row, col, val in updates:
                 self.original_batch[index].append((row, col, self.palette[index][row][col]))
-                self.palette[index][row][col] = val
+                self.palette[index, row, col] = val
+                print(self.palette)
         self.palette.batchUpdate()
 
     def undo(self):
         for index, updates in self.original_batch.items():
             for row, col, val in updates:
-                self.palette[index][row][col] = val
+                self.palette[index, row, col] = val
         self.palette.batchUpdate()
