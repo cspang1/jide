@@ -22,7 +22,7 @@ class GraphicsView(QGraphicsView):
         self.scale(50, 50)
 
     def eventFilter(self, source, event):
-        if event.type() == QEvent.GraphicsSceneWheel and QtWidgets.QApplication.keyboardModifiers() == Qt.ControlModifier:
+        if event.type() == QEvent.GraphicsSceneWheel and QApplication.keyboardModifiers() == Qt.ControlModifier:
             self.zoomCanvas(event)
             event.accept()
             return True
