@@ -96,8 +96,9 @@ class PixelPalettes(QObject):
         return self.palettes[index]
 
     def __setitem__(self, index, value):
-            self.palettes[index] = value
-            self.update_manifest.add(index)
+        index, row, col = index
+        self.palettes[index][row][col] = value
+        self.update_manifest.add(index)
 
 class GameData(QObject):
     spr_col_pal_updated = pyqtSignal(str)
