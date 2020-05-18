@@ -81,37 +81,23 @@ class PixelPalettes(QObject):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.update_manifest = set()
-        self.palettes = OrderedDict()
+        self.palettes = []
         for sprite in data:
-            self.palettes[sprite["name"]] = sprite["contents"]
-
-    def keys(self):
-        return self.palettes.keys()
-
-    def values(self):
-        return self.palettes.values()
-
-    def items(self):
-        return self.palettes.items()
+            self.palettes.append(sprite["contents"])
 
     def batchUpdate(self):
         self.batch_updated.emit(self.update_manifest)
         self.update_manifest.clear()
 
+    def getPalettes(self):
+        return self.palettes
+
     def __getitem__(self, index):
-        if not isinstance(index, tuple):
-            return self.palettes[index]
-        name, row, col = index
-        return self.palettes[name][row][col]
+        return self.palettes[index]
 
     def __setitem__(self, index, value):
-        if not isinstance(index, tuple):
-            self.update_manifest.add(index)
             self.palettes[index] = value
-        else:
-            name, row, col = index
-            self.palettes[name][row][col] = value
-            self.update_manifest.add(name)
+            self.update_manifest.add(index)
 
 class GameData(QObject):
     spr_col_pal_updated = pyqtSignal(str)
@@ -133,13 +119,10 @@ class GameData(QObject):
         self.sprite_color_palettes.palette_removed.connect(self.spr_col_pal_removed)
 
     def getSprites(self):
-        return self.sprite_pixel_palettes.values()
+        return self.sprite_pixel_palettes.getPalettes()
 
-    def getSprite(self, name):
-        return self.sprite_pixel_palettes[name]
-
-    def getSpriteNames(self):
-        return self.sprite_pixel_palettes.keys()
+    def getSprite(self, index):
+        return self.sprite_pixel_palettes[index]
 
     def getSprColPals(self):
         return self.sprite_color_palettes.values()
