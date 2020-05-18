@@ -45,15 +45,17 @@ class Overlay(QLabel):
         painter.drawRect(x*25, y*25, s_width*25, s_height*25)
 
 class Tile(QLabel):
-    tile_selected = pyqtSignal(str, int)
+    tile_selected = pyqtSignal(int)
  
-    def __init__(self, name, index, parent=None):
+    def __init__(self, index, parent=None):
         super().__init__(parent)
         self.setFixedSize(25, 25)
         self.color_palette = [0]*16
         self.data = [[0]*8]*8
-        self.name = name
         self.index = index
+
+    def getIndex(self):
+        return self.index
 
     def setData(self, data):
         self.data = bytes([pix for sub in data for pix in sub])
@@ -67,10 +69,10 @@ class Tile(QLabel):
         self.setPixmap(QPixmap.fromImage(image))
 
     def mousePressEvent(self, event):
-        self.tile_selected.emit(self.name, self.index)
+        self.tile_selected.emit(self.index)
 
     def enterEvent(self, event):
-        QToolTip.showText(event.globalPos(), "{0}: {1}".format(hex(self.index), self.name))
+        QToolTip.showText(event.globalPos(), hex(self.index))
 
     def leaveEvent(self, event):
         QToolTip.hideText()
@@ -81,7 +83,7 @@ class PixelPalette(QFrame):
     def __init__(self, source, parent=None):
         super().__init__(parent)
         self.source = source
-        self.contents = {}
+        self.contents = []
         self.overlay = None
         self.selected = None
         self.grid = QGridLayout()
@@ -91,7 +93,7 @@ class PixelPalette(QFrame):
         self.setLayout(self.grid)
         self.enabled = False
         self.loc_cache = {}
-        self.cur_index = 0
+        self.selected = 0
         self.top_left = (0,0)
         self.bottom_right = (0,0)
         self.select_width = 1
@@ -100,15 +102,15 @@ class PixelPalette(QFrame):
     def setup(self, data):
         self.data = data
         row = col = index = 0
-        for name, sprite in self.data.sprite_pixel_palettes.items():
-            color_palette = list(self.data.sprite_color_palettes.values())[0]
-            tile = Tile(name, index, self)
+        for index, sprite in enumerate(self.data.getSprites()):
+            color_palette = list(self.data.getSprColPals())[0]
+            tile = Tile(index, self)
             tile.setColors(color_palette)
             tile.setData(sprite)
             tile.update()
             tile.tile_selected.connect(self.selectSubjects)
-            self.contents[name] = tile
-            self.grid.addWidget(self.contents[name], row, col)
+            self.contents.append(tile)
+            self.grid.addWidget(self.contents[index], row, col)
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
             index += 1
@@ -118,41 +120,40 @@ class PixelPalette(QFrame):
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
         self.genLocCache(math.floor(self.contents.__len__()/16))
         self.data.spr_batch_updated.connect(self.updateSubjects)
-        self.selectSubjects(next(iter(self.contents)))
+        self.selectSubjects(self.contents[0].getIndex())
 
-    pyqtSlot(str)
-    def selectSubjects(self, name):
-        self.selected = name
-        self.cur_index = list(self.contents.keys()).index(self.selected)
-        data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
+    pyqtSlot(int)
+    def selectSubjects(self, index):
+        self.selected = index
+        data = self.data.getSprites() if self.source == Sources.SPRITE else self.data.getTiles()
         num_rows = math.floor(data.__len__() / 16)
-        initial_row = math.floor(self.cur_index/16)
-        if math.floor((self.cur_index + self.select_width - 1) / 16) > initial_row:
-            self.cur_index = math.floor(self.cur_index/16) * 16 + 16 - self.select_width
+        initial_row = math.floor(self.selected/16)
+        if math.floor((self.selected + self.select_width - 1) / 16) > initial_row:
+            self.selected = math.floor(self.selected/16) * 16 + 16 - self.select_width
         if initial_row + self.select_height > num_rows:
-            self.cur_index -= 16 * (initial_row + self.select_height - num_rows)
-        self.top_left = self.genCoords(self.cur_index)
-        self.bottom_right = self.genCoords(self.cur_index + 16 * self.select_height + self.select_width)
-        self.overlay.selectSubjects(self.cur_index, self.select_width, self.select_height)
-        self.subject_selected.emit(self.cur_index, self.select_width, self.select_height)
+            self.selected -= 16 * (initial_row + self.select_height - num_rows)
+        self.top_left = self.genCoords(self.selected)
+        self.bottom_right = self.genCoords(self.selected + 16 * self.select_height + self.select_width)
+        self.overlay.selectSubjects(self.selected, self.select_width, self.select_height)
+        self.subject_selected.emit(self.selected, self.select_width, self.select_height)
 
     pyqtSlot(set)
     def updateSubjects(self, subjects):
-        lowest = list(self.contents.keys())[-1]
+        lowest = self.contents[-1]
         for subject in subjects:
             tile = self.contents[subject]
-            tile.setData(self.data.sprite_pixel_palettes[subject])
+            tile.setData(self.data.getSprite(subject))
             tile.update()
             lowest = subject if tile.index < self.contents[lowest].index else lowest
             if not self.inSelection(self.contents[lowest].index):
                 self.selectSubjects(lowest)
             else:
-                self.subject_selected.emit(self.cur_index, self.select_width, self.select_height)
+                self.subject_selected.emit(self.selected, self.select_width, self.select_height)
 
     pyqtSlot(str)
     def setColorPalette(self, palette):
         self.current_palette = palette
-        for subject in self.contents.values():
+        for subject in self.contents:
             subject.setColors(self.data.sprite_color_palettes[self.current_palette])
             subject.update()
 

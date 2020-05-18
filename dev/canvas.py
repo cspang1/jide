@@ -260,7 +260,7 @@ class Overlay(QGraphicsPixmapItem):
             self.selecting = False
 
 class GraphicsScene(QGraphicsScene):
-    set_pixel_palette = pyqtSignal(str, int, int)
+    set_pixel_palette = pyqtSignal(int, int, int)
     region_selected = pyqtSignal(bool)
     region_copied = pyqtSignal(bool)
 
@@ -287,7 +287,7 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setHeight(height * 8)
         self.overlay.setWidth(width * 8)
         self.overlay.setHeight(height * 8)
-        data = list(self.data.getSprites()) if self.source == Sources.SPRITE else list(self.data.getTiles())
+        data = self.data.getSprites() if self.source == Sources.SPRITE else self.data.getTiles()
         for row in range(height):
             for col in range(width):
                 cur_subject = data[root + col + (row * 16)]
@@ -299,13 +299,13 @@ class GraphicsScene(QGraphicsScene):
         if self.overlay.selecting: self.overlay.updateSceneForeground()
         self.setSceneRect(self.itemsBoundingRect())
 
-    @pyqtSlot(str, int, int)
-    def setPixel(self, name, row, col):
-        self.set_pixel_palette.emit(name, row, col)
-        diff = list(self.data.getSpriteNames()).index(name) - self.root
+    @pyqtSlot(int, int, int)
+    def setPixel(self, index, row, col):
+        self.set_pixel_palette.emit(index, row, col)
+        diff = index - self.root
         new_row = 8 * math.floor(diff/16) + row
         new_col = 8 * (diff % 16) + col
-        data = self.data.getSprite(name) if self.source == Sources.SPRITE else self.data.getTile(name)
+        data = self.data.getSprite(index) if self.source == Sources.SPRITE else self.data.getTile(index)
         self.subject.setPixel(new_col, new_row, data[row][col])
         self.subject.update()
 
@@ -340,7 +340,6 @@ class GraphicsScene(QGraphicsScene):
 
     def bakeDiff(self, image):
         original = self.subject.subject
-        names = list(self.data.getSpriteNames())
         batch = defaultdict(list)
         for row in range(image.height()):
             for col in range(image.width()):
@@ -350,13 +349,11 @@ class GraphicsScene(QGraphicsScene):
                     index = self.root + math.floor(col/8) + 16*math.floor(row/8)
                     row_norm = row % 8
                     col_norm = col % 8
-                    name = names[index]
-                    batch[name].append((row_norm, col_norm, new_pixel))
+                    batch[index].append((row_norm, col_norm, new_pixel))
         if batch:
             self.data.setSprPixBatch(batch)
 
     def bakeOverlay(self, overlay):
-        names = list(self.data.getSpriteNames())
         batch = defaultdict(list)
         for row in range(overlay.height()):
             for col in range(overlay.width()):
@@ -364,8 +361,7 @@ class GraphicsScene(QGraphicsScene):
                     index = self.root + math.floor(col/8) + 16*math.floor(row/8)
                     row_norm = row % 8
                     col_norm = col % 8
-                    name = names[index]
-                    batch[name].append((row_norm, col_norm, self.primary_color))
+                    batch[index].append((row_norm, col_norm, self.primary_color))
         if batch:
             self.data.setSprPixBatch(batch)
 
