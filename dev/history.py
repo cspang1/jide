@@ -71,7 +71,6 @@ class cmdSetSprPixBatch(QUndoCommand):
             for row, col, val in updates:
                 self.original_batch[index].append((row, col, self.palette[index][row][col]))
                 self.palette[index, row, col] = val
-                print(self.palette)
         self.palette.batchUpdate()
 
     def undo(self):
