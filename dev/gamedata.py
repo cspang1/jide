@@ -6,6 +6,7 @@ from history import *
 from sources import Sources
 from colorpalette import upsample
 import json
+import math
 from collections import OrderedDict
 
 class ColorPalettes(QObject):
@@ -77,6 +78,7 @@ class ColorPalettes(QObject):
 
 class PixelPalettes(QObject):
     batch_updated = pyqtSignal(set)
+    row_count_updated = pyqtSignal(int)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -92,6 +94,16 @@ class PixelPalettes(QObject):
     def getPalettes(self):
         return self.palettes
 
+    def addRow(self, row):
+        self.palettes.extend(row)
+        self.row_count_updated.emit(math.ceil(self.palettes.__len__()/16))
+
+    def remRow(self):
+        old_row = self.palettes[-16:]
+        del self.palettes[-16:]
+        self.row_count_updated.emit(math.ceil(self.palettes.__len__()/16))
+        return old_row
+
     def __getitem__(self, index):
         return self.palettes[index]
 
@@ -106,6 +118,7 @@ class GameData(QObject):
     spr_col_pal_added = pyqtSignal(str, int)
     spr_col_pal_removed = pyqtSignal(str)
     spr_batch_updated = pyqtSignal(set)
+    spr_row_count_updated = pyqtSignal(int)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
@@ -115,6 +128,7 @@ class GameData(QObject):
         self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"], Sources.SPRITE)
         self.sprite_pixel_palettes.batch_updated.connect(self.spr_batch_updated)
         self.sprite_color_palettes.color_changed.connect(self.spr_col_pal_updated)
+        self.sprite_pixel_palettes.row_count_updated.connect(self.spr_row_count_updated)
         self.sprite_color_palettes.name_changed.connect(self.spr_col_pal_renamed)
         self.sprite_color_palettes.palette_added.connect(self.spr_col_pal_added)
         self.sprite_color_palettes.palette_removed.connect(self.spr_col_pal_removed)
@@ -161,6 +175,14 @@ class GameData(QObject):
 
     def setSprPixBatch(self, batch):
         command = cmdSetSprPixBatch(self.sprite_pixel_palettes, batch, "Draw pixels")
+        self.undo_stack.push(command)
+
+    def addSprPixRow(self):
+        command = cmdAddSprPixRow(self.sprite_pixel_palettes, "Add Sprite Row")
+        self.undo_stack.push(command)
+
+    def remSprPixRow(self):
+        command = cmdRemSprPixRow(self.sprite_pixel_palettes, "Remove Sprite Row")
         self.undo_stack.push(command)
 
     def setUndoStack(self, undo_stack):

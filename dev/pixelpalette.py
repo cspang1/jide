@@ -120,6 +120,7 @@ class PixelPalette(QFrame):
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
         self.genLocCache(math.floor(self.contents.__len__()/16))
         self.data.spr_batch_updated.connect(self.updateSubjects)
+        self.data.spr_row_count_updated.connect(self.genLocCache)
         self.selectSubjects(self.contents[0].getIndex())
 
     pyqtSlot(int)
@@ -164,6 +165,7 @@ class PixelPalette(QFrame):
         return x1 <= x <= x2-1 and y1 <= y <= y2-1
 
     # NEEDS TO BE CALLED AGAIN WHENEVER # OF SPRITES/TILES CHANGES!
+    @pyqtSlot(int)
     def genLocCache(self, height):
         for loc in range(height*16):
             self.loc_cache[loc] = self.genCoords(loc)
@@ -180,21 +182,38 @@ class Contents(QWidget):
     def __init__(self, source, palette, parent=None):
         super().__init__(parent)
         self.palette = palette
-        control_layout = QHBoxLayout()
+        self.height = 0
+
+        size_ctrl_layout = QHBoxLayout()
         w_label = QLabel("Width:")
-        self.width = QSpinBox()
-        self.width.setMaximum(16)
-        self.width.setMinimum(1)
+        self.width_spin = QSpinBox()
+        self.width_spin.setMaximum(16)
+        self.width_spin.setMinimum(1)
         h_label = QLabel("Height:")
-        self.height = QSpinBox()
-        self.height.setMaximum(8) # HARDCODED FOR DEMO
-        self.height.setMinimum(1)
-        self.width.valueChanged.connect(self.widthChanged)
-        self.height.valueChanged.connect(self.heightChanged)
-        control_layout.addWidget(w_label)
-        control_layout.addWidget(self.width)
-        control_layout.addWidget(h_label)
-        control_layout.addWidget(self.height)
+        self.height_spin = QSpinBox()
+        self.width_spin.valueChanged.connect(self.widthChanged)
+        self.height_spin.valueChanged.connect(self.heightChanged)
+        size_ctrl_layout.addWidget(w_label)
+        size_ctrl_layout.addWidget(self.width_spin)
+        size_ctrl_layout.addWidget(h_label)
+        size_ctrl_layout.addWidget(self.height_spin)
+
+        row_ctrl_layout = QHBoxLayout()
+        self.add_row = QToolButton(self)
+        self.add_row.clicked.connect(self.addPalRow)
+        self.add_row.setToolTip("Add new palette")
+        add_icon = QIcon()
+        add_icon.addPixmap(QPixmap(":/icons/add.png"))
+        self.add_row.setIcon(add_icon)
+        self.rem_row = QToolButton(self)
+        self.rem_row.clicked.connect(self.remPalRow)
+        self.rem_row.setToolTip("Remove current palette")
+        remove_icon = QIcon()
+        remove_icon.addPixmap(QPixmap(":/icons/remove.png"))
+        self.rem_row.setIcon(remove_icon)
+        row_ctrl_layout.addWidget(self.add_row)
+        row_ctrl_layout.addWidget(self.rem_row)
+
         scroll_area = QScrollArea(self)
         self.setFixedWidth(scroll_area.verticalScrollBar().sizeHint().width() + 420)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
@@ -202,17 +221,41 @@ class Contents(QWidget):
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll_area.setWidget(self.palette)
         main_layout = QVBoxLayout()
-        main_layout.addLayout(control_layout)
+        main_layout.addLayout(size_ctrl_layout)
+        main_layout.addLayout(row_ctrl_layout)
         main_layout.addWidget(scroll_area)
         self.setLayout(main_layout)
 
+    def setup(self, data):
+        self.data = data
+        self.data.spr_row_count_updated.connect(self.palRowCntChanged)
+        self.height = math.ceil(self.data.getSprites().__len__()/16)
+        self.height_spin.setMaximum(self.height) # HARDCODED FOR DEMO
+        self.height_spin.setMinimum(1)
+
+    @pyqtSlot()
+    def addPalRow(self):
+        self.data.addSprPixRow()
+
+    @pyqtSlot()
+    def remPalRow(self):
+        if self.height > 1:
+            self.data.remSprPixRow()
+        else:
+            QMessageBox(QMessageBox.Critical, "Error", "Palette must contain at least one row.").exec()
+
+    @pyqtSlot(int)
+    def palRowCntChanged(self, num_rows):
+        self.height = num_rows
+        self.height_spin.setMaximum(self.height)
+
     @pyqtSlot(int)
     def widthChanged(self, width):
-        self.palette.changeSelectionSize(width, self.height.value())
+        self.palette.changeSelectionSize(width, self.height_spin.value())
 
     @pyqtSlot(int)
     def heightChanged(self, height):
-        self.palette.changeSelectionSize(self.width.value(), height)
+        self.palette.changeSelectionSize(self.width_spin.value(), height)
 
 class PixelPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)
@@ -229,6 +272,7 @@ class PixelPaletteDock(QDockWidget):
 
     def setup(self, data):
         self.pixel_palette.setup(data)
+        self.contents.setup(data)
 
     def closeEvent(self, event):
         event.ignore()
