@@ -96,12 +96,12 @@ class PixelPalettes(QObject):
 
     def addRow(self, row):
         self.palettes.extend(row)
-        self.row_count_updated.emit(math.ceil(self.palettes.__len__()/16))
+        self.row_count_updated.emit(math.floor(self.palettes.__len__()/16))
 
     def remRow(self):
         old_row = self.palettes[-16:]
         del self.palettes[-16:]
-        self.row_count_updated.emit(math.ceil(self.palettes.__len__()/16))
+        self.row_count_updated.emit(math.floor(self.palettes.__len__()/16))
         return old_row
 
     def __getitem__(self, index):
