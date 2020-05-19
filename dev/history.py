@@ -78,3 +78,27 @@ class cmdSetSprPixBatch(QUndoCommand):
             for row, col, val in updates:
                 self.palette[index, row, col] = val
         self.palette.batchUpdate()
+
+class cmdAddSprPixRow(QUndoCommand):
+    def __init__(self, palette, description, parent=None):
+        super().__init__(description, parent)
+        self.palette = palette
+        self.row = [[[0]*8]*8]*16
+
+    def redo(self):
+        self.palette.addRow(self.row)
+
+    def undo(self):
+        self.palette.remRow()
+
+class cmdRemSprPixRow(QUndoCommand):
+    def __init__(self, palette, description, parent=None):
+        super().__init__(description, parent)
+        self.palette = palette
+        self.row = []
+
+    def redo(self):
+        self.row = self.palette.remRow()
+
+    def undo(self):
+        self.palette.addRow(self.row)
