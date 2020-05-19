@@ -101,6 +101,15 @@ class PixelPalette(QFrame):
 
     def setup(self, data):
         self.data = data
+        self.genPalette()
+        self.data.spr_batch_updated.connect(self.updateSubjects)
+        self.selectSubjects(self.contents[0].getIndex())
+
+    @pyqtSlot()
+    def genPalette(self):
+        for i in reversed(range(self.grid.count())): 
+            self.grid.itemAt(i).widget().setParent(None)
+        self.contents.clear()
         row = col = index = 0
         for index, sprite in enumerate(self.data.getSprites()):
             color_palette = list(self.data.getSprColPals())[0]
@@ -114,14 +123,10 @@ class PixelPalette(QFrame):
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
             index += 1
-        self.setEnabled(True)
         self.overlay = Overlay()
         self.overlay.setDims(math.floor(self.contents.__len__()/16))
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
         self.genLocCache(math.floor(self.contents.__len__()/16))
-        self.data.spr_batch_updated.connect(self.updateSubjects)
-        self.data.spr_row_count_updated.connect(self.genLocCache)
-        self.selectSubjects(self.contents[0].getIndex())
 
     pyqtSlot(int)
     def selectSubjects(self, index):
@@ -164,7 +169,6 @@ class PixelPalette(QFrame):
         x, y = self.loc_cache[index]
         return x1 <= x <= x2-1 and y1 <= y <= y2-1
 
-    # NEEDS TO BE CALLED AGAIN WHENEVER # OF SPRITES/TILES CHANGES!
     @pyqtSlot(int)
     def genLocCache(self, height):
         for loc in range(height*16):
@@ -179,6 +183,8 @@ class PixelPalette(QFrame):
         self.selectSubjects(self.selected)
 
 class Contents(QWidget):
+    height_changed = pyqtSignal(int)
+
     def __init__(self, source, palette, parent=None):
         super().__init__(parent)
         self.palette = palette
@@ -229,8 +235,8 @@ class Contents(QWidget):
     def setup(self, data):
         self.data = data
         self.data.spr_row_count_updated.connect(self.palRowCntChanged)
-        self.height = math.ceil(self.data.getSprites().__len__()/16)
-        self.height_spin.setMaximum(self.height) # HARDCODED FOR DEMO
+        self.height = math.floor(self.data.getSprites().__len__()/16)
+        self.height_spin.setMaximum(self.height)
         self.height_spin.setMinimum(1)
 
     @pyqtSlot()
@@ -248,6 +254,7 @@ class Contents(QWidget):
     def palRowCntChanged(self, num_rows):
         self.height = num_rows
         self.height_spin.setMaximum(self.height)
+        self.height_changed.emit(self.height)
 
     @pyqtSlot(int)
     def widthChanged(self, width):
@@ -273,6 +280,7 @@ class PixelPaletteDock(QDockWidget):
     def setup(self, data):
         self.pixel_palette.setup(data)
         self.contents.setup(data)
+        self.contents.height_changed.connect(self.pixel_palette.genPalette)
 
     def closeEvent(self, event):
         event.ignore()
