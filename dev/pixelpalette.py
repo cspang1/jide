@@ -101,9 +101,9 @@ class PixelPalette(QFrame):
 
     def setup(self, data):
         self.data = data
+        self.selected = 0
         self.genPalette()
         self.data.spr_batch_updated.connect(self.updateSubjects)
-        self.selectSubjects(self.contents[0].getIndex())
 
     @pyqtSlot()
     def genPalette(self):
@@ -127,6 +127,7 @@ class PixelPalette(QFrame):
         self.overlay.setDims(math.floor(self.contents.__len__()/16))
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
         self.genLocCache(math.floor(self.contents.__len__()/16))
+        self.selectSubjects(self.selected)
 
     pyqtSlot(int)
     def selectSubjects(self, index):
@@ -171,6 +172,7 @@ class PixelPalette(QFrame):
 
     @pyqtSlot(int)
     def genLocCache(self, height):
+        self.loc_cache.clear()
         for loc in range(height*16):
             self.loc_cache[loc] = self.genCoords(loc)
 
