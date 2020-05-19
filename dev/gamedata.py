@@ -94,8 +94,8 @@ class PixelPalettes(QObject):
     def getPalettes(self):
         return self.palettes
 
-    def addRow(self, row):
-        self.palettes.extend(row)
+    def addRow(self, row=None):
+        self.palettes.extend([[[0]*8 for i in range(8)]for i in range(16)] if row is None else row)
         self.row_count_updated.emit(math.floor(self.palettes.__len__()/16))
 
     def remRow(self):

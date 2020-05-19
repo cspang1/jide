@@ -83,10 +83,9 @@ class cmdAddSprPixRow(QUndoCommand):
     def __init__(self, palette, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
-        self.row = [[[0]*8]*8]*16
 
     def redo(self):
-        self.palette.addRow(self.row)
+        self.palette.addRow()
 
     def undo(self):
         self.palette.remRow()
