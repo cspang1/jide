@@ -4,5 +4,7 @@
         <file>icons/remove.png</file>
         <file>icons/rename.png</file>
         <file>icons/switch_color.png</file>
+        <file>icons/add_row.png</file>
+        <file>icons/remove_row.png</file>
     </qresource>
 </RCC>
