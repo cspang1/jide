@@ -146,7 +146,7 @@ class PixelPalette(QFrame):
         self.overlay.setDims(math.floor(self.contents.__len__()/16))
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
         self.genLocCache(math.floor(self.contents.__len__()/16))
-        self.selectSubjects(self.selected)
+        self.selectSubjects(index=self.selected)
 
     pyqtSlot(int, int, int)
     def selectSubjects(self, index=None, width=-1, height=-1):
@@ -159,7 +159,11 @@ class PixelPalette(QFrame):
         if math.floor((self.selected + self.select_width - 1) / 16) > initial_row:
             self.selected = math.floor(self.selected/16) * 16 + 16 - self.select_width
         if initial_row + self.select_height > num_rows:
-            self.selected -= 16 * (initial_row + self.select_height - num_rows)
+            temp_index = self.selected - 16 * (initial_row + self.select_height - num_rows)
+            if temp_index < 0:
+                self.select_height -= 1
+            else:
+                self.selected = temp_index
         self.top_left = self.genCoords(self.selected)
         self.bottom_right = self.genCoords(self.selected + 16 * self.select_height + self.select_width)
         self.overlay.selectSubjects(self.selected, self.select_width, self.select_height)
@@ -201,7 +205,7 @@ class PixelPalette(QFrame):
         return (index % 16, math.floor(index/16))
 
 class Contents(QWidget):
-    height_changed = pyqtSignal(int)
+    height_changed = pyqtSignal()
 
     def __init__(self, source, palette, parent=None):
         super().__init__(parent)
@@ -261,7 +265,7 @@ class Contents(QWidget):
     @pyqtSlot(int)
     def palRowCntChanged(self, num_rows):
         self.height = num_rows
-        self.height_changed.emit(self.height)
+        self.height_changed.emit()
         if self.height <= 1:
             self.rem_row.setEnabled(False)
         else:
