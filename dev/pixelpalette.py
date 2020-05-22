@@ -5,11 +5,16 @@ from sources import Sources
 import math
 
 class Overlay(QLabel):
+    tiles_selected = pyqtSignal(int, int, int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.height = 0
         self.selected = (0, 0, 0)
-        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setMouseTracking(True)
+        self.orig_x = self.orig_y = 0
+        self.orig_index = 0
+        self.last_x = self.last_y = 0
 
     def setDims(self, height):
         self.height = height
@@ -44,18 +49,42 @@ class Overlay(QLabel):
         painter.setPen(pen)
         painter.drawRect(x*25, y*25, s_width*25, s_height*25)
 
+    def getCoords(self, event):
+        x = min(max(0, math.floor(event.localPos().x()/25)), 16)
+        y = min(max(0, math.floor(event.localPos().y()/25)), self.height)
+        return x, y
+
+    def clamp(self, value, lower=0, upper=16):
+        return min(max(lower, value), upper)
+
+    def mousePressEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            self.orig_x, self.orig_y = (math.floor(event.pos().x()/25), math.floor(event.pos().y()/25))
+            self.orig_index = self.orig_x + self.orig_y*16
+            self.last_x, self.last_y = (self.orig_x, self.orig_y)
+            if event.modifiers() != Qt.ControlModifier:
+                self.tiles_selected.emit(self.orig_index, -1, -1)
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ControlModifier:
+            x, y = (self.clamp(math.ceil(event.pos().x()/25)), self.clamp(math.ceil(event.pos().y()/25), upper=self.height))
+            if (x, y) != (self.last_x, self.last_y):
+                width = x - self.orig_x if x > self.orig_x else -1
+                height = y - self.orig_y if y > self.orig_y else -1
+                self.tiles_selected.emit(self.orig_index, width, height)
+            self.last_x, self.last_y = (self.clamp(math.floor(event.pos().x()/25)), self.clamp(math.floor(self.pos().y()/25), upper=self.height))
+        else:
+            x, y = self.getCoords(event)
+            QToolTip.showText(event.globalPos(), hex(x + y*16))
+            # QToolTip.hideText()
+
 class Tile(QLabel):
-    tile_selected = pyqtSignal(int)
- 
     def __init__(self, index, parent=None):
         super().__init__(parent)
         self.setFixedSize(25, 25)
         self.color_palette = [0]*16
         self.data = [[0]*8]*8
         self.index = index
-
-    def getIndex(self):
-        return self.index
 
     def setData(self, data):
         self.data = bytes([pix for sub in data for pix in sub])
@@ -67,15 +96,6 @@ class Tile(QLabel):
         image = QImage(self.data, 8, 8, QImage.Format_Indexed8).scaled(25, 25)
         image.setColorTable([color.rgba() for color in self.color_palette])
         self.setPixmap(QPixmap.fromImage(image))
-
-    def mousePressEvent(self, event):
-        self.tile_selected.emit(self.index)
-
-    def enterEvent(self, event):
-        QToolTip.showText(event.globalPos(), hex(self.index))
-
-    def leaveEvent(self, event):
-        QToolTip.hideText()
 
 class PixelPalette(QFrame):
     subject_selected = pyqtSignal(int, int, int)
@@ -117,21 +137,22 @@ class PixelPalette(QFrame):
             tile.setColors(color_palette)
             tile.setData(sprite)
             tile.update()
-            tile.tile_selected.connect(self.selectSubjects)
             self.contents.append(tile)
             self.grid.addWidget(self.contents[index], row, col)
             col = col + 1 if col < 15 else 0
             row = row + 1 if col == 0 else row
-            index += 1
         self.overlay = Overlay()
+        self.overlay.tiles_selected.connect(self.selectSubjects)
         self.overlay.setDims(math.floor(self.contents.__len__()/16))
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
         self.genLocCache(math.floor(self.contents.__len__()/16))
         self.selectSubjects(self.selected)
 
-    pyqtSlot(int)
-    def selectSubjects(self, index):
-        self.selected = index
+    pyqtSlot(int, int, int)
+    def selectSubjects(self, index=None, width=-1, height=-1):
+        self.select_width = width if width > 0 else self.select_width
+        self.select_height = height if height > 0 else self.select_height
+        self.selected = index if index is not None else self.selected
         data = self.data.getSprites() if self.source == Sources.SPRITE else self.data.getTiles()
         num_rows = math.floor(data.__len__() / 16)
         initial_row = math.floor(self.selected/16)
@@ -179,11 +200,6 @@ class PixelPalette(QFrame):
     def genCoords(self, index):
         return (index % 16, math.floor(index/16))
 
-    def changeSelectionSize(self, width, height):
-        self.select_width = width
-        self.select_height = height
-        self.selectSubjects(self.selected)
-
 class Contents(QWidget):
     height_changed = pyqtSignal(int)
 
@@ -191,23 +207,6 @@ class Contents(QWidget):
         super().__init__(parent)
         self.palette = palette
         self.height = 0
-
-        size_ctrl_layout = QHBoxLayout()
-        w_label = QLabel("Width:")
-        self.width_spin = QSpinBox()
-        self.width_spin.setMinimum(1)
-        self.width_spin.setMaximum(16)
-        self.width_spin.setEnabled(False)
-        h_label = QLabel("Height:")
-        self.height_spin = QSpinBox()
-        self.height_spin.setMinimum(1)
-        self.width_spin.valueChanged.connect(self.widthChanged)
-        self.height_spin.valueChanged.connect(self.heightChanged)
-        self.height_spin.setEnabled(False)
-        size_ctrl_layout.addWidget(w_label)
-        size_ctrl_layout.addWidget(self.width_spin)
-        size_ctrl_layout.addWidget(h_label)
-        size_ctrl_layout.addWidget(self.height_spin)
 
         row_ctrl_layout = QHBoxLayout()
         self.add_row = QToolButton(self)
@@ -217,12 +216,14 @@ class Contents(QWidget):
         add_icon = QIcon()
         add_icon.addPixmap(QPixmap(":/icons/add_row.png"))
         self.add_row.setIcon(add_icon)
+        self.add_row.setIconSize(QSize(24, 24))
         self.rem_row = QToolButton(self)
         self.rem_row.clicked.connect(self.remPalRow)
         self.rem_row.setToolTip("Remove last row")
         self.rem_row.setEnabled(False)
         remove_icon = QIcon()
         remove_icon.addPixmap(QPixmap(":/icons/remove_row.png"))
+        self.rem_row.setIconSize(QSize(24, 24))
         self.rem_row.setIcon(remove_icon)
         row_ctrl_layout.addWidget(self.add_row)
         row_ctrl_layout.addWidget(self.rem_row)
@@ -235,7 +236,6 @@ class Contents(QWidget):
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         scroll_area.setWidget(self.palette)
         main_layout = QVBoxLayout()
-        main_layout.addLayout(size_ctrl_layout)
         main_layout.addLayout(row_ctrl_layout)
         main_layout.addWidget(scroll_area)
         self.setLayout(main_layout)
@@ -244,9 +244,8 @@ class Contents(QWidget):
         self.data = data
         self.data.spr_row_count_updated.connect(self.palRowCntChanged)
         self.height = math.floor(self.data.getSprites().__len__()/16)
-        self.height_spin.setMaximum(self.height)
-        self.width_spin.setEnabled(True)
-        self.height_spin.setEnabled(True)
+        if self.height <= 1:
+            self.rem_row.setEnabled(False)
         self.add_row.setEnabled(True)
         self.rem_row.setEnabled(True)
 
@@ -258,22 +257,15 @@ class Contents(QWidget):
     def remPalRow(self):
         if self.height > 1:
             self.data.remSprPixRow()
-        else:
-            QMessageBox(QMessageBox.Critical, "Error", "Palette must contain at least one row.").exec()
 
     @pyqtSlot(int)
     def palRowCntChanged(self, num_rows):
         self.height = num_rows
-        self.height_spin.setMaximum(self.height)
         self.height_changed.emit(self.height)
-
-    @pyqtSlot(int)
-    def widthChanged(self, width):
-        self.palette.changeSelectionSize(width, self.height_spin.value())
-
-    @pyqtSlot(int)
-    def heightChanged(self, height):
-        self.palette.changeSelectionSize(self.width_spin.value(), height)
+        if self.height <= 1:
+            self.rem_row.setEnabled(False)
+        else:
+            self.rem_row.setEnabled(True)
 
 class PixelPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)
