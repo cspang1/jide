@@ -5,7 +5,7 @@ import subprocess
 import sys
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, qApp, QUndoStack, QMessageBox
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, qApp, QUndoStack, QMessageBox, QTabWidget
 from canvas import GraphicsScene, GraphicsView
 from colorpalette import ColorPaletteDock
 from colorpicker import downsample
@@ -18,24 +18,33 @@ class jide(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setupWindow()
+        self.setupTabs()
         self.setupDocks()
         self.setupActions()
         self.setupStatusBar()
         # DEMO
         self.openFile()
         # DEMO
+        self.setCanvas(0)
 
     def setupWindow(self):
         self.setWindowTitle("JIDE")
-        self.view = QGraphicsView()
-        self.setCentralWidget(self.view)
-        self.view.setStyleSheet("background-color: #494949;")
+        self.sprite_view = QGraphicsView()
+        self.tile_view = QGraphicsView()
+        self.sprite_view.setStyleSheet("background-color: #494949;")
+        self.tile_view.setStyleSheet("background-color: #494949;")
 
     def setupDocks(self):
-        self.colorPaletteDock = ColorPaletteDock(Source.SPRITE, self)
-        self.pixelPaletteDock = PixelPaletteDock(Source.SPRITE, self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
+        self.sprite_color_palette_dock = ColorPaletteDock(Source.SPRITE, self)
+        self.sprite_pixel_palette_dock = PixelPaletteDock(Source.SPRITE, self)
+        self.tile_color_palette_dock = ColorPaletteDock(Source.TILE, self)
+        self.tile_pixel_palette_dock = PixelPaletteDock(Source.TILE, self)
+
+    def setupTabs(self):
+        self.canvas_tabs = QTabWidget()
+        self.canvas_tabs.addTab(self.sprite_view, "Sprites")
+        self.canvas_tabs.addTab(self.tile_view, "Tiles")
+        self.setCentralWidget(self.canvas_tabs)
 
     def setupActions(self):
         # Exit
@@ -127,21 +136,77 @@ class jide(QMainWindow):
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
-        self.scene = GraphicsScene(self.data, Source.SPRITE, self)
-        self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
-        self.view = GraphicsView(self.scene, self)
-        self.setCentralWidget(self.view)
-        self.view.setStyleSheet("background-color: #494949;")
-        self.scene.set_color_switch_enabled.connect(self.colorPaletteDock.color_palette.color_preview.setColorSwitchEnabled)
-        self.colorPaletteDock.palette_updated.connect(self.scene.setColorPalette)
-        self.colorPaletteDock.palette_updated.connect(self.pixelPaletteDock.palette_updated)
-        self.colorPaletteDock.color_palette.color_selected.connect(self.scene.setPrimaryColor)
-        self.colorPaletteDock.setup(self.data)
-        self.pixelPaletteDock.setup(self.data)
-        self.copy_act.triggered.connect(self.scene.copy)
-        self.paste_act.triggered.connect(self.scene.startPasting)
-        self.scene.region_selected.connect(self.copy_act.setEnabled)
-        self.scene.region_copied.connect(self.paste_act.setEnabled)
+        self.sprite_scene = GraphicsScene(self.data, Source.SPRITE, self)
+        self.tile_scene = GraphicsScene(self.data, Source.TILE, self)
+        self.sprite_view = GraphicsView(self.sprite_scene, self)
+        self.tile_view = GraphicsView(self.tile_scene, self)
+        self.sprite_view.setStyleSheet("background-color: #494949;")
+        self.tile_view.setStyleSheet("background-color: #494949;")
+
+        self.sprite_pixel_palette_dock.pixel_palette.subject_selected.connect(self.sprite_scene.setSubject)
+        self.sprite_scene.set_color_switch_enabled.connect(self.sprite_color_palette_dock.color_palette.color_preview.setColorSwitchEnabled)
+        self.sprite_color_palette_dock.palette_updated.connect(self.sprite_scene.setColorPalette)
+        self.sprite_color_palette_dock.palette_updated.connect(self.sprite_pixel_palette_dock.palette_updated)
+        self.sprite_color_palette_dock.color_palette.color_selected.connect(self.sprite_scene.setPrimaryColor)
+        self.copy_act.triggered.connect(self.sprite_scene.copy)
+        self.paste_act.triggered.connect(self.sprite_scene.startPasting)
+        self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
+        self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
+
+        self.tile_pixel_palette_dock.pixel_palette.subject_selected.connect(self.tile_scene.setSubject)
+        self.tile_scene.set_color_switch_enabled.connect(self.tile_color_palette_dock.color_palette.color_preview.setColorSwitchEnabled)
+        self.tile_color_palette_dock.palette_updated.connect(self.tile_scene.setColorPalette)
+        self.tile_color_palette_dock.palette_updated.connect(self.tile_pixel_palette_dock.palette_updated)
+        self.tile_color_palette_dock.color_palette.color_selected.connect(self.tile_scene.setPrimaryColor)
+        self.copy_act.triggered.connect(self.tile_scene.copy)
+        self.paste_act.triggered.connect(self.tile_scene.startPasting)
+        self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
+        self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
+
+        self.sprite_color_palette_dock.setup(self.data)
+        self.tile_color_palette_dock.setup(self.data)
+        self.sprite_pixel_palette_dock.setup(self.data)
+        self.tile_pixel_palette_dock.setup(self.data)
+        self.canvas_tabs = QTabWidget()
+        self.canvas_tabs.addTab(self.sprite_view, "Sprites")
+        self.canvas_tabs.addTab(self.tile_view, "Tiles")
+        self.setCentralWidget(self.canvas_tabs)
+        self.canvas_tabs.currentChanged.connect(self.setCanvas)
+        self.setCanvas(0)
+
+    @pyqtSlot(int)
+    def setCanvas(self, index):
+        try:
+            self.paste_act.triggered.disconnect()
+        except Exception as e:
+            print(e)
+        try:
+            self.copy_act.triggered.disconnect()
+        except Exception as e:
+            print(e)
+        if index == 0:
+            self.copy_act.triggered.connect(self.sprite_scene.copy)
+            self.paste_act.triggered.connect(self.sprite_scene.startPasting)
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.sprite_color_palette_dock.show()
+            self.sprite_pixel_palette_dock.show()
+            self.removeDockWidget(self.tile_color_palette_dock)
+            self.removeDockWidget(self.tile_pixel_palette_dock)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_color_palette_dock)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock)
+
+        elif index == 1:
+            self.copy_act.triggered.connect(self.tile_scene.copy)
+            self.paste_act.triggered.connect(self.tile_scene.startPasting)
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.show()
+            self.tile_pixel_palette_dock.show()
+            self.removeDockWidget(self.sprite_color_palette_dock)
+            self.removeDockWidget(self.sprite_pixel_palette_dock)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.tile_color_palette_dock)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.tile_pixel_palette_dock)
 
     def genDATFiles(self):
         dir_path = Path(__file__).resolve().parent
