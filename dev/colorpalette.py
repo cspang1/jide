@@ -16,17 +16,18 @@ class ColorPreview(QWidget):
         self.secondary_color = QColor(211, 211, 211, 255)
         self.primary_index = 0
         self.secondary_index = 0
-        switch_icon = QIcon()
-        switch_icon.addPixmap(QPixmap(":/icons/switch_color.png"))
-        switch_color = QAction(self)
-        switch_color.setShortcut("X")
-        switch_color.triggered.connect(self.switch)
-        switch_button = QToolButton(self)
-        switch_color.setToolTip("Switch colors (X)")
-        switch_button.setDefaultAction(switch_color)
-        switch_button.move(-1, 63)
-        switch_button.resize(28, 28)
-        switch_button.setIcon(switch_icon)
+        self.switch_icon = QIcon()
+        self.switch_icon.addPixmap(QPixmap(":/icons/switch_color.png"))
+        self.switch_color = QAction(self)
+        self.switch_color.setShortcut("X")
+        self.switch_color.triggered.connect(self.switch)
+        self.switch_button = QToolButton(self)
+        self.switch_color.setToolTip("Switch colors (X)")
+        self.switch_button.setDefaultAction(self.switch_color)
+        self.setColorSwitchEnabled(True)
+        self.switch_button.move(-1, 63)
+        self.switch_button.resize(28, 28)
+        self.switch_button.setIcon(self.switch_icon)
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -69,6 +70,11 @@ class ColorPreview(QWidget):
     def setSecondaryIndex(self, index):
         self.secondary_index = index
         self.update()
+
+    @pyqtSlot(bool)
+    def setColorSwitchEnabled(self, enabled):
+        self.switch_color.setEnabled(enabled)
+        self.switch_button.setIcon(self.switch_icon)
 
 class Color(QLabel):
     color_selected = pyqtSignal(int, QColor, Qt.MouseButton)
@@ -175,7 +181,6 @@ class ColorPalette(QWidget):
     def setPalette(self, palette):
         self.current_palette = palette
         widgets = [self.grid.itemAt(index) for index in range(self.grid.count())]
-        # for color, widget in zip(self.data.sprite_color_palettes[self.current_palette], widgets):
         for color, widget in zip(self.data.getColPal(self.current_palette, self.source), widgets):
             widget.widget().fill(color)
             index = widgets.index(widget)

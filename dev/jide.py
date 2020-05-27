@@ -132,6 +132,7 @@ class jide(QMainWindow):
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)
         self.view.setStyleSheet("background-color: #494949;")
+        self.scene.set_color_switch_enabled.connect(self.colorPaletteDock.color_palette.color_preview.setColorSwitchEnabled)
         self.colorPaletteDock.palette_updated.connect(self.scene.setColorPalette)
         self.colorPaletteDock.palette_updated.connect(self.pixelPaletteDock.palette_updated)
         self.colorPaletteDock.color_palette.color_selected.connect(self.scene.setPrimaryColor)

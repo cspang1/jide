@@ -76,7 +76,6 @@ class Overlay(QLabel):
         else:
             x, y = self.getCoords(event)
             QToolTip.showText(event.globalPos(), hex(x + y*16))
-            # QToolTip.hideText()
 
 class Tile(QLabel):
     def __init__(self, index, parent=None):

@@ -175,6 +175,7 @@ class Overlay(QGraphicsPixmapItem):
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.LeftButton and not self.pasting:
+            self.scene.setColorSwitchEnabled(False)
             if self.start_pos is None:
                 self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
                 self.start_scene_pos = QPointF(math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
@@ -230,6 +231,7 @@ class Overlay(QGraphicsPixmapItem):
 
     def mouseReleaseEvent(self, event):
         self.start_pos = None
+        self.scene.setColorSwitchEnabled(True)
         if event.button() == Qt.LeftButton and self.tool is Tools.FLOODFILL:
             self.floodFill(math.floor(event.pos().x()), math.floor(event.pos().y()))
             self.scene.bakeDiff(self.base_image)
@@ -266,6 +268,7 @@ class GraphicsScene(QGraphicsScene):
     set_pixel_palette = pyqtSignal(int, int, int)
     region_selected = pyqtSignal(bool)
     region_copied = pyqtSignal(bool)
+    set_color_switch_enabled = pyqtSignal(bool)
 
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
@@ -281,7 +284,10 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.SELECT, True)
+        self.setTool(Tools.PEN, True)
+
+    def setColorSwitchEnabled(self, enabled):
+        self.set_color_switch_enabled.emit(enabled)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
