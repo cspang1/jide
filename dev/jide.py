@@ -5,9 +5,10 @@ import subprocess
 import sys
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, qApp, QUndoStack
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, qApp, QUndoStack, QMessageBox
 from canvas import GraphicsScene, GraphicsView
 from colorpalette import ColorPaletteDock
+from colorpicker import downsample
 from gamedata import GameData
 from pixelpalette import PixelPaletteDock
 from source import Source
