@@ -103,6 +103,7 @@ class PixelPalette(QFrame):
     def __init__(self, source, parent=None):
         super().__init__(parent)
         self.source = source
+        self.data = None
         self.contents = []
         self.overlay = None
         self.selected = None
@@ -122,6 +123,7 @@ class PixelPalette(QFrame):
     def setup(self, data):
         self.data = data
         self.selected = 0
+        self.current_palette = list(self.data.getColPals(self.source))[0]
         self.genPalette()
         self.data.pix_batch_updated.connect(self.updateSubjects)
 
@@ -132,9 +134,8 @@ class PixelPalette(QFrame):
         self.contents.clear()
         row = col = index = 0
         for index, element in enumerate(self.data.getPixelPalettes(self.source)):
-            color_palette = list(self.data.getColPals(self.source))[0]
             tile = Tile(index, self)
-            tile.setColors(color_palette)
+            tile.setColors(self.current_palette)
             tile.setData(element)
             tile.update()
             self.contents.append(tile)
@@ -184,10 +185,11 @@ class PixelPalette(QFrame):
 
     pyqtSlot(str)
     def setColorPalette(self, palette):
-        self.current_palette = palette
-        for subject in self.contents:
-            subject.setColors(self.data.sprite_color_palettes[self.current_palette])
-            subject.update()
+        if self.data is not None:
+            self.current_palette = self.data.getColPal(palette, self.source)
+            for subject in self.contents:
+                subject.setColors(self.current_palette)
+                subject.update()
 
     def inSelection(self, index):
         x1, y1 = self.top_left

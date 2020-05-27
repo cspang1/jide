@@ -152,6 +152,9 @@ class GameData(QObject):
     def getColPals(self, source):
         return self.sprite_color_palettes.values() if source is Source.SPRITE else self.tile_color_palettes.values()
 
+    def getColPalNames(self, source):
+        return self.sprite_color_palettes.keys() if source is Source.SPRITE else self.tile_color_palettes.keys()
+
     def getColPal(self, name, source):
         return self.sprite_color_palettes[name] if source is Source.SPRITE else self.tile_color_palettes[name]
 
