@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from collections import defaultdict
 
-class cmdSetSprCol(QUndoCommand):
+class cmdSetCol(QUndoCommand):
     def __init__(self, palette, name, index, color, orig, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -19,7 +19,7 @@ class cmdSetSprCol(QUndoCommand):
     def undo(self):
         self.palette[self.name, self.index] = self.original_color
 
-class cmdSetSprColPalName(QUndoCommand):
+class cmdSetColPalName(QUndoCommand):
     def __init__(self, palette, cur_name, new_name, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -32,7 +32,7 @@ class cmdSetSprColPalName(QUndoCommand):
     def undo(self):
         self.palette.setName(self.new_name, self.cur_name)
 
-class cmdAddSprColPal(QUndoCommand):
+class cmdAddColPal(QUndoCommand):
     def __init__(self, palette, name, contents, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -45,7 +45,7 @@ class cmdAddSprColPal(QUndoCommand):
     def undo(self):
         self.palette.remPalette(self.name)
 
-class cmdRemSprColPal(QUndoCommand):
+class cmdRemColPal(QUndoCommand):
     def __init__(self, palette, name, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -59,7 +59,7 @@ class cmdRemSprColPal(QUndoCommand):
     def undo(self):
         self.palette.addPalette(self.name, self.contents, self.index)
 
-class cmdSetSprPixBatch(QUndoCommand):
+class cmdSetPixBatch(QUndoCommand):
     def __init__(self, palette, batch, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -79,7 +79,7 @@ class cmdSetSprPixBatch(QUndoCommand):
                 self.palette[index, row, col] = val
         self.palette.batchUpdate()
 
-class cmdAddSprPixRow(QUndoCommand):
+class cmdAddPixRow(QUndoCommand):
     def __init__(self, palette, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -90,7 +90,7 @@ class cmdAddSprPixRow(QUndoCommand):
     def undo(self):
         self.palette.remRow()
 
-class cmdRemSprPixRow(QUndoCommand):
+class cmdRemPixRow(QUndoCommand):
     def __init__(self, palette, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
