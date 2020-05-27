@@ -147,6 +147,10 @@ class Overlay(QGraphicsPixmapItem):
         self.scene.region_selected.emit(False)
         self.renderPaste(self.last_pos)
 
+    def setColorTable(self, color_table):
+        if self.pasting:
+            self.copied.setColorTable(color_table)
+
     def hoverMoveEvent(self, event):
         self.last_pos = event.pos()
         if self.pasting:
@@ -277,7 +281,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN, True)
+        self.setTool(Tools.SELECT, True)
 
     @pyqtSlot(int, int, int)
     def setSubject(self, root, width, height):
@@ -315,7 +319,9 @@ class GraphicsScene(QGraphicsScene):
     @pyqtSlot(str)
     def setColorPalette(self, palette):
         self.current_color_palette = self.data.getColPal(palette, self.source)
-        self.subject.setColorTable([color.rgba() for color in self.current_color_palette])
+        color_table = [color.rgba() for color in self.current_color_palette]
+        self.subject.setColorTable(color_table)
+        self.overlay.setColorTable(color_table)
         self.setPrimaryColor(self.primary_color)
         self.subject.update()
 
