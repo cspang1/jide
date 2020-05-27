@@ -43,7 +43,8 @@ class ColorPalettes(QObject):
         self.name_changed.emit(cur_name, new_name, self.source)
 
     def addPalette(self, name, contents, index=None):
-        contents[0] = QColor(0,0,0,0)
+        if self.source is Source.SPRITE:
+            contents[0] = QColor(0,0,0,0)
         new_palettes = OrderedDict()
         cur_palette = 0
         if index == None or index == len(self.palettes):
