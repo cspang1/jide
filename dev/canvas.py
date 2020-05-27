@@ -1,17 +1,16 @@
-from PyQt5 import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from canvastools import Tools
-from source import Source
-from itertools import product
-from typing import List
-from dataclasses import dataclass, field
 from collections import defaultdict
 from copy import deepcopy
-import sys
-import os
+from dataclasses import dataclass, field
+from itertools import product
 import math
+import os
+import sys
+from typing import List
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer, QEvent, QLineF, QPointF, QRectF
+from PyQt5.QtGui import QGuiApplication, QImage, QPixmap, QColor, QBrush, QPen, QPainter
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QApplication, QStyleOptionGraphicsItem
+from canvastools import Tools
+from source import Source
 
 class GraphicsView(QGraphicsView):
     def __init__(self, scene=None, parent=None):

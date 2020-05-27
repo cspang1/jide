@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from jide import jide
 import sys
+from PyQt5.QtWidgets import QApplication
+from jide import jide
 
 app = QApplication(sys.argv)
 

@@ -1,6 +1,6 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QRegExp, QEvent
+from PyQt5.QtGui import QColor, QValidator, QPixmap, QFont, QRegExpValidator, QIcon, QKeySequence, QPainter, QPen, QBrush
+from PyQt5.QtWidgets import QLabel, QFrame, QDialog, QWidget, QDockWidget, QVBoxLayout, QSizePolicy, QGridLayout, QDialogButtonBox, QHBoxLayout, QFormLayout, QLineEdit, QLayout, QAction, QToolButton, QComboBox, qApp, QUndoStack
 
 def upsample(red, green, blue):
     red = round((red/7)*255)

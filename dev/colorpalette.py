@@ -1,9 +1,9 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from colorpicker import *
-from source import Source
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QLineF
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QKeySequence, QPainter, QPen, QBrush
+from PyQt5.QtWidgets import QWidget, QLabel, QDockWidget, QVBoxLayout, QSizePolicy, QGridLayout, QAction, QToolButton, QHBoxLayout, QComboBox, qApp, QUndoStack, QInputDialog, QLineEdit, QMessageBox
+from colorpicker import ColorPicker, upsample, downsample, normalize
 import resources
+from source import Source
 
 class ColorPreview(QWidget):
     switch = pyqtSignal()

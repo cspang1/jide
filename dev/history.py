@@ -1,8 +1,7 @@
-from PyQt5 import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
 from collections import defaultdict
+from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QUndoCommand, QUndoStack
 
 class cmdSetCol(QUndoCommand):
     def __init__(self, palette, name, index, color, orig, description, parent=None):
