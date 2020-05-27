@@ -148,20 +148,12 @@ class jide(QMainWindow):
         self.sprite_color_palette_dock.palette_updated.connect(self.sprite_scene.setColorPalette)
         self.sprite_color_palette_dock.palette_updated.connect(self.sprite_pixel_palette_dock.palette_updated)
         self.sprite_color_palette_dock.color_palette.color_selected.connect(self.sprite_scene.setPrimaryColor)
-        self.copy_act.triggered.connect(self.sprite_scene.copy)
-        self.paste_act.triggered.connect(self.sprite_scene.startPasting)
-        self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
-        self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
 
         self.tile_pixel_palette_dock.pixel_palette.subject_selected.connect(self.tile_scene.setSubject)
         self.tile_scene.set_color_switch_enabled.connect(self.tile_color_palette_dock.color_palette.color_preview.setColorSwitchEnabled)
         self.tile_color_palette_dock.palette_updated.connect(self.tile_scene.setColorPalette)
         self.tile_color_palette_dock.palette_updated.connect(self.tile_pixel_palette_dock.palette_updated)
         self.tile_color_palette_dock.color_palette.color_selected.connect(self.tile_scene.setPrimaryColor)
-        self.copy_act.triggered.connect(self.tile_scene.copy)
-        self.paste_act.triggered.connect(self.tile_scene.startPasting)
-        self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
-        self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
 
         self.sprite_color_palette_dock.setup(self.data)
         self.tile_color_palette_dock.setup(self.data)
@@ -178,12 +170,13 @@ class jide(QMainWindow):
     def setCanvas(self, index):
         try:
             self.paste_act.triggered.disconnect()
-        except Exception as e:
-            print(e)
+        except:
+            pass
         try:
             self.copy_act.triggered.disconnect()
-        except Exception as e:
-            print(e)
+        except:
+            pass
+
         if index == 0:
             self.copy_act.triggered.connect(self.sprite_scene.copy)
             self.paste_act.triggered.connect(self.sprite_scene.startPasting)
@@ -195,7 +188,10 @@ class jide(QMainWindow):
             self.removeDockWidget(self.tile_pixel_palette_dock)
             self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_color_palette_dock)
             self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock)
-
+            self.copy_act.triggered.connect(self.sprite_scene.copy)
+            self.paste_act.triggered.connect(self.sprite_scene.startPasting)
+            self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
+            self.sprite_scene.region_selected.connect(self.copy_act.setEnabled)
         elif index == 1:
             self.copy_act.triggered.connect(self.tile_scene.copy)
             self.paste_act.triggered.connect(self.tile_scene.startPasting)
@@ -207,6 +203,10 @@ class jide(QMainWindow):
             self.removeDockWidget(self.sprite_pixel_palette_dock)
             self.addDockWidget(Qt.RightDockWidgetArea, self.tile_color_palette_dock)
             self.addDockWidget(Qt.RightDockWidgetArea, self.tile_pixel_palette_dock)
+            self.copy_act.triggered.connect(self.tile_scene.copy)
+            self.paste_act.triggered.connect(self.tile_scene.startPasting)
+            self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
+            self.tile_scene.region_selected.connect(self.copy_act.setEnabled)
 
     def genDATFiles(self):
         dir_path = Path(__file__).resolve().parent
