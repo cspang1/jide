@@ -150,6 +150,7 @@ class Overlay(QGraphicsPixmapItem):
     def setColorTable(self, color_table):
         if self.pasting:
             self.copied.setColorTable(color_table)
+            self.renderPaste(self.last_pos)
 
     def hoverMoveEvent(self, event):
         self.last_pos = event.pos()
@@ -163,7 +164,8 @@ class Overlay(QGraphicsPixmapItem):
         self.pasted = QImage(bytes([16]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
         color_table = deepcopy(self.copied.colorTable())
         color_table.append(0)
-        color_table[0] = QColor(Qt.magenta).rgba()
+        if self.scene.source is Source.SPRITE:
+            color_table[0] = QColor(Qt.magenta).rgba()
         self.pasted.setColorTable(color_table)
         for i in range(y, min(self.pasted.height(), self.copied.height() + y)):
             for j in range(x, min(self.pasted.width(), self.copied.width() + x)):
@@ -284,7 +286,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN, True)
+        self.setTool(Tools.SELECT, True)
 
     def setColorSwitchEnabled(self, enabled):
         self.set_color_switch_enabled.emit(enabled)
