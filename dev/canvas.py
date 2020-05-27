@@ -3,7 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from canvastools import Tools
-from sources import Sources
+from source import Source
 from itertools import product
 from typing import List
 from dataclasses import dataclass, field
@@ -287,7 +287,7 @@ class GraphicsScene(QGraphicsScene):
         self.subject.setHeight(height * 8)
         self.overlay.setWidth(width * 8)
         self.overlay.setHeight(height * 8)
-        data = self.data.getSprites() if self.source == Sources.SPRITE else self.data.getTiles()
+        data = self.data.getPixelPalettes(self.source)
         for row in range(height):
             for col in range(width):
                 cur_subject = data[root + col + (row * 16)]
@@ -305,7 +305,7 @@ class GraphicsScene(QGraphicsScene):
         diff = index - self.root
         new_row = 8 * math.floor(diff/16) + row
         new_col = 8 * (diff % 16) + col
-        data = self.data.getSprite(index) if self.source == Sources.SPRITE else self.data.getTile(index)
+        data = self.data.getElement(index, self.source)
         self.subject.setPixel(new_col, new_row, data[row][col])
         self.subject.update()
 
@@ -314,8 +314,8 @@ class GraphicsScene(QGraphicsScene):
         self.overlay.setTool(tool, filled)
 
     @pyqtSlot(str)
-    def setColorPalette(self, source):
-        self.current_color_palette = self.data.getSprColPal(source)
+    def setColorPalette(self, palette):
+        self.current_color_palette = self.data.getColPal(palette, self.source)
         self.subject.setColorTable([color.rgba() for color in self.current_color_palette])
         self.setPrimaryColor(self.primary_color)
         self.subject.update()
@@ -351,7 +351,7 @@ class GraphicsScene(QGraphicsScene):
                     col_norm = col % 8
                     batch[index].append((row_norm, col_norm, new_pixel))
         if batch:
-            self.data.setSprPixBatch(batch)
+            self.data.setPixBatch(batch, self.source)
 
     def bakeOverlay(self, overlay):
         batch = defaultdict(list)
@@ -363,7 +363,7 @@ class GraphicsScene(QGraphicsScene):
                     col_norm = col % 8
                     batch[index].append((row_norm, col_norm, self.primary_color))
         if batch:
-            self.data.setSprPixBatch(batch)
+            self.data.setPixBatch(batch, self.source)
 
     def drawForeground(self, painter, rect):
         pen = QPen(Qt.darkCyan)

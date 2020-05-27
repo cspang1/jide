@@ -5,7 +5,7 @@ from PyQt5.Qt import QApplication
 from colorpalette import *
 from pixelpalette import *
 from gamedata import GameData
-from sources import Sources
+from source import Source
 from pathlib import Path
 import json
 import sys
@@ -30,8 +30,8 @@ class jide(QtWidgets.QMainWindow):
         self.view.setStyleSheet("background-color: #494949;")
 
     def setupDocks(self):
-        self.colorPaletteDock = ColorPaletteDock(self)
-        self.pixelPaletteDock = PixelPaletteDock(Sources.SPRITE, self)
+        self.colorPaletteDock = ColorPaletteDock(Source.SPRITE, self)
+        self.pixelPaletteDock = PixelPaletteDock(Source.SPRITE, self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
 
@@ -125,7 +125,7 @@ class jide(QtWidgets.QMainWindow):
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
-        self.scene = GraphicsScene(self.data, Sources.SPRITE, self)
+        self.scene = GraphicsScene(self.data, Source.SPRITE, self)
         self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)
@@ -151,8 +151,8 @@ class jide(QtWidgets.QMainWindow):
 
         #tile_pixel_data = self.data.getTiles()
         #tile_color_data = self.data.getTileColPals()
-        sprite_pixel_data = self.data.getSprites()
-        sprite_color_data = self.data.getSprColPals()
+        sprite_pixel_data = self.data.getPixelPalettes(Source.SPRITE)
+        sprite_color_data = self.data.getColPals(Source.SPRITE)
 
         #self.genPixelDATFile(tile_pixel_data, tpp_path)
         #self.genColorDATFile(tile_color_data, tcp_path)

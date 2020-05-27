@@ -3,25 +3,26 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from history import *
-from sources import Sources
+from source import Source
 from colorpalette import upsample
 import json
 import math
 from collections import OrderedDict
 
 class ColorPalettes(QObject):
-    color_changed = pyqtSignal(str)
-    name_changed = pyqtSignal(str, str)
-    palette_added = pyqtSignal(str, int)
-    palette_removed = pyqtSignal(str)
+    color_changed = pyqtSignal(str, Source)
+    name_changed = pyqtSignal(str, str, Source)
+    palette_added = pyqtSignal(str, int, Source)
+    palette_removed = pyqtSignal(str, Source)
 
     def __init__(self, data, source, parent=None):
         super().__init__(parent)
         self.palettes = OrderedDict()
+        self.source = source
         for spr_pal in data:
             palette = spr_pal["contents"]
             palette[:] = [QColor(*upsample(color>>5, (color>>2)&7, color&3)) for color in palette]
-            if source is Sources.SPRITE:
+            if self.source is Source.SPRITE:
                 palette[0] = QColor(0,0,0,0)
             self.palettes[spr_pal["name"]] = palette
 
@@ -40,7 +41,7 @@ class ColorPalettes(QObject):
         for name, _ in self.palettes.items():
             temp_palette_items[replacement.get(name, name)] = temp_palette_items.pop(name)
         self.palettes = temp_palette_items
-        self.name_changed.emit(cur_name, new_name)
+        self.name_changed.emit(cur_name, new_name, self.source)
 
     def addPalette(self, name, contents, index=None):
         contents[0] = QColor(0,0,0,0)
@@ -56,14 +57,14 @@ class ColorPalettes(QObject):
                 new_palettes[key] = value
                 cur_palette += 1
             self.palettes = new_palettes
-        self.palette_added.emit(name, index)
+        self.palette_added.emit(name, index, self.source)
 
     def remPalette(self, name):
         if name in self.palettes:
             del self.palettes[name]
-            self.palette_removed.emit(name)
+            self.palette_removed.emit(name, self.source)
         else:
-            self.palette_removed.emit(None)
+            self.palette_removed.emit(None, self.source)
 
     def __getitem__(self, index):
         if not isinstance(index, tuple):
@@ -74,21 +75,22 @@ class ColorPalettes(QObject):
     def __setitem__(self, index, value):
         name, index = index
         self.palettes[name][index] = value
-        self.color_changed.emit(name)
+        self.color_changed.emit(name, self.source)
 
 class PixelPalettes(QObject):
-    batch_updated = pyqtSignal(set)
-    row_count_updated = pyqtSignal(int)
+    batch_updated = pyqtSignal(set, Source)
+    row_count_updated = pyqtSignal(int, Source)
 
-    def __init__(self, data, parent=None):
+    def __init__(self, data, source, parent=None):
         super().__init__(parent)
         self.update_manifest = set()
         self.palettes = []
-        for sprite in data:
-            self.palettes.append(sprite["contents"])
+        self.source = source
+        for element in data:
+            self.palettes.append(element["contents"])
 
     def batchUpdate(self):
-        self.batch_updated.emit(self.update_manifest)
+        self.batch_updated.emit(self.update_manifest, self.source)
         self.update_manifest.clear()
 
     def getPalettes(self):
@@ -96,12 +98,12 @@ class PixelPalettes(QObject):
 
     def addRow(self, row=None):
         self.palettes.extend([[[0]*8 for i in range(8)]for i in range(16)] if row is None else row)
-        self.row_count_updated.emit(math.floor(self.palettes.__len__()/16))
+        self.row_count_updated.emit(math.floor(self.palettes.__len__()/16), self.source)
 
     def remRow(self):
         old_row = self.palettes[-16:]
         del self.palettes[-16:]
-        self.row_count_updated.emit(math.floor(self.palettes.__len__()/16))
+        self.row_count_updated.emit(math.floor(self.palettes.__len__()/16), self.source)
         return old_row
 
     def __getitem__(self, index):
@@ -113,76 +115,114 @@ class PixelPalettes(QObject):
         self.update_manifest.add(index)
 
 class GameData(QObject):
-    spr_col_pal_updated = pyqtSignal(str)
-    spr_col_pal_renamed = pyqtSignal(str, str)
-    spr_col_pal_added = pyqtSignal(str, int)
-    spr_col_pal_removed = pyqtSignal(str)
-    spr_batch_updated = pyqtSignal(set)
-    spr_row_count_updated = pyqtSignal(int)
+    col_pal_updated = pyqtSignal(str, Source)
+    col_pal_renamed = pyqtSignal(str, str, Source)
+    col_pal_added = pyqtSignal(str, int, Source)
+    col_pal_removed = pyqtSignal(str, Source)
+    pix_batch_updated = pyqtSignal(set, Source)
+    row_count_updated = pyqtSignal(int, Source)
 
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.undo_stack = QUndoStack(self)
 
-        self.sprite_pixel_palettes = PixelPalettes(data["sprites"])
-        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"], Sources.SPRITE)
-        self.sprite_pixel_palettes.batch_updated.connect(self.spr_batch_updated)
-        self.sprite_color_palettes.color_changed.connect(self.spr_col_pal_updated)
-        self.sprite_pixel_palettes.row_count_updated.connect(self.spr_row_count_updated)
-        self.sprite_color_palettes.name_changed.connect(self.spr_col_pal_renamed)
-        self.sprite_color_palettes.palette_added.connect(self.spr_col_pal_added)
-        self.sprite_color_palettes.palette_removed.connect(self.spr_col_pal_removed)
+        self.sprite_pixel_palettes = PixelPalettes(data["sprites"], Source.SPRITE)
+        self.tile_pixel_palettes = PixelPalettes(data["tiles"], Source.TILE)
+        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"], Source.SPRITE)
+        self.tile_color_palettes = ColorPalettes(data["tileColorPalettes"], Source.TILE)
+        self.sprite_pixel_palettes.batch_updated.connect(self.pix_batch_updated)
+        self.tile_pixel_palettes.batch_updated.connect(self.pix_batch_updated)
+        self.sprite_color_palettes.color_changed.connect(self.col_pal_updated)
+        self.tile_color_palettes.color_changed.connect(self.col_pal_updated)
+        self.sprite_pixel_palettes.row_count_updated.connect(self.row_count_updated)
+        self.tile_pixel_palettes.row_count_updated.connect(self.row_count_updated)
+        self.sprite_color_palettes.name_changed.connect(self.col_pal_renamed)
+        self.tile_color_palettes.name_changed.connect(self.col_pal_renamed)
+        self.sprite_color_palettes.palette_added.connect(self.col_pal_added)
+        self.tile_color_palettes.palette_added.connect(self.col_pal_added)
+        self.sprite_color_palettes.palette_removed.connect(self.col_pal_removed)
+        self.tile_color_palettes.palette_removed.connect(self.col_pal_removed)
 
-    def getSprites(self):
-        return self.sprite_pixel_palettes.getPalettes()
+    def getPixelPalettes(self, source):
+        return self.sprite_pixel_palettes.getPalettes() if source is Source.SPRITE else self.tile_pixel_palettes.getPalettes()
 
-    def getSprite(self, index):
-        return self.sprite_pixel_palettes[index]
+    def getElement(self, index, source):
+        return self.sprite_pixel_palettes[index] if source is Source.SPRITE else self.tile_pixel_palettes[index]
 
-    def getSprColPals(self):
-        return self.sprite_color_palettes.values()
+    def getColPals(self, source):
+        return self.sprite_color_palettes.values() if source is Source.SPRITE else self.tile_color_palettes.values()
 
-    def getSprColPal(self, name):
-        return self.sprite_color_palettes[name]
+    def getColPal(self, name, source):
+        return self.sprite_color_palettes[name] if source is Source.SPRITE else self.tile_color_palettes[name]
 
-    def setSprCol(self, name, index, color, orig=None):
-        command = cmdSetSprCol(self.sprite_color_palettes, name, index, color, orig, "Set palette color")
+    def setColor(self, name, index, color, source, orig=None):
+        target = self.sprite_color_palettes if source is Source.SPRITE else self.tile_color_palettes
+        command = cmdSetCol(target, name, index, color, orig, "Set palette color")
         self.undo_stack.push(command)
 
-    def previewSprCol(self, name, index, color):
-        self.sprite_color_palettes[name, index] = color
-
-    def setSprColPalName(self, cur_name, new_name):
-        if new_name not in self.sprite_color_palettes.keys():
-            command = cmdSetSprColPalName(self.sprite_color_palettes, cur_name, new_name, "Set palette name")
-            self.undo_stack.push(command)
+    def previewColor(self, name, index, color, source):
+        if source is Source.SPRITE:
+            self.sprite_color_palettes[name, index] = color
         else:
-            self.spr_col_pal_renamed.emit(None, None)
+            self.tile_color_palettes[name, index] = color
 
-    def addSprColPal(self, name):
-        if name not in self.sprite_color_palettes.keys():
-            command = cmdAddSprColPal(self.sprite_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
-            self.undo_stack.push(command)
+    def setColPalName(self, cur_name, new_name, source):
+        if source is Source.SPRITE:
+            if new_name not in self.sprite_color_palettes.keys():
+                command = cmdSetColPalName(self.sprite_color_palettes, cur_name, new_name, "Set palette name")
+                self.undo_stack.push(command)
+            else:
+                self.col_pal_renamed.emit(None, None, source)
         else:
-            self.spr_col_pal_added.emit(None, None)
+            if new_name not in self.tile_color_palettes.keys():
+                command = cmdSetColPalName(self.tile_color_palettes, cur_name, new_name, "Set palette name")
+                self.undo_stack.push(command)
+            else:
+                self.col_pal_renamed.emit(None, None, source)
 
-    def remSprColPal(self, name):
-        if name in self.sprite_color_palettes.keys():
-            command = cmdRemSprColPal(self.sprite_color_palettes, name, "Add color palette")
-            self.undo_stack.push(command)
+    def addColPal(self, name, source):
+        if source is Source.SPRITE:
+            if name not in self.sprite_color_palettes.keys():
+                command = cmdAddColPal(self.sprite_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
+                self.undo_stack.push(command)
+            else:
+                self.spr_col_pal_added.emit(None, None, source)
         else:
-            self.spr_col_pal_removed.emit(None)
+            if name not in self.tile_color_palettes.keys():
+                command = cmdAddColPal(self.tile_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
+                self.undo_stack.push(command)
+            else:
+                self.spr_col_pal_added.emit(None, None, source)
 
-    def setSprPixBatch(self, batch):
-        command = cmdSetSprPixBatch(self.sprite_pixel_palettes, batch, "Draw pixels")
+    def remColPal(self, name, source):
+        if source is Source.SPRITE:
+            if name in self.sprite_color_palettes.keys():
+                command = cmdRemColPal(self.sprite_color_palettes, name, "Add color palette")
+                self.undo_stack.push(command)
+            else:
+                self.spr_col_pal_removed.emit(None, source)
+        else:
+            if name in self.tile_color_palettes.keys():
+                command = cmdRemColPal(self.tile_color_palettes, name, "Add color palette")
+                self.undo_stack.push(command)
+            else:
+                self.spr_col_pal_removed.emit(None, source)
+
+    def setPixBatch(self, batch, source):
+        target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
+        command = cmdSetPixBatch(target, batch, "Draw pixels")
         self.undo_stack.push(command)
 
-    def addSprPixRow(self):
-        command = cmdAddSprPixRow(self.sprite_pixel_palettes, "Add Sprite Row")
+    def addPixRow(self, source):
+        target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
+        target_name = "sprite" if source is Source.SPRITE else "tile"
+        command = cmdAddPixRow(target, "Add {} row".format(target_name))
         self.undo_stack.push(command)
 
-    def remSprPixRow(self):
-        command = cmdRemSprPixRow(self.sprite_pixel_palettes, "Remove Sprite Row")
+    def remPixRow(self, source):
+        target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
+        target_name = "sprite" if source is Source.SPRITE else "tile"
+        command = cmdRemPixRow(target, "Add {} row".format(target_name))
         self.undo_stack.push(command)
 
     def setUndoStack(self, undo_stack):

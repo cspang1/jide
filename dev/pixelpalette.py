@@ -1,7 +1,7 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from sources import Sources
+from source import Source
 import math
 
 class Overlay(QLabel):
@@ -123,7 +123,7 @@ class PixelPalette(QFrame):
         self.data = data
         self.selected = 0
         self.genPalette()
-        self.data.spr_batch_updated.connect(self.updateSubjects)
+        self.data.pix_batch_updated.connect(self.updateSubjects)
 
     @pyqtSlot()
     def genPalette(self):
@@ -131,11 +131,11 @@ class PixelPalette(QFrame):
             self.grid.itemAt(i).widget().setParent(None)
         self.contents.clear()
         row = col = index = 0
-        for index, sprite in enumerate(self.data.getSprites()):
-            color_palette = list(self.data.getSprColPals())[0]
+        for index, element in enumerate(self.data.getPixelPalettes(self.source)):
+            color_palette = list(self.data.getColPals(self.source))[0]
             tile = Tile(index, self)
             tile.setColors(color_palette)
-            tile.setData(sprite)
+            tile.setData(element)
             tile.update()
             self.contents.append(tile)
             self.grid.addWidget(self.contents[index], row, col)
@@ -153,7 +153,7 @@ class PixelPalette(QFrame):
         self.select_width = width if width > 0 else self.select_width
         self.select_height = height if height > 0 else self.select_height
         self.selected = index if index is not None else self.selected
-        data = self.data.getSprites() if self.source == Sources.SPRITE else self.data.getTiles()
+        data = self.data.getPixelPalettes(self.source)
         num_rows = math.floor(data.__len__() / 16)
         initial_row = math.floor(self.selected/16)
         if math.floor((self.selected + self.select_width - 1) / 16) > initial_row:
@@ -174,7 +174,7 @@ class PixelPalette(QFrame):
         lowest = len(self.contents) - 1
         for subject in subjects:
             tile = self.contents[subject]
-            tile.setData(self.data.getSprite(subject))
+            tile.setData(self.data.getElement(subject, self.source))
             tile.update()
             lowest = subject if tile.index < lowest else lowest
             if not self.inSelection(lowest):
@@ -209,6 +209,7 @@ class Contents(QWidget):
 
     def __init__(self, source, palette, parent=None):
         super().__init__(parent)
+        self.source = source
         self.palette = palette
         self.height = 0
 
@@ -246,8 +247,8 @@ class Contents(QWidget):
 
     def setup(self, data):
         self.data = data
-        self.data.spr_row_count_updated.connect(self.palRowCntChanged)
-        self.height = math.floor(self.data.getSprites().__len__()/16)
+        self.data.row_count_updated.connect(self.palRowCntChanged)
+        self.height = math.floor(self.data.getPixelPalettes(self.source).__len__()/16)
         if self.height <= 1:
             self.rem_row.setEnabled(False)
         self.add_row.setEnabled(True)
@@ -255,12 +256,12 @@ class Contents(QWidget):
 
     @pyqtSlot()
     def addPalRow(self):
-        self.data.addSprPixRow()
+        self.data.addPixRow(self.source)
 
     @pyqtSlot()
     def remPalRow(self):
         if self.height > 1:
-            self.data.remSprPixRow()
+            self.data.remPixRow(self.source)
 
     @pyqtSlot(int)
     def palRowCntChanged(self, num_rows):
@@ -275,7 +276,7 @@ class PixelPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)
 
     def __init__(self, source, parent=None):
-        title = "Sprite " if source == Sources.SPRITE else "Tile "
+        title = "Sprite " if source == Source.SPRITE else "Tile "
         super().__init__(title + "Palettes", parent)
         self.setFloating(False)
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)

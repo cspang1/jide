@@ -119,8 +119,9 @@ class ColorPalette(QWidget):
     palette_updated = pyqtSignal(str)
     color_selected = pyqtSignal(int)
 
-    def __init__(self, parent=None):
+    def __init__(self, source, parent=None):
         super().__init__(parent)
+        self.source = source
         self.grid = QGridLayout()
         self.grid.setSpacing(0)
         self.grid.setContentsMargins(0, 0, 0, 0)
@@ -143,7 +144,7 @@ class ColorPalette(QWidget):
 
     def setup(self, data):
         self.data = data
-        self.data.spr_col_pal_updated.connect(self.setPalette)
+        self.data.col_pal_updated.connect(self.setPalette)
         self.palette[0].select()
         index = 0
         color = QColor(Qt.magenta)
@@ -165,11 +166,11 @@ class ColorPalette(QWidget):
 
     @pyqtSlot(int, QColor)
     def sendColorUpdate(self, index, new_color, orig_color=None):
-        self.data.setSprCol(self.current_palette, index, new_color, orig_color)
+        self.data.setColor(self.current_palette, index, new_color, self.source, orig_color)
 
     @pyqtSlot(QColor)
     def previewColor(self, index, color):
-        self.data.previewSprCol(self.current_palette, index, color)
+        self.data.previewColor(self.current_palette, index, color, self.source)
 
     @pyqtSlot(str)
     def setPalette(self, palette):
@@ -212,15 +213,16 @@ class ColorPalette(QWidget):
 class ColorPaletteDock(QDockWidget):
     palette_updated = pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, source, parent=None):
         super().__init__("Color Palettes", parent)
+        self.source = source
         self.setFloating(False)
         self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
         self.docked_widget = QWidget(self)
         self.setWidget(self.docked_widget)
         self.docked_widget.setLayout(QVBoxLayout())
         self.docked_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
-        self.color_palette = ColorPalette(self)
+        self.color_palette = ColorPalette(self.source, self)
         self.color_palette_list = QComboBox()
         self.color_palette_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
         self.palette_picker = QHBoxLayout()
@@ -260,9 +262,9 @@ class ColorPaletteDock(QDockWidget):
 
     def setup(self, data):
         self.data = data
-        self.data.spr_col_pal_renamed.connect(self.renamePalette)
-        self.data.spr_col_pal_added.connect(self.addPalette)
-        self.data.spr_col_pal_removed.connect(self.removePalette)
+        self.data.col_pal_renamed.connect(self.renamePalette)
+        self.data.col_pal_added.connect(self.addPalette)
+        self.data.col_pal_removed.connect(self.removePalette)
         self.color_palette.setup(self.data)
         self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
         self.color_palette_list.setEnabled(True)
@@ -276,20 +278,20 @@ class ColorPaletteDock(QDockWidget):
     def addPaletteReq(self, event=None):
         name, accepted = QInputDialog.getText(self, "Add", "Palette name:", QLineEdit.Normal, "New palette")
         if accepted:
-            self.data.addSprColPal(name)
+            self.data.addColPal(name, self.source)
 
     def removePaletteReq(self, event=None):
         if self.color_palette_list.count() == 1:
-            QMessageBox(QMessageBox.Critical, "Error", "There must be at least one sprite color palette in the project").exec()
+            QMessageBox(QMessageBox.Critical, "Error", "There must be at least one sprite and tile color palette in the project").exec()
         else:
             name = self.color_palette_list.currentText()
-            self.data.remSprColPal(name)
+            self.data.remColPal(name, self.source)
 
     def renamePaletteReq(self, event=None):
         cur_name = self.color_palette_list.currentText()
         new_name, accepted = QInputDialog.getText(self, "Rename", "Palette name:", QLineEdit.Normal, cur_name)
         if accepted:
-            self.data.setSprColPalName(cur_name, new_name)
+            self.data.setColPalName(cur_name, new_name, self.source)
 
     def addPalette(self, name, index):
         if name != None:
