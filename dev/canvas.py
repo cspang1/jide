@@ -286,7 +286,7 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.PEN, True)
+        self.setTool(Tools.SELECT, True)
 
     def setColorSwitchEnabled(self, enabled):
         self.set_color_switch_enabled.emit(enabled)

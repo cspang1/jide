@@ -169,8 +169,10 @@ class PixelPalette(QFrame):
         self.overlay.selectSubjects(self.selected, self.select_width, self.select_height)
         self.subject_selected.emit(self.selected, self.select_width, self.select_height)
 
-    pyqtSlot(set)
-    def updateSubjects(self, subjects):
+    pyqtSlot(set, Source)
+    def updateSubjects(self, subjects, source):
+        if source is not self.source:
+            return
         lowest = len(self.contents) - 1
         for subject in subjects:
             tile = self.contents[subject]
@@ -264,8 +266,10 @@ class Contents(QWidget):
         if self.height > 1:
             self.data.remPixRow(self.source)
 
-    @pyqtSlot(int)
-    def palRowCntChanged(self, num_rows):
+    @pyqtSlot(int, Source)
+    def palRowCntChanged(self, num_rows, source):
+        if source is not self.source:
+            return
         self.height = num_rows
         self.height_changed.emit()
         if self.height <= 1:

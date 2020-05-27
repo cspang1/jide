@@ -177,8 +177,10 @@ class ColorPalette(QWidget):
     def previewColor(self, index, color):
         self.data.previewColor(self.current_palette, index, color, self.source)
 
-    @pyqtSlot(str)
-    def setPalette(self, palette):
+    @pyqtSlot(str, Source)
+    def setPalette(self, palette, source):
+        if source is not self.source:
+            return
         self.current_palette = palette
         widgets = [self.grid.itemAt(index) for index in range(self.grid.count())]
         for color, widget in zip(self.data.getColPal(self.current_palette, self.source), widgets):
@@ -299,7 +301,10 @@ class ColorPaletteDock(QDockWidget):
         if accepted:
             self.data.setColPalName(cur_name, new_name, self.source)
 
-    def addPalette(self, name, index):
+    @pyqtSlot(str, int, Source)
+    def addPalette(self, name, index, source):
+        if source is not self.source:
+            return
         if name != None:
             self.color_palette_list.insertItem(index, name)
             self.color_palette_list.setCurrentIndex(index)
@@ -308,7 +313,10 @@ class ColorPaletteDock(QDockWidget):
             QMessageBox(QMessageBox.Critical, "Error", "Palette with that name already exists").exec()
             self.addPaletteReq()
 
-    def removePalette(self, name):
+    @pyqtSlot(str, Source)
+    def removePalette(self, name, source):
+        if source is not self.source:
+            return
         if name != None:
             index = self.color_palette_list.findText(name)
             self.color_palette_list.removeItem(index)
@@ -317,7 +325,10 @@ class ColorPaletteDock(QDockWidget):
         else:
             QMessageBox(QMessageBox.Critical, "Error", "Unable to remove palette {}".format(name)).exec()
 
-    def renamePalette(self, cur_name, new_name):
+    @pyqtSlot(str, str, Source)
+    def renamePalette(self, cur_name, new_name, source):
+        if source is not self.source:
+            return
         if cur_name != new_name:
             self.color_palette_list.setItemText(self.color_palette_list.findText(cur_name), new_name)
             self.color_palette_list.setCurrentIndex(self.color_palette_list.findText(new_name))
@@ -332,7 +343,7 @@ class ColorPaletteDock(QDockWidget):
         self.palette_updated.emit(name)
 
     def setColorPalette(self, index):
-        self.color_palette.setPalette(self.color_palette_list.currentText())
+        self.color_palette.setPalette(self.color_palette_list.currentText(), self.source)
 
     def closeEvent(self, event):
         event.ignore()
