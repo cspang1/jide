@@ -2,13 +2,15 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from colorpicker import *
+from source import Source
 import resources
 
 class ColorPreview(QWidget):
     switch = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, source, parent=None):
         super().__init__(parent)
+        self.source = source
         self.setFixedSize(95, 95)
         self.primary_color = QColor(211, 211, 211, 255)
         self.secondary_color = QColor(211, 211, 211, 255)
@@ -40,15 +42,17 @@ class ColorPreview(QWidget):
         painter.setPen(rect_pen)
         painter.setBrush(sec_brush)
         painter.drawRect(27, 27, 61, 61)
-        if self.secondary_index == 0:
-            painter.setPen(trans_pen)
-            painter.drawLine(30, 30, 61+25, 61+25)
+        if self.source is Source.SPRITE:
+            if self.secondary_index == 0:
+                painter.setPen(trans_pen)
+                painter.drawLine(30, 30, 61+25, 61+25)
         painter.setPen(rect_pen)
         painter.setBrush(prim_brush)
         painter.drawRect(1, 1, 61, 61)
-        if self.primary_index == 0:
-            painter.setPen(trans_pen)
-            painter.drawLine(4, 4, 61-1, 61-1)
+        if self.source is Source.SPRITE:
+            if self.primary_index == 0:
+                painter.setPen(trans_pen)
+                painter.drawLine(4, 4, 61-1, 61-1)
 
     def setPrimaryColor(self, color):
         self.primary_color = color
@@ -70,8 +74,9 @@ class Color(QLabel):
     color_selected = pyqtSignal(int, QColor, Qt.MouseButton)
     edit = pyqtSignal(int, QColor)
 
-    def __init__(self, index, parent=None):
+    def __init__(self, index, source, parent=None):
         super().__init__(parent)
+        self.source = source
         self.index = index
         self.selected = False
         self.setPixmap(QPixmap(75, 75))
@@ -80,7 +85,7 @@ class Color(QLabel):
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
-        if self.index == 0:
+        if self.index == 0 and self.source is Source.SPRITE:
             pen = QPen(Qt.red)
             pen.setWidth(5)
             painter.setPen(pen)
@@ -100,7 +105,7 @@ class Color(QLabel):
         self.update()
 
     def mouseDoubleClickEvent(self, event):
-        if self.index != 0 and event.buttons() == Qt.LeftButton:
+        if (self.index != 0 or self.source is Source.TILE) and event.buttons() == Qt.LeftButton:
             self.edit.emit(self.index, self.color)
 
     def mousePressEvent(self, event):
@@ -126,9 +131,9 @@ class ColorPalette(QWidget):
         self.grid.setSpacing(0)
         self.grid.setContentsMargins(0, 0, 0, 0)
         self.picker = ColorPicker(self)
-        self.color_preview = ColorPreview(self)
+        self.color_preview = ColorPreview(self.source, self)
         self.color_preview.switch.connect(self.switchColors)
-        self.palette = [Color(n) for n in range(16)]
+        self.palette = [Color(n, self.source, self) for n in range(16)]
         positions = [(row,col) for row in range(4) for col in range(4)]
         for position, swatch in zip(positions, self.palette):
             swatch.color_selected.connect(self.selectColor)
@@ -146,12 +151,6 @@ class ColorPalette(QWidget):
         self.data = data
         self.data.col_pal_updated.connect(self.setPalette)
         self.palette[0].select()
-        index = 0
-        color = QColor(Qt.magenta)
-        self.color_preview.setSecondaryColor(color)
-        self.color_preview.setSecondaryIndex(index)
-        self.color_preview.setPrimaryColor(color)
-        self.color_preview.setPrimaryIndex(index)
 
     @pyqtSlot(int, QColor)
     def openPicker(self, index, orig_color):
@@ -176,14 +175,16 @@ class ColorPalette(QWidget):
     def setPalette(self, palette):
         self.current_palette = palette
         widgets = [self.grid.itemAt(index) for index in range(self.grid.count())]
-        for color, widget in zip(self.data.sprite_color_palettes[self.current_palette], widgets):
+        # for color, widget in zip(self.data.sprite_color_palettes[self.current_palette], widgets):
+        for color, widget in zip(self.data.getColPal(self.current_palette, self.source), widgets):
             widget.widget().fill(color)
             index = widgets.index(widget)
             if index == self.color_preview.primary_index:
-                self.color_preview.setPrimaryColor(color if index != 0 else QColor(Qt.magenta))
+                self.color_preview.setPrimaryColor(color if (index != 0 or self.source is Source.TILE) else QColor(Qt.magenta))
             if index == self.color_preview.secondary_index:
-                self.color_preview.setSecondaryColor(color if index != 0 else QColor(Qt.magenta))
-        self.grid.itemAt(0).widget().fill(QColor(Qt.magenta))
+                self.color_preview.setSecondaryColor(color if (index != 0 or self.source is Source.TILE) else QColor(Qt.magenta))
+        if self.source is Source.SPRITE:
+            self.grid.itemAt(0).widget().fill(QColor(Qt.magenta))
         self.palette_updated.emit(self.current_palette)
 
     @pyqtSlot()
@@ -272,7 +273,7 @@ class ColorPaletteDock(QDockWidget):
         self.add_palette.setEnabled(True)
         self.remove_palette.setEnabled(True)
         self.rename_palette.setEnabled(True)
-        for name, palette in self.data.sprite_color_palettes.items():
+        for name in self.data.getColPalNames(self.source):
             self.color_palette_list.addItem(name)
 
     def addPaletteReq(self, event=None):

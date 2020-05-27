@@ -30,8 +30,8 @@ class jide(QtWidgets.QMainWindow):
         self.view.setStyleSheet("background-color: #494949;")
 
     def setupDocks(self):
-        self.colorPaletteDock = ColorPaletteDock(Source.SPRITE, self)
-        self.pixelPaletteDock = PixelPaletteDock(Source.SPRITE, self)
+        self.colorPaletteDock = ColorPaletteDock(Source.TILE, self)
+        self.pixelPaletteDock = PixelPaletteDock(Source.TILE, self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
 
@@ -125,7 +125,7 @@ class jide(QtWidgets.QMainWindow):
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
-        self.scene = GraphicsScene(self.data, Source.SPRITE, self)
+        self.scene = GraphicsScene(self.data, Source.TILE, self)
         self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)
