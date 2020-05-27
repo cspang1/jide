@@ -1,13 +1,12 @@
-from PyQt5 import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from history import *
-from source import Source
-from colorpalette import upsample
+from collections import OrderedDict
 import json
 import math
-from collections import OrderedDict
+from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtGui import QColor
+from colorpicker import upsample
+from PyQt5.QtWidgets import QUndoStack
+from history import cmdAddColPal, cmdAddPixRow, cmdRemColPal, cmdRemPixRow, cmdSetCol, cmdSetColPalName, cmdSetPixBatch
+from source import Source
 
 class ColorPalettes(QObject):
     color_changed = pyqtSignal(str, Source)

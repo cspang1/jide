@@ -1,8 +1,8 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from source import Source
 import math
+from PyQt5.QtCore import Qt, QSize, QLineF, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QIcon, QPixmap, QImage, QPainter, QPen
+from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QDockWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QToolButton, QScrollArea, QSizePolicy, QToolTip
+from source import Source
 
 class Overlay(QLabel):
     tiles_selected = pyqtSignal(int, int, int)

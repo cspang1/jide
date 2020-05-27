@@ -1,18 +1,19 @@
-from PyQt5 import QtWidgets, uic
-from canvas import *
-from PyQt5 import QtCore
-from PyQt5.Qt import QApplication
-from colorpalette import *
-from pixelpalette import *
-from gamedata import GameData
-from source import Source
-from pathlib import Path
 import json
-import sys
+from pathlib import Path
 import shutil
 import subprocess
+import sys
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QKeySequence
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, qApp, QUndoStack
+from canvas import GraphicsScene, GraphicsView
+from colorpalette import ColorPaletteDock
+from gamedata import GameData
+from pixelpalette import PixelPaletteDock
+from source import Source
 
-class jide(QtWidgets.QMainWindow):
+
+class jide(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setupWindow()
@@ -30,8 +31,8 @@ class jide(QtWidgets.QMainWindow):
         self.view.setStyleSheet("background-color: #494949;")
 
     def setupDocks(self):
-        self.colorPaletteDock = ColorPaletteDock(Source.TILE, self)
-        self.pixelPaletteDock = PixelPaletteDock(Source.TILE, self)
+        self.colorPaletteDock = ColorPaletteDock(Source.SPRITE, self)
+        self.pixelPaletteDock = PixelPaletteDock(Source.SPRITE, self)
         self.addDockWidget(Qt.RightDockWidgetArea, self.colorPaletteDock)
         self.addDockWidget(Qt.RightDockWidgetArea, self.pixelPaletteDock)
 
@@ -125,7 +126,7 @@ class jide(QtWidgets.QMainWindow):
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
-        self.scene = GraphicsScene(self.data, Source.TILE, self)
+        self.scene = GraphicsScene(self.data, Source.SPRITE, self)
         self.pixelPaletteDock.pixel_palette.subject_selected.connect(self.scene.setSubject)
         self.view = GraphicsView(self.scene, self)
         self.setCentralWidget(self.view)
