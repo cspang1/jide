@@ -212,18 +212,18 @@ class jide(QMainWindow):
         dir_path = Path(__file__).resolve().parent
         dat_path = dir_path / "DAT Files"
         dat_path.mkdir(exist_ok=True)
-        #tcp_path = dat_path / "tile_color_palettes.dat"
-        #tpp_path = dat_path / "tiles.dat"
+        tcp_path = dat_path / "tile_color_palettes.dat"
+        tpp_path = dat_path / "tiles.dat"
         scp_path = dat_path / "sprite_color_palettes.dat"
         spp_path = dat_path / "sprites.dat"
 
-        #tile_pixel_data = self.data.getTiles()
-        #tile_color_data = self.data.getTileColPals()
+        tile_pixel_data = self.data.getPixelPalettes(Source.TILE)
+        tile_color_data = self.data.getColPals(Source.TILE)
         sprite_pixel_data = self.data.getPixelPalettes(Source.SPRITE)
         sprite_color_data = self.data.getColPals(Source.SPRITE)
 
-        #self.genPixelDATFile(tile_pixel_data, tpp_path)
-        #self.genColorDATFile(tile_color_data, tcp_path)
+        self.genPixelDATFile(tile_pixel_data, tpp_path)
+        self.genColorDATFile(tile_color_data, tcp_path)
         self.genPixelDATFile(sprite_pixel_data, spp_path)
         self.genColorDATFile(sprite_color_data, scp_path)
 
