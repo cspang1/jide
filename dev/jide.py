@@ -27,7 +27,6 @@ class jide(QMainWindow):
         # DEMO
         self.openFile()
         # DEMO
-        self.setCanvas(0)
 
     def setupWindow(self):
         self.setWindowTitle("JIDE")
@@ -41,6 +40,10 @@ class jide(QMainWindow):
         self.sprite_pixel_palette_dock = PixelPaletteDock(Source.SPRITE, self)
         self.tile_color_palette_dock = ColorPaletteDock(Source.TILE, self)
         self.tile_pixel_palette_dock = PixelPaletteDock(Source.TILE, self)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_color_palette_dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock)
+        self.removeDockWidget(self.tile_color_palette_dock)
+        self.removeDockWidget(self.tile_pixel_palette_dock)
 
     def setupToolbar(self):
         self.canvas_toolbar = QToolBar()
@@ -69,6 +72,8 @@ class jide(QMainWindow):
         self.canvas_tabs = QTabWidget()
         self.canvas_tabs.addTab(self.sprite_view, "Sprites")
         self.canvas_tabs.addTab(self.tile_view, "Tiles")
+        self.canvas_tabs.setTabEnabled(0, False)
+        self.canvas_tabs.setTabEnabled(1, False)
         self.setCentralWidget(self.canvas_tabs)
 
     def setupActions(self):
@@ -83,9 +88,6 @@ class jide(QMainWindow):
         open_file.setShortcut("Ctrl+O")
         open_file.setStatusTip("Open file")
         open_file.triggered.connect(self.openFile)
-        # DEMO
-        open_file.setEnabled(False)
-        # DEMO
 
         # Undo/redo
         self.undo_stack = QUndoStack(self)
@@ -187,6 +189,8 @@ class jide(QMainWindow):
         self.canvas_tabs = QTabWidget()
         self.canvas_tabs.addTab(self.sprite_view, "Sprites")
         self.canvas_tabs.addTab(self.tile_view, "Tiles")
+        self.canvas_tabs.setTabEnabled(0, True)
+        self.canvas_tabs.setTabEnabled(1, True)
         self.setCentralWidget(self.canvas_tabs)
         self.canvas_tabs.currentChanged.connect(self.setCanvas)
         self.setCanvas(0)
@@ -206,6 +210,9 @@ class jide(QMainWindow):
 
         for tool in self.tools:
             tool.setEnabled(True)
+        
+        self.pen_tool.setChecked(True)
+        self.pen_tool.triggered.emit(True)
 
     @pyqtSlot(int)
     def setCanvas(self, index):
