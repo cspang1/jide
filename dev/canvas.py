@@ -8,7 +8,7 @@ import sys
 from typing import List
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer, QEvent, QLineF, QPointF, QRectF
 from PyQt5.QtGui import QGuiApplication, QImage, QPixmap, QColor, QBrush, QPen, QPainter
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QApplication, QStyleOptionGraphicsItem
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QApplication, QStyleOptionGraphicsItem, QAction
 from canvastools import Tools
 from source import Source
 
@@ -102,9 +102,15 @@ class Overlay(QGraphicsPixmapItem):
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
         self.setAcceptHoverEvents(True)
 
+    # Currently disabling selection when switching tools...
+    # should make it more interactive...
     def setTool(self, tool, filled=False):
         self.tool = tool
         self.filled = filled
+        self.selecting = False
+        self.select_timer.stop()
+        self.scene.update()
+        self.scene.region_selected.emit(False)
 
     def setColor(self, color):
         self.color = color if color != 0 else QColor(Qt.magenta).rgba()
@@ -286,7 +292,6 @@ class GraphicsScene(QGraphicsScene):
         self.addItem(self.subject)
         self.addItem(self.overlay)
         self.primary_color = 0
-        self.setTool(Tools.SELECT, True)
 
     def setColorSwitchEnabled(self, enabled):
         self.set_color_switch_enabled.emit(enabled)
@@ -321,8 +326,8 @@ class GraphicsScene(QGraphicsScene):
         self.subject.update()
 
     @pyqtSlot(Tools)
-    def setTool(self, tool, filled=False):
-        self.overlay.setTool(tool, filled)
+    def setTool(self, tool):
+        self.overlay.setTool(tool, True) # Need True to be based on tool
 
     @pyqtSlot(str)
     def setColorPalette(self, palette):

@@ -1,14 +1,14 @@
 from enum import Enum
 
 class Tools(Enum):
-    PEN = 0
-    LINE = 1
-    RECTANGLE = 2
-    ELLIPSE = 3
+    SELECT = 0
+    PEN = 1
+    FLOODFILL = 2
+    LINE = 3
+    RECTANGLE = 4
+    ELLIPSE = 5
     # Text?
     # Polygon?
-    ZOOM_IN = 4
-    ZOOM_OUT = 5
-    PAN = 6
-    SELECT = 7
-    FLOODFILL = 8
+    # ZOOM_IN = 4
+    # ZOOM_OUT = 5
+    # PAN = 6
