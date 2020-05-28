@@ -3,10 +3,11 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, qApp, QUndoStack, QMessageBox, QTabWidget
+from PyQt5.QtCore import Qt, pyqtSlot, QSize
+from PyQt5.QtGui import QKeySequence, QIcon, QPixmap
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QMainWindow, QAction, QActionGroup, qApp, QUndoStack, QMessageBox, QTabWidget, QToolBar, QToolButton
 from canvas import GraphicsScene, GraphicsView
+from canvastools import Tools
 from colorpalette import ColorPaletteDock
 from colorpicker import downsample
 from gamedata import GameData
@@ -20,6 +21,7 @@ class jide(QMainWindow):
         self.setupWindow()
         self.setupTabs()
         self.setupDocks()
+        self.setupToolbar()
         self.setupActions()
         self.setupStatusBar()
         # DEMO
@@ -39,6 +41,29 @@ class jide(QMainWindow):
         self.sprite_pixel_palette_dock = PixelPaletteDock(Source.SPRITE, self)
         self.tile_color_palette_dock = ColorPaletteDock(Source.TILE, self)
         self.tile_pixel_palette_dock = PixelPaletteDock(Source.TILE, self)
+
+    def setupToolbar(self):
+        self.canvas_toolbar = QToolBar()
+        self.addToolBar(Qt.LeftToolBarArea, self.canvas_toolbar)
+
+        self.tool_actions = QActionGroup(self)
+        self.select_tool = QAction(QIcon(":/icons/select_tool.png"), "&Select tool", self.tool_actions)
+        self.select_tool.setShortcut("S")
+        self.pen_tool = QAction(QIcon(":/icons/pencil_tool.png"), "&Pen tool", self.tool_actions)
+        self.pen_tool.setShortcut("P")
+        self.fill_tool = QAction(QIcon(":/icons/fill_tool.png"), "&Fill tool", self.tool_actions)
+        self.fill_tool.setShortcut("G")
+        self.line_tool = QAction(QIcon(":/icons/line_tool.png"), "&Line tool", self.tool_actions)
+        self.line_tool.setShortcut("L")
+        self.rect_tool = QAction(QIcon(":/icons/rect_tool.png"), "&Rectangle tool", self.tool_actions)
+        self.rect_tool.setShortcut("R")
+        self.ellipse_tool = QAction(QIcon(":/icons/ellipse_tool.png"), "&Ellipse tool", self.tool_actions)
+        self.ellipse_tool.setShortcut("E")
+        self.tools = [self.select_tool, self.pen_tool, self.fill_tool, self.line_tool, self.rect_tool, self.ellipse_tool]
+        for tool in self.tools:
+            tool.setCheckable(True)
+            tool.setEnabled(False)
+            self.canvas_toolbar.addAction(tool)
 
     def setupTabs(self):
         self.canvas_tabs = QTabWidget()
@@ -165,6 +190,22 @@ class jide(QMainWindow):
         self.setCentralWidget(self.canvas_tabs)
         self.canvas_tabs.currentChanged.connect(self.setCanvas)
         self.setCanvas(0)
+
+        self.select_tool.triggered.connect(lambda checked, tool=Tools.SELECT: self.sprite_scene.setTool(tool))
+        self.select_tool.triggered.connect(lambda checked, tool=Tools.SELECT: self.tile_scene.setTool(tool))
+        self.pen_tool.triggered.connect(lambda checked, tool=Tools.PEN: self.sprite_scene.setTool(tool))
+        self.pen_tool.triggered.connect(lambda checked, tool=Tools.PEN: self.tile_scene.setTool(tool))
+        self.fill_tool.triggered.connect(lambda checked, tool=Tools.FLOODFILL: self.sprite_scene.setTool(tool))
+        self.fill_tool.triggered.connect(lambda checked, tool=Tools.FLOODFILL: self.tile_scene.setTool(tool))
+        self.line_tool.triggered.connect(lambda checked, tool=Tools.LINE: self.sprite_scene.setTool(tool))
+        self.line_tool.triggered.connect(lambda checked, tool=Tools.LINE: self.tile_scene.setTool(tool))
+        self.rect_tool.triggered.connect(lambda checked, tool=Tools.RECTANGLE: self.sprite_scene.setTool(tool))
+        self.rect_tool.triggered.connect(lambda checked, tool=Tools.RECTANGLE: self.tile_scene.setTool(tool))
+        self.ellipse_tool.triggered.connect(lambda checked, tool=Tools.ELLIPSE: self.sprite_scene.setTool(tool))
+        self.ellipse_tool.triggered.connect(lambda checked, tool=Tools.ELLIPSE: self.tile_scene.setTool(tool))
+
+        for tool in self.tools:
+            tool.setEnabled(True)
 
     @pyqtSlot(int)
     def setCanvas(self, index):
