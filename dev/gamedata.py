@@ -189,13 +189,13 @@ class GameData(QObject):
                 command = cmdAddColPal(self.sprite_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
                 self.undo_stack.push(command)
             else:
-                self.spr_col_pal_added.emit(None, None, source)
+                self.col_pal_added.emit(None, None, source)
         else:
             if name not in self.tile_color_palettes.keys():
                 command = cmdAddColPal(self.tile_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
                 self.undo_stack.push(command)
             else:
-                self.spr_col_pal_added.emit(None, None, source)
+                self.col_pal_added.emit(None, None, source)
 
     def remColPal(self, name, source):
         if source is Source.SPRITE:
@@ -203,13 +203,13 @@ class GameData(QObject):
                 command = cmdRemColPal(self.sprite_color_palettes, name, "Add color palette")
                 self.undo_stack.push(command)
             else:
-                self.spr_col_pal_removed.emit(None, source)
+                self.col_pal_removed.emit(None, source)
         else:
             if name in self.tile_color_palettes.keys():
                 command = cmdRemColPal(self.tile_color_palettes, name, "Add color palette")
                 self.undo_stack.push(command)
             else:
-                self.spr_col_pal_removed.emit(None, source)
+                self.col_pal_removed.emit(None, source)
 
     def setPixBatch(self, batch, source):
         target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
