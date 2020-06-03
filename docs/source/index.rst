@@ -55,11 +55,6 @@ JIDE source
 .. automodule:: source
    :members:
 
-JIDE resources
-=====================
-.. automodule:: resources
-   :members:
-
 Indices and tables
 ==================
 
