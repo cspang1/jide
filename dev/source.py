@@ -1,5 +1,5 @@
-from enum import Enum
+from enum import IntEnum
 
-class Source(Enum):
+class Source(IntEnum):
     SPRITE = 0
     TILE = 1
