@@ -195,6 +195,13 @@ class jide(QMainWindow):
         self.canvas_tabs.currentChanged.connect(self.setCanvas)
         self.setCanvas(0)
 
+        self.data.col_pal_updated.connect(lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source)))
+        self.data.col_pal_renamed.connect(lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source)))
+        self.data.col_pal_added.connect(lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source)))
+        self.data.col_pal_removed.connect(lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source)))
+        self.data.pix_batch_updated.connect(lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source)))
+        self.data.row_count_updated.connect(lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source)))
+
         self.select_tool.triggered.connect(lambda checked, tool=Tools.SELECT: self.sprite_scene.setTool(tool))
         self.select_tool.triggered.connect(lambda checked, tool=Tools.SELECT: self.tile_scene.setTool(tool))
         self.pen_tool.triggered.connect(lambda checked, tool=Tools.PEN: self.sprite_scene.setTool(tool))
@@ -214,7 +221,6 @@ class jide(QMainWindow):
         self.pen_tool.setChecked(True)
         self.pen_tool.triggered.emit(True)
 
-    @pyqtSlot(int)
     def setCanvas(self, index):
         try:
             self.paste_act.triggered.disconnect()

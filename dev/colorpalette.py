@@ -177,8 +177,8 @@ class ColorPalette(QWidget):
     def previewColor(self, index, color):
         self.data.previewColor(self.current_palette, index, color, self.source)
 
-    @pyqtSlot(str, Source)
-    def setPalette(self, palette, source):
+    @pyqtSlot(Source, str)
+    def setPalette(self, source, palette):
         if source is not self.source:
             return
         self.current_palette = palette
@@ -301,8 +301,8 @@ class ColorPaletteDock(QDockWidget):
         if accepted:
             self.data.setColPalName(cur_name, new_name, self.source)
 
-    @pyqtSlot(str, int, Source)
-    def addPalette(self, name, index, source):
+    @pyqtSlot(Source, str, int)
+    def addPalette(self, source, name, index):
         if source is not self.source:
             return
         if name != None:
@@ -313,8 +313,8 @@ class ColorPaletteDock(QDockWidget):
             QMessageBox(QMessageBox.Critical, "Error", "Palette with that name already exists").exec()
             self.addPaletteReq()
 
-    @pyqtSlot(str, Source)
-    def removePalette(self, name, source):
+    @pyqtSlot(Source, str)
+    def removePalette(self, source, name):
         if source is not self.source:
             return
         if name != None:
@@ -325,8 +325,8 @@ class ColorPaletteDock(QDockWidget):
         else:
             QMessageBox(QMessageBox.Critical, "Error", "Unable to remove palette {}".format(name)).exec()
 
-    @pyqtSlot(str, str, Source)
-    def renamePalette(self, cur_name, new_name, source):
+    @pyqtSlot(Source, str, str)
+    def renamePalette(self, source, cur_name, new_name):
         if source is not self.source:
             return
         if cur_name != new_name:
@@ -343,7 +343,7 @@ class ColorPaletteDock(QDockWidget):
         self.palette_updated.emit(name)
 
     def setColorPalette(self, index):
-        self.color_palette.setPalette(self.color_palette_list.currentText(), self.source)
+        self.color_palette.setPalette(self.source, self.color_palette_list.currentText())
 
     def closeEvent(self, event):
         event.ignore()
