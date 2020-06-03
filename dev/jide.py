@@ -16,7 +16,12 @@ from source import Source
 
 
 class jide(QMainWindow):
+    """This is the primary class which serves as the glue for JIDE. It interfaces between the various canvases, pixel and color palettes, centralized data source, and data output routines.
+    """
+
     def __init__(self):
+        """jide constructor
+        """
         super().__init__()
         self.setupWindow()
         self.setupTabs()
@@ -29,6 +34,8 @@ class jide(QMainWindow):
         # DEMO
 
     def setupWindow(self):
+        """Entry point to set up primary window attributes
+        """
         self.setWindowTitle("JIDE")
         self.sprite_view = QGraphicsView()
         self.tile_view = QGraphicsView()
@@ -36,6 +43,8 @@ class jide(QMainWindow):
         self.tile_view.setStyleSheet("background-color: #494949;")
 
     def setupDocks(self):
+        """Set up pixel palette, color palette, and tile map docks
+        """
         self.sprite_color_palette_dock = ColorPaletteDock(Source.SPRITE, self)
         self.sprite_pixel_palette_dock = PixelPaletteDock(Source.SPRITE, self)
         self.tile_color_palette_dock = ColorPaletteDock(Source.TILE, self)
@@ -46,6 +55,8 @@ class jide(QMainWindow):
         self.removeDockWidget(self.tile_pixel_palette_dock)
 
     def setupToolbar(self):
+        """Set up graphics tools toolbar
+        """
         self.canvas_toolbar = QToolBar()
         self.addToolBar(Qt.LeftToolBarArea, self.canvas_toolbar)
 
@@ -69,6 +80,8 @@ class jide(QMainWindow):
             self.canvas_toolbar.addAction(tool)
 
     def setupTabs(self):
+        """Set up main window sprite/tile/tile map tabs
+        """
         self.canvas_tabs = QTabWidget()
         self.canvas_tabs.addTab(self.sprite_view, "Sprites")
         self.canvas_tabs.addTab(self.tile_view, "Tiles")
@@ -77,6 +90,8 @@ class jide(QMainWindow):
         self.setCentralWidget(self.canvas_tabs)
 
     def setupActions(self):
+        """Set up main menu actions
+        """
         # Exit
         exit_act = QAction("&Exit", self)
         exit_act.setShortcut("Ctrl+Q")
@@ -133,17 +148,31 @@ class jide(QMainWindow):
         jcap_menu.addAction(self.load_jcap)
 
     def setupStatusBar(self):
+        """Set up bottom status bar
+        """
         self.statusBar = self.statusBar()
 
     @pyqtSlot(bool)
     def setCopyActive(self, active):
+        """Set whether the copy action is available
+
+        :param active: Variable representing whether copy action should be set to available or unavailable
+        :type active: bool
+        """
         self.copy_act.isEnabled(active)
 
     @pyqtSlot(bool)
     def setPasteActive(self, active):
+        """Set whether the paste action is available
+
+        :param active: Variable representing whether paste action should be set to available or unavailable
+        :type active: bool
+        """
         self.paste_act.isEnabled(active)
 
     def openFile(self):
+        """Open file action to hand file handle to GameData
+        """
         # DEMO
         #file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
         dir_path = Path(__file__).resolve().parent
@@ -160,6 +189,8 @@ class jide(QMainWindow):
                 self.loadProject()
 
     def loadProject(self):
+        """Load project file data and populate UI elements/set up signals and slots
+        """
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
@@ -222,6 +253,11 @@ class jide(QMainWindow):
         self.pen_tool.triggered.emit(True)
 
     def setCanvas(self, index):
+        """Set the dock and signal/slot layout to switch between sprite/tile/tile map tabs
+
+        :param index: Index of canvas tab
+        :type index: int
+        """
         try:
             self.paste_act.triggered.disconnect()
         except:
@@ -263,6 +299,8 @@ class jide(QMainWindow):
             self.tile_scene.region_selected.connect(self.copy_act.setEnabled)
 
     def genDATFiles(self):
+        """Generate .dat files from project for use by JCAP
+        """
         dir_path = Path(__file__).resolve().parent
         dat_path = dir_path / "DAT Files"
         dat_path.mkdir(exist_ok=True)
@@ -282,6 +320,13 @@ class jide(QMainWindow):
         self.genColorDATFile(sprite_color_data, scp_path)
 
     def genPixelDATFile(self, source, path):
+        """Generate sprite/tile pixel palette .dat file
+
+        :param source: List containing sprite/tile pixel data
+        :type source: list
+        :param path: File path to .dat
+        :type path: str
+        """
         with path.open("wb") as dat_file:
             for element in source:
                 for line in element:
@@ -291,6 +336,13 @@ class jide(QMainWindow):
                     dat_file.write(total.to_bytes(4, byteorder="big")[::-1])
 
     def genColorDATFile(self, source, path):
+        """Generate sprite/tile color palette .dat file
+
+        :param source: List containing sprite/tile color data
+        :type source: list
+        :param path: File path to .dat
+        :type path: str
+        """
         with path.open("wb") as dat_file:
             for palette in source:
                 for color in palette:
@@ -299,6 +351,8 @@ class jide(QMainWindow):
                     dat_file.write(bytes([rgb]))
 
     def loadJCAP(self):
+        """Generate .dat files and execute command-line serial loading of JCAP
+        """
         self.statusBar.showMessage("Loading JCAP...")
         self.genDATFiles()
         dir_path = Path(__file__).resolve().parent

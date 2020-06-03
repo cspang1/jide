@@ -3,21 +3,61 @@ from PyQt5.QtGui import QColor, QValidator, QPixmap, QFont, QRegExpValidator, QI
 from PyQt5.QtWidgets import QLabel, QFrame, QDialog, QWidget, QDockWidget, QVBoxLayout, QSizePolicy, QGridLayout, QDialogButtonBox, QHBoxLayout, QFormLayout, QLineEdit, QLayout, QAction, QToolButton, QComboBox, qApp, QUndoStack
 
 def upsample(red, green, blue):
+    """Upsamples RGB from 8-bit to 24-bit
+
+    :param red: 8-bit red value
+    :type red: int
+    :param green: 8-bit green value
+    :type green: int
+    :param blue: 8-bit blue value
+    :type blue: int
+    :return: 24-bit upscaled RGB tuple
+    :rtype: tuple(int, int, int)
+    """
     red = round((red/7)*255)
     green = round((green/7)*255)
     blue = round((blue/3)*255)
     return (red, green, blue)
 
 def downsample(red, green, blue):
+    """Downsamples RGB from 24-bit to 8-bit
+
+    :param red: 24-bit red value
+    :type red: int
+    :param green: 24-bit green value
+    :type green: int
+    :param blue: 24-bit blue value
+    :type blue: int
+    :return: 8-bit downscaled RGB tuple
+    :rtype: tuple(int, int, int)
+    """
     red = round((red/255)*7)
     green = round((green/255)*7)
     blue = round((blue/255)*3)
     return (red, green, blue)
 
 def normalize(red, green, blue):
+    """Normalizes any RGB value to be representable by a whole 8-bit value
+
+    :param red: Red value
+    :type red: int
+    :param green: Green value
+    :type green: int
+    :param blue: Blue value
+    :type blue: int
+    :return: 24-bit normalized RGB tuple
+    :rtype: tuple(int, int, int)
+    """
     return upsample(*downsample(red, green, blue))
 
 class Color(QLabel):
+    """Represents a single color tile in the color picker
+
+    :param index: Index of the color tile
+    :type index: int
+    :param parent: Parent widget, defaults to None
+    :type parent: QWidget, optional
+    """
     color = QColor()
     clicked = pyqtSignal(QColor)
     color_selected = pyqtSignal(int)
@@ -29,10 +69,20 @@ class Color(QLabel):
         self.selected = False
 
     def fill(self, color):
+        """Fills the tile with the specified color
+
+        :param color: Target color
+        :type color: QColor
+        """
         self.color = color
         self.pixmap().fill(self.color)
 
     def paintEvent(self, event):
+        """Paint event for the color tile which draws the grid
+
+        :param event: QPaintEvent event
+        :type event: QPaintEvent
+        """
         super().paintEvent(event)
         painter = QPainter(self)
         if self.selected:
@@ -46,20 +96,31 @@ class Color(QLabel):
         painter.drawRect(0, 0, 24, 24)
 
     def mousePressEvent(self, event):
+        """Handles clicking on the color tile to select it
+
+        :param event: Source event
+        :type event: QMouseEvent
+        """
         self.clicked.emit(self.color)
         self.select()
 
     def select(self):
+        """Handles selecting the color tile
+        """
         self.selected = True
         self.color_selected.emit(self.index)
         self.update()
 
     def deselect(self):
+        """Handles de-selecting the color tile
+        """
         self.selected = False
         self.update()
 
 class ColorPalette(QFrame):
-    def __init__(self, initcolor=None):
+    """Represents the entire grid of color tiles in the color picker
+    """
+    def __init__(self):
         super().__init__()
         self.grid = QGridLayout()
         self.grid.setSpacing(0)
@@ -74,8 +135,6 @@ class ColorPalette(QFrame):
         colors = [(red, green, blue) for blue in range(4) for red in range(8) for green in range(8)]
         for position, color, swatch in zip(positions, colors, self.palette):
             color = QColor(*upsample(*color))
-            if initcolor == color:
-                swatch.select()
             swatch.fill(color)
             swatch.color_selected.connect(self.selectColor)
             self.grid.addWidget(swatch, *position)
@@ -83,17 +142,38 @@ class ColorPalette(QFrame):
 
     pyqtSlot(int)
     def selectColor(self, index):
+        """Selects a color in the color picker
+
+        :param index: Index of the selected color
+        :type index: int
+        """
         widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
         for idx in range(self.grid.count()):
             if idx != index:
                 self.grid.itemAt(idx).widget().deselect()
 
 class ColorValidator(QValidator):
+    """Provides input field validation to color picker RGB values
+
+    :param top: RGB value ceiling
+    :type top: int
+    :param parent: Parent widget, defaults to None
+    :type parent: QWidget, optional
+    """
     def __init__(self, top, parent=None):
         super().__init__(parent)
         self.top = top
 
     def validate(self, value, pos):
+        """Validates an RGB input
+
+        :param value: Value of the RGB input
+        :type value: int
+        :param pos: Position of the cursor in the input field
+        :type pos: int
+        :return: Result of the validation
+        :rtype: QValidator
+        """
         bottom = 0
         if value != "":
             try:
@@ -108,6 +188,11 @@ class ColorValidator(QValidator):
             return (QValidator.Invalid, value, pos)
 
 class ColorPicker(QDialog):
+    """Represents the dialog containing the color picker
+
+    :param parent: Parent widget, defaults to None
+    :type parent: QWidget, optional
+    """
     preview_color = pyqtSignal(QColor)
 
     def __init__(self, parent=None):
@@ -203,6 +288,15 @@ class ColorPicker(QDialog):
         self.setLayout(dialog_layout)
 
     def eventFilter(self, source, event):
+        """Event filter to handle the dialog losing focus
+
+        :param source: Event source
+        :type source: QObject
+        :param event: Source event
+        :type event: QEvent
+        :return: Whether to handle the event further down
+        :rtype: bool
+        """
         if event.type() == QEvent.FocusOut:
             if source is self.hex8:
                 self.set8BitHex()
@@ -211,10 +305,20 @@ class ColorPicker(QDialog):
         return False
 
     def getColor(self):
+        """Gets the chosen color from the color picker
+
+        :return: Chosen color
+        :rtype: QColor
+        """
         return self.color
 
     @pyqtSlot(QColor)
     def setColor(self, value):
+        """Sets the chosen color of the color picker
+
+        :param value: The color to be set
+        :type value: QColor
+        """
         self.color = QColor(*normalize(value.red(), value.green(), value.blue()))
         self.preview_color.emit(self.color)
         self.preview_pixmap.fill(self.color)
@@ -240,18 +344,24 @@ class ColorPicker(QDialog):
         self.hex8.setText("#" + self.cur_hex8)
 
     def set8BitColors(self):
+        """Sets the active color to that chosen by the 8-bit input fields
+        """
         r = self.cur_r8 if self.r8.text() == "" else int(self.r8.text())
         g = self.cur_g8 if self.g8.text() == "" else int(self.g8.text())
         b = self.cur_b8 if self.b8.text() == "" else int(self.b8.text())
         self.setColor(QColor(*upsample(r, g, b)))
 
     def set24BitColors(self):
+        """Sets the active color to that chosen by the 24-bit input fields
+        """
         r = self.cur_r24 if self.r24.text() == "" else int(self.r24.text())
         g = self.cur_g24 if self.g24.text() == "" else int(self.g24.text())
         b = self.cur_b24 if self.b24.text() == "" else int(self.b24.text())
         self.setColor(QColor(r, g, b))
 
     def set8BitHex(self):
+        """Sets the active color to that chosen by the 8-bit hex input field
+        """
         hex = self.hex8.text().lstrip("#")
         hex = int(self.cur_hex8, 16) if hex == "" else int(hex, 16)
         r = (hex >> 5) & 7
@@ -260,6 +370,8 @@ class ColorPicker(QDialog):
         self.setColor(QColor(*upsample(r, g, b)))
 
     def set24BitHex(self):
+        """Sets the active color to that chosen by the 24-bit hex input field
+        """
         hex = self.hex24.text().lstrip("#")
         hex = self.cur_hex24 if hex == "" else "#" + hex.zfill(6)
         self.setColor(QColor(hex))
