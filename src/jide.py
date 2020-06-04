@@ -175,8 +175,7 @@ class jide(QMainWindow):
         """
         # DEMO
         #file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
-        dir_path = Path(__file__).resolve().parent
-        file_name = dir_path / "demo.jrf"
+        file_name = Path(__file__).parents[1] / "data" / "demo.jrf"
         #DEMO
         if file_name:
             try:
@@ -301,8 +300,7 @@ class jide(QMainWindow):
     def genDATFiles(self):
         """Generate .dat files from project for use by JCAP
         """
-        dir_path = Path(__file__).resolve().parent
-        dat_path = dir_path / "DAT Files"
+        dat_path = Path(__file__).parents[1] / "data" / "DAT Files"
         dat_path.mkdir(exist_ok=True)
         tcp_path = dat_path / "tile_color_palettes.dat"
         tpp_path = dat_path / "tiles.dat"
@@ -355,8 +353,7 @@ class jide(QMainWindow):
         """
         self.statusBar.showMessage("Loading JCAP...")
         self.genDATFiles()
-        dir_path = Path(__file__).resolve().parent
-        dat_path = dir_path / "DAT Files"
+        dat_path = Path(__file__).parents[1] / "data" / "DAT Files"
         tcp_path = dat_path / "tile_color_palettes.dat"
         tpp_path = dat_path / "tiles.dat"
         scp_path = dat_path / "sprite_color_palettes.dat"
