@@ -3,6 +3,9 @@
 <hr>
 
 <p align="center">
+  <a href='https://github.com/cspang1/jide/actions?query=workflow%3ABuild'>
+    <img src='https://github.com/cspang1/jide/workflows/Build/badge.svg' alt='Build Status'/>
+  </a>
   <a href='https://jide.readthedocs.io/en/latest/?badge=latest'>
     <img src='https://readthedocs.org/projects/jide/badge/?version=latest' alt='Documentation Status'/>
   </a>
