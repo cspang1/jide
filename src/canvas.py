@@ -6,11 +6,28 @@ import math
 import os
 import sys
 from typing import List
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer, QEvent, QLineF, QPointF, QRectF
+from PyQt5.QtCore import (
+    Qt,
+    pyqtSignal,
+    pyqtSlot,
+    QTimer,
+    QEvent,
+    QLineF,
+    QPointF,
+    QRectF,
+)
 from PyQt5.QtGui import QGuiApplication, QImage, QPixmap, QColor, QBrush, QPen, QPainter
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QApplication, QStyleOptionGraphicsItem, QAction
+from PyQt5.QtWidgets import (
+    QGraphicsView,
+    QGraphicsScene,
+    QGraphicsPixmapItem,
+    QApplication,
+    QStyleOptionGraphicsItem,
+    QAction,
+)
 from canvastools import Tools
 from source import Source
+
 
 class GraphicsView(QGraphicsView):
     """QGraphicsView into sprite/tile canvas
@@ -20,6 +37,7 @@ class GraphicsView(QGraphicsView):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget
     """
+
     def __init__(self, scene=None, parent=None):
         super().__init__(scene, parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
@@ -37,7 +55,10 @@ class GraphicsView(QGraphicsView):
         :return: Whether to continue processing event downstream
         :rtype: bool
         """
-        if event.type() == QEvent.GraphicsSceneWheel and QApplication.keyboardModifiers() == Qt.ControlModifier:
+        if (
+            event.type() == QEvent.GraphicsSceneWheel
+            and QApplication.keyboardModifiers() == Qt.ControlModifier
+        ):
             self.zoomCanvas(event)
             event.accept()
             return True
@@ -62,17 +83,24 @@ class GraphicsView(QGraphicsView):
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
 
+
 class Subject(QGraphicsPixmapItem):
     """Object representing pixel contents of canvas
 
     :param parent: Parent widget, defaults to None
     :type parent: QWidget
     """
+
     def __init__(self, parent=None):
         self.width = 8
         self.height = 8
-        self.color_table = [0]*16
-        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.color_table = [0] * 16
+        self.subject = QImage(
+            bytes([0] * self.width * self.height),
+            self.width,
+            self.height,
+            QImage.Format_Indexed8,
+        )
         self.setColorTable(self.color_table)
         super().__init__(QPixmap.fromImage(self.subject), parent)
         self.setShapeMode(QGraphicsPixmapItem.BoundingRectShape)
@@ -124,7 +152,12 @@ class Subject(QGraphicsPixmapItem):
     def resizeSubject(self):
         """Perform re-generation of subject QImage proceeding resize
         """
-        self.subject = QImage(bytes([0]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.subject = QImage(
+            bytes([0] * self.width * self.height),
+            self.width,
+            self.height,
+            QImage.Format_Indexed8,
+        )
         self.setColorTable(self.color_table)
 
     def copy(self, selected_region):
@@ -135,12 +168,14 @@ class Subject(QGraphicsPixmapItem):
         """
         QGuiApplication.clipboard().setImage(self.subject.copy(selected_region))
 
+
 class Overlay(QGraphicsPixmapItem):
     """Overlay of canvas which handles graphics tools interactions
 
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, parent=None):
         self.start_pos = None
         self.last_pos = None
@@ -226,7 +261,9 @@ class Overlay(QGraphicsPixmapItem):
         """
         self.base_image = self.scene.subject.subject.copy()
         old_color = self.base_image.pixelIndex(x, y)
-        new_color = self.base_image.colorTable().index(0 if self.color == QColor(Qt.magenta).rgba() else self.color)
+        new_color = self.base_image.colorTable().index(
+            0 if self.color == QColor(Qt.magenta).rgba() else self.color
+        )
         self.fillPixel(x, y, old_color, new_color)
 
     def fillPixel(self, x, y, old_color, new_color):
@@ -241,14 +278,21 @@ class Overlay(QGraphicsPixmapItem):
         :param new_color: New color to replace target color
         :type new_color: int
         """
-        if not 0 <= x < self.base_image.width() or not 0 <= y < self.base_image.height(): return
-        if old_color == new_color: return
-        elif self.base_image.pixelIndex(x, y) != old_color: return
-        else: self.base_image.setPixel(x, y, new_color)
-        self.fillPixel(x+1, y, old_color, new_color)
-        self.fillPixel(x, y+1, old_color, new_color)
-        self.fillPixel(x-1, y, old_color, new_color)
-        self.fillPixel(x, y-1, old_color, new_color)
+        if (
+            not 0 <= x < self.base_image.width()
+            or not 0 <= y < self.base_image.height()
+        ):
+            return
+        if old_color == new_color:
+            return
+        elif self.base_image.pixelIndex(x, y) != old_color:
+            return
+        else:
+            self.base_image.setPixel(x, y, new_color)
+        self.fillPixel(x + 1, y, old_color, new_color)
+        self.fillPixel(x, y + 1, old_color, new_color)
+        self.fillPixel(x - 1, y, old_color, new_color)
+        self.fillPixel(x, y - 1, old_color, new_color)
 
     def paste(self):
         """Entry point for pasting a pixel region after a selection is copied
@@ -290,7 +334,12 @@ class Overlay(QGraphicsPixmapItem):
         x = int(position.x())
         y = int(position.y())
         cur_x = cur_y = 0
-        self.pasted = QImage(bytes([16]*self.width*self.height), self.width, self.height, QImage.Format_Indexed8)
+        self.pasted = QImage(
+            bytes([16] * self.width * self.height),
+            self.width,
+            self.height,
+            QImage.Format_Indexed8,
+        )
         color_table = deepcopy(self.copied.colorTable())
         color_table.append(0)
         if self.scene.source is Source.SPRITE:
@@ -313,8 +362,12 @@ class Overlay(QGraphicsPixmapItem):
         if event.buttons() == Qt.LeftButton and not self.pasting:
             self.scene.setColorSwitchEnabled(False)
             if self.start_pos is None:
-                self.start_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
-                self.start_scene_pos = QPointF(math.floor(event.scenePos().x()), math.floor(event.scenePos().y()))
+                self.start_pos = QPointF(
+                    math.floor(event.pos().x()), math.floor(event.pos().y())
+                )
+                self.start_scene_pos = QPointF(
+                    math.floor(event.scenePos().x()), math.floor(event.scenePos().y())
+                )
             self.last_pos = self.start_pos
             if self.tool is Tools.SELECT:
                 self.selecting = False
@@ -342,12 +395,16 @@ class Overlay(QGraphicsPixmapItem):
                     self.clear()
                 pixmap = self.pixmap()
                 painter = QPainter(pixmap)
-                self.cur_pos = QPointF(math.floor(event.pos().x()), math.floor(event.pos().y()))
-                self.cur_scene_pos = QPointF(math.ceil(event.scenePos().x()), math.ceil(event.scenePos().y()))
+                self.cur_pos = QPointF(
+                    math.floor(event.pos().x()), math.floor(event.pos().y())
+                )
+                self.cur_scene_pos = QPointF(
+                    math.ceil(event.scenePos().x()), math.ceil(event.scenePos().y())
+                )
                 pen = QPen(QColor.fromRgba(self.color))
                 pen.setWidth(1)
                 painter.setPen(pen)
-                if(self.filled):
+                if self.filled:
                     brush = QBrush(QColor.fromRgba(self.color))
                     painter.setBrush(brush)
                 if self.tool is Tools.LINE:
@@ -383,8 +440,12 @@ class Overlay(QGraphicsPixmapItem):
             self.scene.bakeDiff(self.base_image)
         elif event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
             self.scene.bakeOverlay(self.pixmap().toImage())
-        if self.selecting: self.scene.selectRegion(QRectF(self.start_scene_pos, self.cur_scene_pos).normalized())
-        else: self.scene.region_selected.emit(False)
+        if self.selecting:
+            self.scene.selectRegion(
+                QRectF(self.start_scene_pos, self.cur_scene_pos).normalized()
+            )
+        else:
+            self.scene.region_selected.emit(False)
         if event.button() == Qt.LeftButton and self.pasting:
             self.scene.bakeDiff(self.pasted)
             self.pasting = False
@@ -406,13 +467,23 @@ class Overlay(QGraphicsPixmapItem):
         csx = self.cur_scene_pos.x()
         csy = self.cur_scene_pos.y()
         scene_rect = self.scene.itemsBoundingRect()
-        self.start_scene_pos = QPointF(max(min(ssx, scene_rect.right()), scene_rect.left()), max(min(ssy, scene_rect.bottom()), scene_rect.top()))
-        self.cur_scene_pos = QPointF(max(min(csx, scene_rect.right()), scene_rect.left()), max(min(csy, scene_rect.bottom()), scene_rect.top()))
-        if self.start_scene_pos.x() != self.cur_scene_pos.x() and self.start_scene_pos.y() != self.cur_scene_pos.y():
+        self.start_scene_pos = QPointF(
+            max(min(ssx, scene_rect.right()), scene_rect.left()),
+            max(min(ssy, scene_rect.bottom()), scene_rect.top()),
+        )
+        self.cur_scene_pos = QPointF(
+            max(min(csx, scene_rect.right()), scene_rect.left()),
+            max(min(csy, scene_rect.bottom()), scene_rect.top()),
+        )
+        if (
+            self.start_scene_pos.x() != self.cur_scene_pos.x()
+            and self.start_scene_pos.y() != self.cur_scene_pos.y()
+        ):
             self.selecting = True
             self.scene.update()
         else:
             self.selecting = False
+
 
 class GraphicsScene(QGraphicsScene):
     """Canvas representing the current state of the subject including overlayed grid lines
@@ -424,6 +495,7 @@ class GraphicsScene(QGraphicsScene):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     set_pixel_palette = pyqtSignal(int, int, int)
     region_selected = pyqtSignal(bool)
     region_copied = pyqtSignal(bool)
@@ -474,10 +546,13 @@ class GraphicsScene(QGraphicsScene):
                 cur_subject = data[root + col + (row * 16)]
                 for y in range(8):
                     for x in range(8):
-                        self.subject.setPixel(8*col+x, 8*row+y, cur_subject[y][x])
+                        self.subject.setPixel(
+                            8 * col + x, 8 * row + y, cur_subject[y][x]
+                        )
 
         self.subject.update()
-        if self.overlay.selecting: self.overlay.updateSceneForeground()
+        if self.overlay.selecting:
+            self.overlay.updateSceneForeground()
         self.setSceneRect(self.itemsBoundingRect())
 
     @pyqtSlot(Tools)
@@ -487,7 +562,7 @@ class GraphicsScene(QGraphicsScene):
         :param tool: Current tool to be used
         :type tool: Tools
         """
-        self.overlay.setTool(tool, True) # Need True to be based on tool
+        self.overlay.setTool(tool, True)  # Need True to be based on tool
 
     @pyqtSlot(str)
     def setColorPalette(self, palette):
@@ -548,7 +623,7 @@ class GraphicsScene(QGraphicsScene):
                 new_pixel = image.pixelIndex(col, row)
                 old_pixel = original.pixelIndex(col, row)
                 if old_pixel != new_pixel and new_pixel != 16:
-                    index = self.root + math.floor(col/8) + 16*math.floor(row/8)
+                    index = self.root + math.floor(col / 8) + 16 * math.floor(row / 8)
                     row_norm = row % 8
                     col_norm = col % 8
                     batch[index].append((row_norm, col_norm, new_pixel))
@@ -565,7 +640,7 @@ class GraphicsScene(QGraphicsScene):
         for row in range(overlay.height()):
             for col in range(overlay.width()):
                 if overlay.pixel(col, row) != 0:
-                    index = self.root + math.floor(col/8) + 16*math.floor(row/8)
+                    index = self.root + math.floor(col / 8) + 16 * math.floor(row / 8)
                     row_norm = row % 8
                     col_norm = col % 8
                     batch[index].append((row_norm, col_norm, self.primary_color))
@@ -609,12 +684,16 @@ class GraphicsScene(QGraphicsScene):
             pen.setWidth(3)
             pen.setCosmetic(True)
             painter.setPen(pen)
-            painter.drawRect(QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos))
+            painter.drawRect(
+                QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos)
+            )
             pen.setColor(Qt.black)
             pen.setStyle(Qt.DotLine)
             pen.setDashOffset(self.overlay.ants_offset)
             painter.setPen(pen)
-            painter.drawRect(QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos))
+            painter.drawRect(
+                QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos)
+            )
 
     def drawBackground(self, painter, rect):
         """Draw the magenta transparency background, used by the sprite canvas

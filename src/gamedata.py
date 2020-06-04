@@ -5,8 +5,17 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtGui import QColor
 from colorpicker import upsample
 from PyQt5.QtWidgets import QUndoStack
-from history import cmdAddColPal, cmdAddPixRow, cmdRemColPal, cmdRemPixRow, cmdSetCol, cmdSetColPalName, cmdSetPixBatch
+from history import (
+    cmdAddColPal,
+    cmdAddPixRow,
+    cmdRemColPal,
+    cmdRemPixRow,
+    cmdSetCol,
+    cmdSetColPalName,
+    cmdSetPixBatch,
+)
 from source import Source
+
 
 class ColorPalettes(QObject):
     """Data container for sprite/tile color palettes
@@ -18,6 +27,7 @@ class ColorPalettes(QObject):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     color_changed = pyqtSignal(Source, str)
     name_changed = pyqtSignal(Source, str, str)
     palette_added = pyqtSignal(Source, str, int)
@@ -29,9 +39,12 @@ class ColorPalettes(QObject):
         self.source = source
         for spr_pal in data:
             palette = spr_pal["contents"]
-            palette[:] = [QColor(*upsample(color>>5, (color>>2)&7, color&3)) for color in palette]
+            palette[:] = [
+                QColor(*upsample(color >> 5, (color >> 2) & 7, color & 3))
+                for color in palette
+            ]
             if self.source is Source.SPRITE:
-                palette[0] = QColor(0,0,0,0)
+                palette[0] = QColor(0, 0, 0, 0)
             self.palettes[spr_pal["name"]] = palette
 
     def keys(self):
@@ -69,7 +82,9 @@ class ColorPalettes(QObject):
         replacement = {cur_name: new_name}
         temp_palette_items = self.palettes.copy()
         for name, _ in self.palettes.items():
-            temp_palette_items[replacement.get(name, name)] = temp_palette_items.pop(name)
+            temp_palette_items[replacement.get(name, name)] = temp_palette_items.pop(
+                name
+            )
         self.palettes = temp_palette_items
         self.name_changed.emit(self.source, cur_name, new_name)
 
@@ -84,7 +99,7 @@ class ColorPalettes(QObject):
         :type index: int, optional
         """
         if self.source is Source.SPRITE:
-            contents[0] = QColor(0,0,0,0)
+            contents[0] = QColor(0, 0, 0, 0)
         new_palettes = OrderedDict()
         cur_palette = 0
         if index == None or index == len(self.palettes):
@@ -136,6 +151,7 @@ class ColorPalettes(QObject):
         self.palettes[name][index] = value
         self.color_changed.emit(self.source, name)
 
+
 class PixelPalettes(QObject):
     """Data container for sprite/tile pixel palettes
 
@@ -146,6 +162,7 @@ class PixelPalettes(QObject):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     batch_updated = pyqtSignal(Source, set)
     row_count_updated = pyqtSignal(Source, int)
 
@@ -177,8 +194,12 @@ class PixelPalettes(QObject):
         :param row: Row data to be added, defaults to None
         :type row: list(list), optional
         """
-        self.palettes.extend([[[0]*8 for i in range(8)]for i in range(16)] if row is None else row)
-        self.row_count_updated.emit(self.source, math.floor(self.palettes.__len__()/16))
+        self.palettes.extend(
+            [[[0] * 8 for i in range(8)] for i in range(16)] if row is None else row
+        )
+        self.row_count_updated.emit(
+            self.source, math.floor(self.palettes.__len__() / 16)
+        )
 
     def remRow(self):
         """Removes a row of sprites/tiles from the palette
@@ -188,7 +209,9 @@ class PixelPalettes(QObject):
         """
         old_row = self.palettes[-16:]
         del self.palettes[-16:]
-        self.row_count_updated.emit(self.source, math.floor(self.palettes.__len__()/16))
+        self.row_count_updated.emit(
+            self.source, math.floor(self.palettes.__len__() / 16)
+        )
         return old_row
 
     def __getitem__(self, index):
@@ -213,6 +236,7 @@ class PixelPalettes(QObject):
         self.palettes[index][row][col] = value
         self.update_manifest.add(index)
 
+
 class GameData(QObject):
     """Represents centralized data object for JIDE, containing all sprite/tile/tile map data and CRUD functions
 
@@ -221,6 +245,7 @@ class GameData(QObject):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     col_pal_updated = pyqtSignal(Source, str)
     col_pal_renamed = pyqtSignal(Source, str, str)
     col_pal_added = pyqtSignal(Source, str, int)
@@ -234,7 +259,9 @@ class GameData(QObject):
 
         self.sprite_pixel_palettes = PixelPalettes(data["sprites"], Source.SPRITE)
         self.tile_pixel_palettes = PixelPalettes(data["tiles"], Source.TILE)
-        self.sprite_color_palettes = ColorPalettes(data["spriteColorPalettes"], Source.SPRITE)
+        self.sprite_color_palettes = ColorPalettes(
+            data["spriteColorPalettes"], Source.SPRITE
+        )
         self.tile_color_palettes = ColorPalettes(data["tileColorPalettes"], Source.TILE)
         self.sprite_pixel_palettes.batch_updated.connect(self.pix_batch_updated)
         self.tile_pixel_palettes.batch_updated.connect(self.pix_batch_updated)
@@ -257,7 +284,11 @@ class GameData(QObject):
         :return: Pixel palettes
         :rtype: list
         """
-        return self.sprite_pixel_palettes.getPalettes() if source is Source.SPRITE else self.tile_pixel_palettes.getPalettes()
+        return (
+            self.sprite_pixel_palettes.getPalettes()
+            if source is Source.SPRITE
+            else self.tile_pixel_palettes.getPalettes()
+        )
 
     def getElement(self, index, source):
         """Retrieve a sprite/tile pixel value
@@ -269,7 +300,11 @@ class GameData(QObject):
         :return: Pixel value at index
         :rtype: int
         """
-        return self.sprite_pixel_palettes[index] if source is Source.SPRITE else self.tile_pixel_palettes[index]
+        return (
+            self.sprite_pixel_palettes[index]
+            if source is Source.SPRITE
+            else self.tile_pixel_palettes[index]
+        )
 
     def getColPals(self, source):
         """Retrieve sprite/tile color palettes
@@ -279,7 +314,11 @@ class GameData(QObject):
         :return: Color palettes of target source
         :rtype: list
         """
-        return self.sprite_color_palettes.values() if source is Source.SPRITE else self.tile_color_palettes.values()
+        return (
+            self.sprite_color_palettes.values()
+            if source is Source.SPRITE
+            else self.tile_color_palettes.values()
+        )
 
     def getColPalNames(self, source):
         """Retrieve sprite/tile color palette names
@@ -289,7 +328,11 @@ class GameData(QObject):
         :return: Names of target source color palettes
         :rtype: list
         """
-        return self.sprite_color_palettes.keys() if source is Source.SPRITE else self.tile_color_palettes.keys()
+        return (
+            self.sprite_color_palettes.keys()
+            if source is Source.SPRITE
+            else self.tile_color_palettes.keys()
+        )
 
     def getColPal(self, name, source):
         """Retrieve a specific sprite/tile color palette
@@ -301,7 +344,11 @@ class GameData(QObject):
         :return: Color palette specified by name
         :rtype: list
         """
-        return self.sprite_color_palettes[name] if source is Source.SPRITE else self.tile_color_palettes[name]
+        return (
+            self.sprite_color_palettes[name]
+            if source is Source.SPRITE
+            else self.tile_color_palettes[name]
+        )
 
     def setColor(self, name, index, color, source, orig=None):
         """Sets a color in a specific color palette
@@ -317,7 +364,11 @@ class GameData(QObject):
         :param orig: Original color of the target color, defaults to None
         :type orig: QColor, optional
         """
-        target = self.sprite_color_palettes if source is Source.SPRITE else self.tile_color_palettes
+        target = (
+            self.sprite_color_palettes
+            if source is Source.SPRITE
+            else self.tile_color_palettes
+        )
         command = cmdSetCol(target, name, index, color, orig, "Set palette color")
         self.undo_stack.push(command)
 
@@ -350,13 +401,17 @@ class GameData(QObject):
         """
         if source is Source.SPRITE:
             if new_name not in self.sprite_color_palettes.keys():
-                command = cmdSetColPalName(self.sprite_color_palettes, cur_name, new_name, "Set palette name")
+                command = cmdSetColPalName(
+                    self.sprite_color_palettes, cur_name, new_name, "Set palette name"
+                )
                 self.undo_stack.push(command)
             else:
                 self.col_pal_renamed.emit(source, None, None)
         else:
             if new_name not in self.tile_color_palettes.keys():
-                command = cmdSetColPalName(self.tile_color_palettes, cur_name, new_name, "Set palette name")
+                command = cmdSetColPalName(
+                    self.tile_color_palettes, cur_name, new_name, "Set palette name"
+                )
                 self.undo_stack.push(command)
             else:
                 self.col_pal_renamed.emit(source, None, None)
@@ -371,13 +426,23 @@ class GameData(QObject):
         """
         if source is Source.SPRITE:
             if name not in self.sprite_color_palettes.keys():
-                command = cmdAddColPal(self.sprite_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
+                command = cmdAddColPal(
+                    self.sprite_color_palettes,
+                    name,
+                    [QColor(0, 0, 0, 255)] * 16,
+                    "Add color palette",
+                )
                 self.undo_stack.push(command)
             else:
                 self.col_pal_added.emit(source, None, None)
         else:
             if name not in self.tile_color_palettes.keys():
-                command = cmdAddColPal(self.tile_color_palettes, name, [QColor(0,0,0,255)]*16, "Add color palette")
+                command = cmdAddColPal(
+                    self.tile_color_palettes,
+                    name,
+                    [QColor(0, 0, 0, 255)] * 16,
+                    "Add color palette",
+                )
                 self.undo_stack.push(command)
             else:
                 self.col_pal_added.emit(source, None, None)
@@ -392,13 +457,17 @@ class GameData(QObject):
         """
         if source is Source.SPRITE:
             if name in self.sprite_color_palettes.keys():
-                command = cmdRemColPal(self.sprite_color_palettes, name, "Add color palette")
+                command = cmdRemColPal(
+                    self.sprite_color_palettes, name, "Add color palette"
+                )
                 self.undo_stack.push(command)
             else:
                 self.col_pal_removed.emit(source, None)
         else:
             if name in self.tile_color_palettes.keys():
-                command = cmdRemColPal(self.tile_color_palettes, name, "Add color palette")
+                command = cmdRemColPal(
+                    self.tile_color_palettes, name, "Add color palette"
+                )
                 self.undo_stack.push(command)
             else:
                 self.col_pal_removed.emit(source, None)
@@ -411,7 +480,11 @@ class GameData(QObject):
         :param source: Subject source of pixels, either sprite or tile
         :type source: [type]
         """
-        target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
+        target = (
+            self.sprite_pixel_palettes
+            if source is Source.SPRITE
+            else self.tile_pixel_palettes
+        )
         command = cmdSetPixBatch(target, batch, "Draw pixels")
         self.undo_stack.push(command)
 
@@ -421,7 +494,11 @@ class GameData(QObject):
         :param source: Subject source to add the row to, either sprite or tile
         :type source: Source
         """
-        target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
+        target = (
+            self.sprite_pixel_palettes
+            if source is Source.SPRITE
+            else self.tile_pixel_palettes
+        )
         target_name = "sprite" if source is Source.SPRITE else "tile"
         command = cmdAddPixRow(target, "Add {} row".format(target_name))
         self.undo_stack.push(command)
@@ -432,7 +509,11 @@ class GameData(QObject):
         :param source: Subject source to remove the row from, either sprite or tile
         :type source: Source
         """
-        target = self.sprite_pixel_palettes if source is Source.SPRITE else self.tile_pixel_palettes
+        target = (
+            self.sprite_pixel_palettes
+            if source is Source.SPRITE
+            else self.tile_pixel_palettes
+        )
         target_name = "sprite" if source is Source.SPRITE else "tile"
         command = cmdRemPixRow(target, "Add {} row".format(target_name))
         self.undo_stack.push(command)
@@ -456,5 +537,5 @@ class GameData(QObject):
         :return: Instance of GameData instantiated with data from file
         :rtype: GameData
         """
-        with open(file_name, 'r') as data_file:
-                return cls(json.load(data_file), parent)
+        with open(file_name, "r") as data_file:
+            return cls(json.load(data_file), parent)

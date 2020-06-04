@@ -1,8 +1,10 @@
 from enum import Enum
 
+
 class Tools(Enum):
     """Represents a graphical tool
     """
+
     SELECT = 0
     PEN = 1
     FLOODFILL = 2

@@ -2,15 +2,23 @@
 
 <hr>
 
-<p align="center"><a href='https://jide.readthedocs.io/en/latest/?badge=latest'>
-    <img src='https://readthedocs.org/projects/jide/badge/?version=latest' alt='Documentation Status'/>
-</a></p>
+<p align="center">
+  <a href='https://jide.readthedocs.io/en/latest/?badge=latest'>
+  <img src='https://readthedocs.org/projects/jide/badge/?version=latest' alt='Documentation Status'/>
+  </a>
+  <a href='https://opensource.org/licenses/MIT'>
+  <img src='https://img.shields.io/badge/License-MIT-yellow.svg' alt='License: MIT'/>
+  </a>
+  <a href='https://pyup.io/account/repos/github/cspang1/jide/'>
+  <img src='https://pyup.io/repos/github/cspang1/jide/shield.svg?t=1591311319983' alt='Dependency Status'/>
+  </a>
+</p>
 
-<p align="center"><b>The primary JCAP repository <a href="https://github.com/cspang1/jcap">can be located here</a>.</b></p> 
+<p align="center"><b>The primary JCAP repository <a href="https://github.com/cspang1/jcap">can be located here</a>.</b></p>
 
 <hr>
 
-<p><b><u>JIDE</u></b> is a project developed alongside the <a href="https://github.com/cspang1/jcap">JAMMA Custom Arcade Project (JCAP)</a> in order to provide a graphics development application which can integrate with the JCAP framework. This utility features:</p> 
+<p><b><u>JIDE</u></b> is a project developed alongside the <a href="https://github.com/cspang1/jcap">JAMMA Custom Arcade Project (JCAP)</a> in order to provide a graphics development application which can integrate with the JCAP framework. This utility features:</p>
 
 <ul>
   <li>A modern, Qt-based GUI</li>
