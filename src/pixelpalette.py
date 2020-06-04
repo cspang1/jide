@@ -1,8 +1,21 @@
 import math
 from PyQt5.QtCore import Qt, QSize, QLineF, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QImage, QPainter, QPen
-from PyQt5.QtWidgets import QWidget, QLabel, QFrame, QDockWidget, QGridLayout, QHBoxLayout, QVBoxLayout, QToolButton, QScrollArea, QSizePolicy, QToolTip
+from PyQt5.QtWidgets import (
+    QWidget,
+    QLabel,
+    QFrame,
+    QDockWidget,
+    QGridLayout,
+    QHBoxLayout,
+    QVBoxLayout,
+    QToolButton,
+    QScrollArea,
+    QSizePolicy,
+    QToolTip,
+)
 from source import Source
+
 
 class Overlay(QLabel):
     """Pixel palette overlay used to draw gridlines and selection box
@@ -10,6 +23,7 @@ class Overlay(QLabel):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     tiles_selected = pyqtSignal(int, int, int)
 
     def __init__(self, parent=None):
@@ -28,7 +42,7 @@ class Overlay(QLabel):
         :type height: int
         """
         self.height = height
-        self.setFixedSize(16*25, self.height*25)
+        self.setFixedSize(16 * 25, self.height * 25)
 
     def selectSubjects(self, root, width, height):
         """Select rectangular region of sprites/tiles
@@ -55,13 +69,13 @@ class Overlay(QLabel):
         pen.setWidth(1)
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
-        painter.drawRect(0,0,16*25-1,self.height*25-1)
+        painter.drawRect(0, 0, 16 * 25 - 1, self.height * 25 - 1)
         lines = []
         for longitude in range(16):
-            line = QLineF(longitude*25, 0, longitude*25, self.height*25)
+            line = QLineF(longitude * 25, 0, longitude * 25, self.height * 25)
             lines.append(line)
         for latitude in range(self.height):
-            line = QLineF(0, latitude*25, 16*25, latitude*25)
+            line = QLineF(0, latitude * 25, 16 * 25, latitude * 25)
             lines.append(line)
         painter.drawLines(lines)
         s_root, s_width, s_height = self.selected
@@ -71,7 +85,7 @@ class Overlay(QLabel):
         pen.setWidth(3)
         pen.setJoinStyle(Qt.MiterJoin)
         painter.setPen(pen)
-        painter.drawRect(x*25, y*25, s_width*25, s_height*25)
+        painter.drawRect(x * 25, y * 25, s_width * 25, s_height * 25)
 
     def getCoords(self, event):
         """Get bounded coordinates of a mouse event
@@ -81,8 +95,8 @@ class Overlay(QLabel):
         :return: Bounded horizontal and vertical coordinate of mouse event
         :rtype: tuple(int, int)
         """
-        x = min(max(0, math.floor(event.localPos().x()/25)), 16)
-        y = min(max(0, math.floor(event.localPos().y()/25)), self.height)
+        x = min(max(0, math.floor(event.localPos().x() / 25)), 16)
+        y = min(max(0, math.floor(event.localPos().y() / 25)), self.height)
         return x, y
 
     def clamp(self, value, lower=0, upper=16):
@@ -106,8 +120,11 @@ class Overlay(QLabel):
         :type event: QMouseEvent
         """
         if event.buttons() == Qt.LeftButton:
-            self.orig_x, self.orig_y = (math.floor(event.pos().x()/25), math.floor(event.pos().y()/25))
-            self.orig_index = self.orig_x + self.orig_y*16
+            self.orig_x, self.orig_y = (
+                math.floor(event.pos().x() / 25),
+                math.floor(event.pos().y() / 25),
+            )
+            self.orig_index = self.orig_x + self.orig_y * 16
             self.last_x, self.last_y = (self.orig_x, self.orig_y)
             if event.modifiers() != Qt.ControlModifier:
                 self.tiles_selected.emit(self.orig_index, -1, -1)
@@ -119,15 +136,22 @@ class Overlay(QLabel):
         :type event: QMouseEvent
         """
         if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ControlModifier:
-            x, y = (self.clamp(math.ceil(event.pos().x()/25)), self.clamp(math.ceil(event.pos().y()/25), upper=self.height))
+            x, y = (
+                self.clamp(math.ceil(event.pos().x() / 25)),
+                self.clamp(math.ceil(event.pos().y() / 25), upper=self.height),
+            )
             if (x, y) != (self.last_x, self.last_y):
                 width = x - self.orig_x if x > self.orig_x else -1
                 height = y - self.orig_y if y > self.orig_y else -1
                 self.tiles_selected.emit(self.orig_index, width, height)
-            self.last_x, self.last_y = (self.clamp(math.floor(event.pos().x()/25)), self.clamp(math.floor(self.pos().y()/25), upper=self.height))
+            self.last_x, self.last_y = (
+                self.clamp(math.floor(event.pos().x() / 25)),
+                self.clamp(math.floor(self.pos().y() / 25), upper=self.height),
+            )
         else:
             x, y = self.getCoords(event)
-            QToolTip.showText(event.globalPos(), hex(x + y*16))
+            QToolTip.showText(event.globalPos(), hex(x + y * 16))
+
 
 class Tile(QLabel):
     def __init__(self, index, parent=None):
@@ -140,8 +164,8 @@ class Tile(QLabel):
         """
         super().__init__(parent)
         self.setFixedSize(25, 25)
-        self.color_palette = [0]*16
-        self.data = [[0]*8]*8
+        self.color_palette = [0] * 16
+        self.data = [[0] * 8] * 8
         self.index = index
 
     def setData(self, data):
@@ -167,6 +191,7 @@ class Tile(QLabel):
         image.setColorTable([color.rgba() for color in self.color_palette])
         self.setPixmap(QPixmap.fromImage(image))
 
+
 class PixelPalette(QFrame):
     """Palette of sprite/tiles to be used to select canvas editing area
 
@@ -175,6 +200,7 @@ class PixelPalette(QFrame):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     subject_selected = pyqtSignal(int, int, int)
 
     def __init__(self, source, parent=None):
@@ -192,8 +218,8 @@ class PixelPalette(QFrame):
         self.enabled = False
         self.loc_cache = {}
         self.selected = 0
-        self.top_left = (0,0)
-        self.bottom_right = (0,0)
+        self.top_left = (0, 0)
+        self.bottom_right = (0, 0)
         self.select_width = 1
         self.select_height = 1
 
@@ -213,7 +239,7 @@ class PixelPalette(QFrame):
     def genPalette(self):
         """Generates the palette based on the data source
         """
-        for i in reversed(range(self.grid.count())): 
+        for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)
         self.contents.clear()
         row = col = index = 0
@@ -228,12 +254,13 @@ class PixelPalette(QFrame):
             row = row + 1 if col == 0 else row
         self.overlay = Overlay()
         self.overlay.tiles_selected.connect(self.selectSubjects)
-        self.overlay.setDims(math.floor(self.contents.__len__()/16))
+        self.overlay.setDims(math.floor(self.contents.__len__() / 16))
         self.grid.addWidget(self.overlay, 0, 0, -1, -1)
-        self.genLocCache(math.floor(self.contents.__len__()/16))
+        self.genLocCache(math.floor(self.contents.__len__() / 16))
         self.selectSubjects(index=self.selected)
 
     pyqtSlot(int, int, int)
+
     def selectSubjects(self, index=None, width=-1, height=-1):
         """Selects a rectangular region of tiles in the palette. None and negative index/width/height values result in internal values being used.
 
@@ -249,21 +276,28 @@ class PixelPalette(QFrame):
         self.selected = index if index is not None else self.selected
         data = self.data.getPixelPalettes(self.source)
         num_rows = math.floor(data.__len__() / 16)
-        initial_row = math.floor(self.selected/16)
+        initial_row = math.floor(self.selected / 16)
         if math.floor((self.selected + self.select_width - 1) / 16) > initial_row:
-            self.selected = math.floor(self.selected/16) * 16 + 16 - self.select_width
+            self.selected = math.floor(self.selected / 16) * 16 + 16 - self.select_width
         if initial_row + self.select_height > num_rows:
-            temp_index = self.selected - 16 * (initial_row + self.select_height - num_rows)
+            temp_index = self.selected - 16 * (
+                initial_row + self.select_height - num_rows
+            )
             if temp_index < 0:
                 self.select_height -= 1
             else:
                 self.selected = temp_index
         self.top_left = self.genCoords(self.selected)
-        self.bottom_right = self.genCoords(self.selected + 16 * self.select_height + self.select_width)
-        self.overlay.selectSubjects(self.selected, self.select_width, self.select_height)
+        self.bottom_right = self.genCoords(
+            self.selected + 16 * self.select_height + self.select_width
+        )
+        self.overlay.selectSubjects(
+            self.selected, self.select_width, self.select_height
+        )
         self.subject_selected.emit(self.selected, self.select_width, self.select_height)
 
     pyqtSlot(Source, set)
+
     def updateSubjects(self, source, subjects):
         """Updates the palette's tiles with data from the centralized GameData
 
@@ -283,9 +317,12 @@ class PixelPalette(QFrame):
             if not self.inSelection(lowest):
                 self.selectSubjects(lowest)
             else:
-                self.subject_selected.emit(self.selected, self.select_width, self.select_height)
+                self.subject_selected.emit(
+                    self.selected, self.select_width, self.select_height
+                )
 
     pyqtSlot(str)
+
     def setColorPalette(self, palette):
         """Set the color palette to be used by the sprites/tiles
 
@@ -309,7 +346,7 @@ class PixelPalette(QFrame):
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right
         x, y = self.loc_cache[index]
-        return x1 <= x <= x2-1 and y1 <= y <= y2-1
+        return x1 <= x <= x2 - 1 and y1 <= y <= y2 - 1
 
     @pyqtSlot(int)
     def genLocCache(self, height):
@@ -319,7 +356,7 @@ class PixelPalette(QFrame):
         :type height: int
         """
         self.loc_cache.clear()
-        for loc in range(height*16):
+        for loc in range(height * 16):
             self.loc_cache[loc] = self.genCoords(loc)
 
     def genCoords(self, index):
@@ -330,7 +367,8 @@ class PixelPalette(QFrame):
         :return: (x,y) coordinates of the element
         :rtype: tuple(int, int)
         """
-        return (index % 16, math.floor(index/16))
+        return (index % 16, math.floor(index / 16))
+
 
 class Contents(QWidget):
     """Visual contents of the pixel palette
@@ -342,6 +380,7 @@ class Contents(QWidget):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     height_changed = pyqtSignal()
 
     def __init__(self, source, palette, parent=None):
@@ -390,7 +429,7 @@ class Contents(QWidget):
         """
         self.data = data
         self.data.row_count_updated.connect(self.palRowCntChanged)
-        self.height = math.floor(self.data.getPixelPalettes(self.source).__len__()/16)
+        self.height = math.floor(self.data.getPixelPalettes(self.source).__len__() / 16)
         if self.height <= 1:
             self.rem_row.setEnabled(False)
         self.add_row.setEnabled(True)
@@ -427,6 +466,7 @@ class Contents(QWidget):
         else:
             self.rem_row.setEnabled(True)
 
+
 class PixelPaletteDock(QDockWidget):
     """Dock containing the pixel palette
 
@@ -435,13 +475,16 @@ class PixelPaletteDock(QDockWidget):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     palette_updated = pyqtSignal(str)
 
     def __init__(self, source, parent=None):
         title = "Sprite " if source == Source.SPRITE else "Tile "
         super().__init__(title + "Palettes", parent)
         self.setFloating(False)
-        self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+        self.setFeatures(
+            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
+        )
         self.pixel_palette = PixelPalette(source)
         self.contents = Contents(source, self.pixel_palette)
         self.palette_updated.connect(self.pixel_palette.setColorPalette)

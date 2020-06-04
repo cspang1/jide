@@ -3,6 +3,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QUndoCommand, QUndoStack
 
+
 class cmdSetCol(QUndoCommand):
     """Sets a color in a color palette
 
@@ -21,6 +22,7 @@ class cmdSetCol(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, name, index, color, orig, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -39,6 +41,7 @@ class cmdSetCol(QUndoCommand):
         """
         self.palette[self.name, self.index] = self.original_color
 
+
 class cmdSetColPalName(QUndoCommand):
     """Set the name of a color palette
 
@@ -53,6 +56,7 @@ class cmdSetColPalName(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, cur_name, new_name, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -69,6 +73,7 @@ class cmdSetColPalName(QUndoCommand):
         """
         self.palette.setName(self.new_name, self.cur_name)
 
+
 class cmdAddColPal(QUndoCommand):
     """Add a new sprite/tile color palette
 
@@ -83,6 +88,7 @@ class cmdAddColPal(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, name, contents, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -99,6 +105,7 @@ class cmdAddColPal(QUndoCommand):
         """
         self.palette.remPalette(self.name)
 
+
 class cmdRemColPal(QUndoCommand):
     """Remove a sprite/tile color palette
 
@@ -111,6 +118,7 @@ class cmdRemColPal(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, name, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -128,6 +136,7 @@ class cmdRemColPal(QUndoCommand):
         """
         self.palette.addPalette(self.name, self.contents, self.index)
 
+
 class cmdSetPixBatch(QUndoCommand):
     """Apply a pixel batch update
 
@@ -140,6 +149,7 @@ class cmdSetPixBatch(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, batch, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -151,7 +161,9 @@ class cmdSetPixBatch(QUndoCommand):
         """
         for index, updates in self.batch.items():
             for row, col, val in updates:
-                self.original_batch[index].append((row, col, self.palette[index][row][col]))
+                self.original_batch[index].append(
+                    (row, col, self.palette[index][row][col])
+                )
                 self.palette[index, row, col] = val
         self.palette.batchUpdate()
 
@@ -163,6 +175,7 @@ class cmdSetPixBatch(QUndoCommand):
                 self.palette[index, row, col] = val
         self.palette.batchUpdate()
 
+
 class cmdAddPixRow(QUndoCommand):
     """Add a row of sprite/tiles to a pixel palette
 
@@ -173,6 +186,7 @@ class cmdAddPixRow(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette
@@ -187,6 +201,7 @@ class cmdAddPixRow(QUndoCommand):
         """
         self.palette.remRow()
 
+
 class cmdRemPixRow(QUndoCommand):
     """Remove a row of sprite/tiles from a pixel palette
 
@@ -197,6 +212,7 @@ class cmdRemPixRow(QUndoCommand):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, palette, description, parent=None):
         super().__init__(description, parent)
         self.palette = palette

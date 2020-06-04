@@ -1,6 +1,37 @@
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QRegExp, QEvent
-from PyQt5.QtGui import QColor, QValidator, QPixmap, QFont, QRegExpValidator, QIcon, QKeySequence, QPainter, QPen, QBrush
-from PyQt5.QtWidgets import QLabel, QFrame, QDialog, QWidget, QDockWidget, QVBoxLayout, QSizePolicy, QGridLayout, QDialogButtonBox, QHBoxLayout, QFormLayout, QLineEdit, QLayout, QAction, QToolButton, QComboBox, qApp, QUndoStack
+from PyQt5.QtGui import (
+    QColor,
+    QValidator,
+    QPixmap,
+    QFont,
+    QRegExpValidator,
+    QIcon,
+    QKeySequence,
+    QPainter,
+    QPen,
+    QBrush,
+)
+from PyQt5.QtWidgets import (
+    QLabel,
+    QFrame,
+    QDialog,
+    QWidget,
+    QDockWidget,
+    QVBoxLayout,
+    QSizePolicy,
+    QGridLayout,
+    QDialogButtonBox,
+    QHBoxLayout,
+    QFormLayout,
+    QLineEdit,
+    QLayout,
+    QAction,
+    QToolButton,
+    QComboBox,
+    qApp,
+    QUndoStack,
+)
+
 
 def upsample(red, green, blue):
     """Upsamples RGB from 8-bit to 24-bit
@@ -14,10 +45,11 @@ def upsample(red, green, blue):
     :return: 24-bit upscaled RGB tuple
     :rtype: tuple(int, int, int)
     """
-    red = round((red/7)*255)
-    green = round((green/7)*255)
-    blue = round((blue/3)*255)
+    red = round((red / 7) * 255)
+    green = round((green / 7) * 255)
+    blue = round((blue / 3) * 255)
     return (red, green, blue)
+
 
 def downsample(red, green, blue):
     """Downsamples RGB from 24-bit to 8-bit
@@ -31,10 +63,11 @@ def downsample(red, green, blue):
     :return: 8-bit downscaled RGB tuple
     :rtype: tuple(int, int, int)
     """
-    red = round((red/255)*7)
-    green = round((green/255)*7)
-    blue = round((blue/255)*3)
+    red = round((red / 255) * 7)
+    green = round((green / 255) * 7)
+    blue = round((blue / 255) * 3)
     return (red, green, blue)
+
 
 def normalize(red, green, blue):
     """Normalizes any RGB value to be representable by a whole 8-bit value
@@ -50,6 +83,7 @@ def normalize(red, green, blue):
     """
     return upsample(*downsample(red, green, blue))
 
+
 class Color(QLabel):
     """Represents a single color tile in the color picker
 
@@ -58,6 +92,7 @@ class Color(QLabel):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     color = QColor()
     clicked = pyqtSignal(QColor)
     color_selected = pyqtSignal(int)
@@ -117,9 +152,11 @@ class Color(QLabel):
         self.selected = False
         self.update()
 
+
 class ColorPalette(QFrame):
     """Represents the entire grid of color tiles in the color picker
     """
+
     def __init__(self):
         super().__init__()
         self.grid = QGridLayout()
@@ -130,9 +167,14 @@ class ColorPalette(QFrame):
         self.setFrameShape(QFrame.Panel)
         self.setFrameShadow(QFrame.Sunken)
         self.setLineWidth(3)
-        self.setFixedSize(400 + self.lineWidth()*2, 400 + self.lineWidth()*2)
-        positions = [(row,col) for row in range(16) for col in range(16)]
-        colors = [(red, green, blue) for blue in range(4) for red in range(8) for green in range(8)]
+        self.setFixedSize(400 + self.lineWidth() * 2, 400 + self.lineWidth() * 2)
+        positions = [(row, col) for row in range(16) for col in range(16)]
+        colors = [
+            (red, green, blue)
+            for blue in range(4)
+            for red in range(8)
+            for green in range(8)
+        ]
         for position, color, swatch in zip(positions, colors, self.palette):
             color = QColor(*upsample(*color))
             swatch.fill(color)
@@ -141,6 +183,7 @@ class ColorPalette(QFrame):
         self.enabled = False
 
     pyqtSlot(int)
+
     def selectColor(self, index):
         """Selects a color in the color picker
 
@@ -152,6 +195,7 @@ class ColorPalette(QFrame):
             if idx != index:
                 self.grid.itemAt(idx).widget().deselect()
 
+
 class ColorValidator(QValidator):
     """Provides input field validation to color picker RGB values
 
@@ -160,6 +204,7 @@ class ColorValidator(QValidator):
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     def __init__(self, top, parent=None):
         super().__init__(parent)
         self.top = top
@@ -187,12 +232,14 @@ class ColorValidator(QValidator):
         else:
             return (QValidator.Invalid, value, pos)
 
+
 class ColorPicker(QDialog):
     """Represents the dialog containing the color picker
 
     :param parent: Parent widget, defaults to None
     :type parent: QWidget, optional
     """
+
     preview_color = pyqtSignal(QColor)
 
     def __init__(self, parent=None):
@@ -336,8 +383,12 @@ class ColorPicker(QDialog):
             if swatch.color == self.color:
                 swatch.select()
 
-        self.cur_r8, self.cur_g8, self.cur_b8 = downsample(self.cur_r24, self.cur_g24, self.cur_b24)
-        self.cur_hex8 = format((self.cur_r8 << 5) | (self.cur_g8 << 2) | self.cur_b8, 'X').zfill(2)
+        self.cur_r8, self.cur_g8, self.cur_b8 = downsample(
+            self.cur_r24, self.cur_g24, self.cur_b24
+        )
+        self.cur_hex8 = format(
+            (self.cur_r8 << 5) | (self.cur_g8 << 2) | self.cur_b8, "X"
+        ).zfill(2)
         self.r8.setText(str(self.cur_r8))
         self.g8.setText(str(self.cur_g8))
         self.b8.setText(str(self.cur_b8))
