@@ -23,7 +23,7 @@ Jinja2
 MarkupSafe
 more-itertools
 nodeenv
-packaging
+packaging==20.4
 pathspec
 pefile
 pluggy
