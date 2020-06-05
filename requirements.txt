@@ -47,7 +47,7 @@ rstcheck
 six
 snowballstemmer
 Sphinx
-sphinx-qt-documentation
+sphinx-qt-documentation==0.2
 sphinxcontrib-applehelp
 sphinxcontrib-devhelp
 sphinxcontrib-htmlhelp
