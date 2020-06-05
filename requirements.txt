@@ -42,7 +42,7 @@ PyVirtualDisplay
 pywin32-ctypes
 PyYAML
 regex
-requests
+requests==2.23.0
 rstcheck
 six
 snowballstemmer
