@@ -3,7 +3,7 @@ altgraph
 appdirs
 atomicwrites
 attrs
-Babel
+Babel==2.8.0
 black
 certifi
 cfgv
