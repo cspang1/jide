@@ -8,7 +8,7 @@ black
 certifi
 cfgv
 chardet
-click
+click==7.1.2
 colorama
 distlib
 docutils
