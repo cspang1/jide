@@ -30,7 +30,7 @@ pluggy
 pre-commit
 py
 Pygments
-PyInstaller
+PyInstaller==3.6
 pyparsing
 PyQt5
 PyQt5-sip
