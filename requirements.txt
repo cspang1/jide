@@ -44,7 +44,7 @@ PyYAML
 regex
 requests
 rstcheck
-six
+six==1.15.0
 snowballstemmer
 Sphinx
 sphinx-qt-documentation
