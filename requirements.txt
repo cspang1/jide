@@ -6,7 +6,7 @@ attrs
 Babel
 black
 certifi
-cfgv
+cfgv==3.1.0
 chardet
 click
 colorama
