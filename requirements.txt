@@ -7,7 +7,7 @@ Babel
 black
 certifi
 cfgv
-chardet
+chardet==3.0.4
 click
 colorama
 distlib
