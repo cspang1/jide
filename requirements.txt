@@ -27,7 +27,7 @@ packaging
 pathspec
 pefile
 pluggy
-pre-commit
+pre-commit==2.4.0
 py
 Pygments
 PyInstaller
