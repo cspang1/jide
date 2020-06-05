@@ -41,7 +41,7 @@ pytz
 PyVirtualDisplay
 pywin32-ctypes
 PyYAML
-regex
+regex==2020.5.14
 requests
 rstcheck
 six
