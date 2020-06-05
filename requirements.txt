@@ -1,6 +1,6 @@
 alabaster
 altgraph
-appdirs
+appdirs==1.4.4
 atomicwrites
 attrs
 Babel
