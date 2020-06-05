@@ -9,7 +9,7 @@ certifi
 cfgv
 chardet
 click
-colorama
+colorama==0.4.3
 distlib
 docutils
 EasyProcess
