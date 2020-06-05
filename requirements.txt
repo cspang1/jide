@@ -39,7 +39,7 @@ pytest-qt
 pytest-xvfb
 pytz
 PyVirtualDisplay
-pywin32-ctypes
+pywin32-ctypes==0.2.0
 PyYAML
 regex
 requests
