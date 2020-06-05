@@ -17,9 +17,9 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QMessageBox,
 )
-from colorpicker import ColorPicker, upsample, downsample, normalize
-import resources
-from source import Source
+from .colorpicker import ColorPicker, upsample, downsample, normalize
+from . import resources
+from .source import Source
 
 
 class ColorPreview(QWidget):

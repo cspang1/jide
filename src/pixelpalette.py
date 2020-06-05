@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
     QToolTip,
 )
-from source import Source
+from .source import Source
 
 
 class Overlay(QLabel):

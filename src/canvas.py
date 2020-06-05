@@ -25,8 +25,8 @@ from PyQt5.QtWidgets import (
     QStyleOptionGraphicsItem,
     QAction,
 )
-from canvastools import Tools
-from source import Source
+from .canvastools import Tools
+from .source import Source
 
 
 class GraphicsView(QGraphicsView):
