@@ -2,7 +2,7 @@ alabaster
 altgraph
 appdirs
 atomicwrites
-attrs
+attrs==19.3.0
 Babel
 black
 certifi
