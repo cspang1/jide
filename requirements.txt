@@ -45,7 +45,7 @@ regex
 requests
 rstcheck
 six
-snowballstemmer
+snowballstemmer==2.0.0
 Sphinx
 sphinx-qt-documentation
 sphinxcontrib-applehelp
