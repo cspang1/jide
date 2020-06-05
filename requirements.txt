@@ -4,7 +4,7 @@ appdirs
 atomicwrites
 attrs
 Babel
-black
+black==19.10b0
 certifi
 cfgv
 chardet
