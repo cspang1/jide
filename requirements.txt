@@ -29,7 +29,7 @@ pefile
 pluggy
 pre-commit
 py
-Pygments
+Pygments==2.6.1
 PyInstaller
 pyparsing
 PyQt5
