@@ -1,11 +1,12 @@
 import pytest
+import sys, os
+
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), "src"))
+from jide import jide
 
 
-@pytest.fixture(scope="session", autouse=True)
-def my_own_session_run_at_beginning(request):
-    print("\nIn my_own_session_run_at_beginning()")
-
-    def my_own_session_run_at_end():
-        print("In my_own_session_run_at_end()")
-
-    request.addfinalizer(my_own_session_run_at_end)
+@pytest.fixture
+def main_window(qtbot):
+    widget = jide()
+    qtbot.addWidget(widget)
+    return widget
