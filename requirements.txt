@@ -14,7 +14,7 @@ distlib
 docutils
 EasyProcess
 filelock
-future
+future==0.18.2
 identify
 idna
 imagesize
