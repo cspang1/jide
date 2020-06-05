@@ -24,7 +24,7 @@ MarkupSafe
 more-itertools
 nodeenv
 packaging
-pathspec
+pathspec==0.8.0
 pefile
 pluggy
 pre-commit
