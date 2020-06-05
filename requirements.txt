@@ -37,7 +37,7 @@ PyQt5-sip
 pytest
 pytest-qt
 pytest-xvfb
-pytz
+pytz==2020.1
 PyVirtualDisplay
 pywin32-ctypes
 PyYAML
