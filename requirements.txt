@@ -21,7 +21,7 @@ imagesize
 importlib-metadata
 Jinja2
 MarkupSafe
-more-itertools
+more-itertools==8.3.0
 nodeenv
 packaging
 pathspec
