@@ -34,7 +34,7 @@ PyInstaller
 pyparsing
 PyQt5
 PyQt5-sip
-pytest
+pytest==5.4.3
 pytest-qt
 pytest-xvfb
 pytz
