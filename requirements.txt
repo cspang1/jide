@@ -31,7 +31,7 @@ pre-commit
 py
 Pygments
 PyInstaller
-pyparsing
+pyparsing==2.4.7
 PyQt5
 PyQt5-sip
 pytest
