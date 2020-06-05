@@ -11,7 +11,7 @@ chardet
 click
 colorama
 distlib
-docutils
+docutils==0.16
 EasyProcess
 filelock
 future
