@@ -16,7 +16,7 @@ EasyProcess
 filelock
 future
 identify
-idna
+idna==2.9
 imagesize
 importlib-metadata
 Jinja2
