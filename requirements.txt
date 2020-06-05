@@ -46,7 +46,7 @@ requests
 rstcheck
 six
 snowballstemmer
-Sphinx
+Sphinx==3.0.4
 sphinx-qt-documentation
 sphinxcontrib-applehelp
 sphinxcontrib-devhelp
