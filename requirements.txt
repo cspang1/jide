@@ -51,7 +51,7 @@ sphinx-qt-documentation
 sphinxcontrib-applehelp
 sphinxcontrib-devhelp
 sphinxcontrib-htmlhelp
-sphinxcontrib-jsmath
+sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
 toml
