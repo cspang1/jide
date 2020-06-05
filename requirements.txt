@@ -28,7 +28,7 @@ pathspec
 pefile
 pluggy
 pre-commit
-py
+py==1.8.1
 Pygments
 PyInstaller
 pyparsing
