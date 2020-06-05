@@ -49,7 +49,7 @@ snowballstemmer
 Sphinx
 sphinx-qt-documentation
 sphinxcontrib-applehelp
-sphinxcontrib-devhelp
+sphinxcontrib-devhelp==1.0.2
 sphinxcontrib-htmlhelp
 sphinxcontrib-jsmath
 sphinxcontrib-qthelp
