@@ -18,13 +18,13 @@ from PyQt5.QtWidgets import (
     QToolBar,
     QToolButton,
 )
-from canvas import GraphicsScene, GraphicsView
-from canvastools import Tools
-from colorpalette import ColorPaletteDock
-from colorpicker import downsample
-from gamedata import GameData
-from pixelpalette import PixelPaletteDock
-from source import Source
+from .canvas import GraphicsScene, GraphicsView
+from .canvastools import Tools
+from .colorpalette import ColorPaletteDock
+from .colorpicker import downsample
+from .gamedata import GameData
+from .pixelpalette import PixelPaletteDock
+from .source import Source
 
 
 class jide(QMainWindow):

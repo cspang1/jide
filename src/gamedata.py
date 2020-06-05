@@ -3,9 +3,9 @@ import json
 import math
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtGui import QColor
-from colorpicker import upsample
+from .colorpicker import upsample
 from PyQt5.QtWidgets import QUndoStack
-from history import (
+from .history import (
     cmdAddColPal,
     cmdAddPixRow,
     cmdRemColPal,
@@ -14,7 +14,7 @@ from history import (
     cmdSetColPalName,
     cmdSetPixBatch,
 )
-from source import Source
+from .source import Source
 
 
 class ColorPalettes(QObject):
