@@ -1,4 +1,10 @@
 repos:
+-   repo: local
+    hooks:
+    -   id: update-pip-reqs
+        name: update-pip-reqs
+        entry: bash -c 'source ~/Envs/jide/Scripts/activate && pip freeze > requirements.txt'
+        language: system
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.3.0
     hooks:
