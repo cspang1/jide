@@ -1,7 +1,7 @@
 alabaster
 altgraph
 appdirs
-atomicwrites
+atomicwrites==1.4.0
 attrs
 Babel
 black
