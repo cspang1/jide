@@ -15,7 +15,7 @@ docutils
 EasyProcess
 filelock
 future
-identify
+identify==1.4.19
 idna
 imagesize
 importlib-metadata
