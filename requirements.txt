@@ -13,7 +13,7 @@ colorama
 distlib
 docutils
 EasyProcess
-filelock
+filelock==3.0.12
 future
 identify
 idna
