@@ -17,7 +17,7 @@ filelock
 future
 identify
 idna
-imagesize
+imagesize==1.2.0
 importlib-metadata
 Jinja2
 MarkupSafe
