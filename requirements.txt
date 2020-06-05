@@ -1,5 +1,5 @@
 alabaster
-altgraph
+altgraph==0.17
 appdirs
 atomicwrites
 attrs
