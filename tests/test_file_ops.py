@@ -37,7 +37,6 @@ class TestDataLoad:
         gui_col_pal_names = [
             col_pal_combo_box.itemText(i) for i in range(col_pal_combo_box.count())
         ]
-        print(gui_col_pal_names)
         dat_col_pals = []
         for col_pal in game_data["spriteColorPalettes"]:
             dat_col_pals.append(col_pal["name"])
