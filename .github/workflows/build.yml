@@ -39,7 +39,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Test with pytest
       run: |
-        python -m pytest -s -v
+        python -m pytest -s -v --cov=src
     - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@v1.1.1
       with:
