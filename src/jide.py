@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
     QTabWidget,
     QToolBar,
     QToolButton,
+    QFileDialog,
 )
 from canvas import GraphicsScene, GraphicsView
 from canvastools import Tools
@@ -41,9 +42,6 @@ class jide(QMainWindow):
         self.setupToolbar()
         self.setupActions()
         self.setupStatusBar()
-        # DEMO
-        self.openFile()
-        # DEMO
 
     def setupWindow(self):
         """Entry point to set up primary window attributes
@@ -133,7 +131,7 @@ class jide(QMainWindow):
         open_file = QAction("&Open", self)
         open_file.setShortcut("Ctrl+O")
         open_file.setStatusTip("Open file")
-        open_file.triggered.connect(self.openFile)
+        open_file.triggered.connect(self.selectFile)
 
         # Undo/redo
         self.undo_stack = QUndoStack(self)
@@ -201,13 +199,17 @@ class jide(QMainWindow):
         """
         self.paste_act.isEnabled(active)
 
-    def openFile(self):
+    def selectFile(self):
         """Open file action to hand file handle to GameData
         """
-        # DEMO
-        # file_name, _ = QFileDialog.getOpenFileName(self, "Open file", "", "JCAP Resource File (*.jrf)")
-        file_name = Path(__file__).parents[1] / "data" / "demo.jrf"
-        # DEMO
+        file_name, _ = QFileDialog.getOpenFileName(
+            self, "Open file", "", "JCAP Resource File (*.jrf)"
+        )
+        self.loadProject(file_name)
+
+    def loadProject(self, file_name):
+        """Load project file data and populate UI elements/set up signals and slots
+        """
         if file_name:
             try:
                 self.data = GameData.fromFilename(file_name, self)
@@ -217,16 +219,15 @@ class jide(QMainWindow):
                     "Error",
                     "Unable to load project due to malformed data",
                 ).exec()
+                return
             except OSError:
                 QMessageBox(
                     QMessageBox.Critical, "Error", "Unable to open project file"
                 ).exec()
-            else:
-                self.loadProject()
+                return
 
-    def loadProject(self):
-        """Load project file data and populate UI elements/set up signals and slots
-        """
+        self.setWindowTitle("JIDE - " + self.data.getGameName())
+
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
