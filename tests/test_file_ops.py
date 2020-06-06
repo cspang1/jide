@@ -1,6 +1,7 @@
 import sys, os
-
-# from PyQt5.QtGui import QColor
+from pathlib import Path
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtWidgets import QApplication
 
 
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]), "src"))
@@ -9,11 +10,10 @@ from source import Source
 
 
 def test_file_open(qtbot):
-    print("start of test")
-    temp = jide()
-    qtbot.addWidget(temp)
-    palettes = temp.data.getColPals(Source.SPRITE)
-    for pal in palettes:
-        for color in pal:
-            print(color.rgb())
-    assert True
+    app = jide()
+    qtbot.addWidget(app)
+
+    dat_path = Path(__file__).parents[1] / "data" / "demo.jrf"
+    app.loadProject(dat_path)
+
+    assert app.windowTitle() == "JIDE - JCAP Demo"

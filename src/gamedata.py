@@ -256,6 +256,7 @@ class GameData(QObject):
     def __init__(self, data, parent=None):
         super().__init__(parent)
         self.undo_stack = QUndoStack(self)
+        self.game_name = data["gameName"]
 
         self.sprite_pixel_palettes = PixelPalettes(data["sprites"], Source.SPRITE)
         self.tile_pixel_palettes = PixelPalettes(data["tiles"], Source.TILE)
@@ -275,6 +276,9 @@ class GameData(QObject):
         self.tile_color_palettes.palette_added.connect(self.col_pal_added)
         self.sprite_color_palettes.palette_removed.connect(self.col_pal_removed)
         self.tile_color_palettes.palette_removed.connect(self.col_pal_removed)
+
+    def getGameName(self):
+        return self.game_name
 
     def getPixelPalettes(self, source):
         """Retrieve sprite/tile pixel palettes
