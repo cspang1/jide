@@ -1,13 +1,10 @@
-import json
 from pathlib import Path
 import shutil
 import subprocess
-import sys
-from PyQt5.QtCore import Qt, pyqtSlot, QSize
-from PyQt5.QtGui import QKeySequence, QIcon, QPixmap
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import (
     QGraphicsView,
-    QGraphicsScene,
     QMainWindow,
     QAction,
     QActionGroup,
@@ -16,7 +13,6 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QTabWidget,
     QToolBar,
-    QToolButton,
     QFileDialog,
 )
 from canvas import GraphicsScene, GraphicsView
@@ -29,7 +25,10 @@ from source import Source
 
 
 class jide(QMainWindow):
-    """This is the primary class which serves as the glue for JIDE. It interfaces between the various canvases, pixel and color palettes, centralized data source, and data output routines.
+    """This is the primary class which serves as the glue for JIDE.
+
+    This class interfaces between the various canvases, pixel and color
+    palettes, centralized data source, and data output routines.
     """
 
     def __init__(self):
@@ -448,10 +447,6 @@ class jide(QMainWindow):
         self.statusBar.showMessage("Loading JCAP...")
         self.genDATFiles()
         dat_path = Path(__file__).parents[1] / "data" / "DAT Files"
-        tcp_path = dat_path / "tile_color_palettes.dat"
-        tpp_path = dat_path / "tiles.dat"
-        scp_path = dat_path / "sprite_color_palettes.dat"
-        spp_path = dat_path / "sprites.dat"
         jcap_path = Path(__file__).parents[2] / "jcap" / "dev" / "software"
         sysload_path = jcap_path / "sysload.sh"
 
