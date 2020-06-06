@@ -17688,7 +17688,7 @@
         {
             "name": "sprite_color_palette0",
             "contents": [
-                0,
+                227,
                 0,
                 72,
                 250,
@@ -17709,7 +17709,7 @@
         {
             "name": "sprite_color_palette1",
             "contents": [
-                0,
+                227,
                 51,
                 255,
                 195,
@@ -17730,7 +17730,7 @@
         {
             "name": "sprite_color_palette2",
             "contents": [
-                0,
+                227,
                 236,
                 244,
                 11,
