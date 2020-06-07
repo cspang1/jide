@@ -1,35 +1,35 @@
 from collections import defaultdict
-from PyQt5.QtCore import QObject, pyqtSignal
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QUndoCommand, QUndoStack
+from PyQt5.QtWidgets import QUndoCommand
 
 
 class cmdSetCol(QUndoCommand):
     """Sets a color in a color palette
 
     :param palette: Target set of color palettes
-    :type palette: gamedata.ColorPalettes
-    :param name: Name of target color palette
-    :type name: str
-    :param index: Index of target color
-    :type index: int
-    :param color: New color to set to
-    :type color: QColor
-    :param orig: Original color
-    :type orig: QColor
-    :param description: Text description of action
-    :type description: Str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :type palette:  gamedata.ColorPalettes
+    :param name:    Name of target color palette
+    :type name:     str
+    :param index:   Index of target color
+    :type index:    int
+    :param color:   New color to set to
+    :type color:    QColor
+    :param orig:    Original color
+    :type orig:     QColor
+    :param desc:    Text description of action
+    :type desc:     Str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
-    def __init__(self, palette, name, index, color, orig, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, name, index, color, orig, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
         self.name = name
         self.index = index
         self.color = color
-        self.original_color = orig if orig is not None else self.palette[name][index]
+        self.original_color = (
+            orig if orig is not None else self.palette[name][index]
+        )
 
     def redo(self):
         """Redo setting a color
@@ -45,20 +45,20 @@ class cmdSetCol(QUndoCommand):
 class cmdSetColPalName(QUndoCommand):
     """Set the name of a color palette
 
-    :param palette: Target set of color palettes
-    :type palette: gamedata.ColorPalettes
-    :param cur_name: Target name of color palette
-    :type cur_name: str
-    :param new_name: New name for color palette
-    :type new_name: str
-    :param description: Text description of action
-    :type description: str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param palette:     Target set of color palettes
+    :type palette:      gamedata.ColorPalettes
+    :param cur_name:    Target name of color palette
+    :type cur_name:     str
+    :param new_name:    New name for color palette
+    :type new_name:     str
+    :param desc:        Text description of action
+    :type desc:         str
+    :param parent:      Parent widget, defaults to None
+    :type parent:       QWidget, optional
     """
 
-    def __init__(self, palette, cur_name, new_name, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, cur_name, new_name, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
         self.cur_name = cur_name
         self.new_name = new_name
@@ -77,20 +77,20 @@ class cmdSetColPalName(QUndoCommand):
 class cmdAddColPal(QUndoCommand):
     """Add a new sprite/tile color palette
 
-    :param palette: Target set of color palettes
-    :type palette: gamedata.ColorPalettes
-    :param name: Name of target color palette
-    :type name: str
-    :param contents: Contents of new color palette
-    :type contents: list
-    :param description: Text description of action
-    :type description: str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param palette:     Target set of color palettes
+    :type palette:      gamedata.ColorPalettes
+    :param name:        Name of target color palette
+    :type name:         str
+    :param contents:    Contents of new color palette
+    :type contents:     list
+    :param desc:        Text description of action
+    :type desc:         str
+    :param parent:      Parent widget, defaults to None
+    :type parent:       QWidget, optional
     """
 
-    def __init__(self, palette, name, contents, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, name, contents, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
         self.name = name
         self.contents = contents
@@ -110,17 +110,17 @@ class cmdRemColPal(QUndoCommand):
     """Remove a sprite/tile color palette
 
     :param palette: Target set of color palettes
-    :type palette: gamedata.ColorPalettes
-    :param name: Name of target color palette
-    :type name: str
-    :param description: Text description of action
-    :type description: str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :type palette:  gamedata.ColorPalettes
+    :param name:    Name of target color palette
+    :type name:     str
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
-    def __init__(self, palette, name, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, name, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
         self.name = name
         self.contents = self.palette[self.name]
@@ -141,17 +141,18 @@ class cmdSetPixBatch(QUndoCommand):
     """Apply a pixel batch update
 
     :param palette: Target set of pixel palettes
-    :type palette: gamedata.PixelPalettes
-    :param batch: Set of pixel deltas represented by pixel indexes and new values
-    :type batch: defaultdict
-    :param description: Text description of action
-    :type description: str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :type palette:  gamedata.PixelPalettes
+    :param batch:   Set of pixel deltas represented by pixel indexes and new
+                    values
+    :type batch:    defaultdict
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
-    def __init__(self, palette, batch, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, batch, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
         self.batch = batch
         self.original_batch = defaultdict(list)
@@ -180,15 +181,15 @@ class cmdAddPixRow(QUndoCommand):
     """Add a row of sprite/tiles to a pixel palette
 
     :param palette: Target set of pixel palettes
-    :type palette: gamedata.PixelPalettes
-    :param description: Text description of action
-    :type description: str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :type palette:  gamedata.PixelPalettes
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
-    def __init__(self, palette, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
 
     def redo(self):
@@ -206,15 +207,15 @@ class cmdRemPixRow(QUndoCommand):
     """Remove a row of sprite/tiles from a pixel palette
 
     :param palette: Target set of pixel palettes
-    :type palette: gamedata.PixelPalettes
-    :param description: Text description of action
-    :type description: str
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :type palette:  gamedata.PixelPalettes
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
-    def __init__(self, palette, description, parent=None):
-        super().__init__(description, parent)
+    def __init__(self, palette, desc, parent=None):
+        super().__init__(desc, parent)
         self.palette = palette
         self.row = []
 
