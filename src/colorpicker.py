@@ -5,45 +5,34 @@ from PyQt5.QtGui import (
     QPixmap,
     QFont,
     QRegExpValidator,
-    QIcon,
-    QKeySequence,
     QPainter,
     QPen,
-    QBrush,
 )
 from PyQt5.QtWidgets import (
     QLabel,
     QFrame,
     QDialog,
-    QWidget,
-    QDockWidget,
     QVBoxLayout,
-    QSizePolicy,
     QGridLayout,
     QDialogButtonBox,
     QHBoxLayout,
     QFormLayout,
     QLineEdit,
     QLayout,
-    QAction,
-    QToolButton,
-    QComboBox,
-    qApp,
-    QUndoStack,
 )
 
 
 def upsample(red, green, blue):
     """Upsamples RGB from 8-bit to 24-bit
 
-    :param red: 8-bit red value
-    :type red: int
-    :param green: 8-bit green value
-    :type green: int
-    :param blue: 8-bit blue value
-    :type blue: int
-    :return: 24-bit upscaled RGB tuple
-    :rtype: tuple(int, int, int)
+    :param red:     8-bit red value
+    :type red:      int
+    :param green:   8-bit green value
+    :type green:    int
+    :param blue:    8-bit blue value
+    :type blue:     int
+    :return:        24-bit upscaled RGB tuple
+    :rtype:         tuple(int, int, int)
     """
     red = round((red / 7) * 255)
     green = round((green / 7) * 255)
@@ -54,14 +43,14 @@ def upsample(red, green, blue):
 def downsample(red, green, blue):
     """Downsamples RGB from 24-bit to 8-bit
 
-    :param red: 24-bit red value
-    :type red: int
-    :param green: 24-bit green value
-    :type green: int
-    :param blue: 24-bit blue value
-    :type blue: int
-    :return: 8-bit downscaled RGB tuple
-    :rtype: tuple(int, int, int)
+    :param red:     24-bit red value
+    :type red:      int
+    :param green:   24-bit green value
+    :type green:    int
+    :param blue:    24-bit blue value
+    :type blue:     int
+    :return:        8-bit downscaled RGB tuple
+    :rtype:         tuple(int, int, int)
     """
     red = round((red / 255) * 7)
     green = round((green / 255) * 7)
@@ -72,14 +61,14 @@ def downsample(red, green, blue):
 def normalize(red, green, blue):
     """Normalizes any RGB value to be representable by a whole 8-bit value
 
-    :param red: Red value
-    :type red: int
-    :param green: Green value
-    :type green: int
-    :param blue: Blue value
-    :type blue: int
-    :return: 24-bit normalized RGB tuple
-    :rtype: tuple(int, int, int)
+    :param red:     Red value
+    :type red:      int
+    :param green:   Green value
+    :type green:    int
+    :param blue:    Blue value
+    :type blue:     int
+    :return:        24-bit normalized RGB tuple
+    :rtype:         tuple(int, int, int)
     """
     return upsample(*downsample(red, green, blue))
 
@@ -87,10 +76,10 @@ def normalize(red, green, blue):
 class Color(QLabel):
     """Represents a single color tile in the color picker
 
-    :param index: Index of the color tile
-    :type index: int
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param index:   Index of the color tile
+    :type index:    int
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     color = QColor()
@@ -106,8 +95,8 @@ class Color(QLabel):
     def fill(self, color):
         """Fills the tile with the specified color
 
-        :param color: Target color
-        :type color: QColor
+        :param color:   Target color
+        :type color:    QColor
         """
         self.color = color
         self.pixmap().fill(self.color)
@@ -115,8 +104,8 @@ class Color(QLabel):
     def paintEvent(self, event):
         """Paint event for the color tile which draws the grid
 
-        :param event: QPaintEvent event
-        :type event: QPaintEvent
+        :param event:   QPaintEvent event
+        :type event:    QPaintEvent
         """
         super().paintEvent(event)
         painter = QPainter(self)
@@ -133,8 +122,8 @@ class Color(QLabel):
     def mousePressEvent(self, event):
         """Handles clicking on the color tile to select it
 
-        :param event: Source event
-        :type event: QMouseEvent
+        :param event:   Source event
+        :type event:    QMouseEvent
         """
         self.clicked.emit(self.color)
         self.select()
@@ -167,7 +156,9 @@ class ColorPalette(QFrame):
         self.setFrameShape(QFrame.Panel)
         self.setFrameShadow(QFrame.Sunken)
         self.setLineWidth(3)
-        self.setFixedSize(400 + self.lineWidth() * 2, 400 + self.lineWidth() * 2)
+        self.setFixedSize(
+            400 + self.lineWidth() * 2, 400 + self.lineWidth() * 2
+        )
         positions = [(row, col) for row in range(16) for col in range(16)]
         colors = [
             (red, green, blue)
@@ -187,10 +178,9 @@ class ColorPalette(QFrame):
     def selectColor(self, index):
         """Selects a color in the color picker
 
-        :param index: Index of the selected color
-        :type index: int
+        :param index:   Index of the selected color
+        :type index:    int
         """
-        widgets = (self.grid.itemAt(index) for index in range(self.grid.count()))
         for idx in range(self.grid.count()):
             if idx != index:
                 self.grid.itemAt(idx).widget().deselect()
@@ -199,10 +189,10 @@ class ColorPalette(QFrame):
 class ColorValidator(QValidator):
     """Provides input field validation to color picker RGB values
 
-    :param top: RGB value ceiling
-    :type top: int
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param top:     RGB value ceiling
+    :type top:      int
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     def __init__(self, top, parent=None):
@@ -212,18 +202,17 @@ class ColorValidator(QValidator):
     def validate(self, value, pos):
         """Validates an RGB input
 
-        :param value: Value of the RGB input
-        :type value: int
-        :param pos: Position of the cursor in the input field
-        :type pos: int
-        :return: Result of the validation
-        :rtype: QValidator
+        :param value:   Value of the RGB input
+        :type value:    int
+        :param pos:     Position of the cursor in the input field
+        :type pos:      int
+        :return:        Result of the validation
+        :rtype:         QValidator
         """
-        bottom = 0
         if value != "":
             try:
                 int(value)
-            except:
+            except ValueError:
                 return (QValidator.Invalid, value, pos)
         else:
             return (QValidator.Acceptable, value, pos)
@@ -236,8 +225,8 @@ class ColorValidator(QValidator):
 class ColorPicker(QDialog):
     """Represents the dialog containing the color picker
 
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     preview_color = pyqtSignal(QColor)
@@ -245,7 +234,9 @@ class ColorPicker(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Select Color")
-        actions = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        actions = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        )
         actions.accepted.connect(self.accept)
         actions.rejected.connect(self.reject)
         self.color = QColor()
@@ -284,7 +275,9 @@ class ColorPicker(QDialog):
         self.b8.setValidator(ColorValidator(3))
         self.b8.editingFinished.connect(self.set8BitColors)
         self.hex8 = QLineEdit()
-        self.hex8.setValidator(QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{2})")))
+        self.hex8.setValidator(
+            QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{2})"))
+        )
         self.hex8.setFixedWidth(60)
         self.hex8.editingFinished.connect(self.set8BitHex)
         self.hex8.installEventFilter(self)
@@ -313,7 +306,9 @@ class ColorPicker(QDialog):
         self.b24.setFixedWidth(60)
         self.b24.editingFinished.connect(self.set24BitColors)
         self.hex24 = QLineEdit()
-        self.hex24.setValidator(QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{6})")))
+        self.hex24.setValidator(
+            QRegExpValidator(QRegExp(r"#?(?:[0-9a-fA-F]{6})"))
+        )
         self.hex24.setFixedWidth(60)
         self.hex24.installEventFilter(self)
         fullcolor_form.addRow(QLabel("Red:"), self.r24)
@@ -337,12 +332,12 @@ class ColorPicker(QDialog):
     def eventFilter(self, source, event):
         """Event filter to handle the dialog losing focus
 
-        :param source: Event source
-        :type source: QObject
-        :param event: Source event
-        :type event: QEvent
-        :return: Whether to handle the event further down
-        :rtype: bool
+        :param source:  Event source
+        :type source:   QObject
+        :param event:   Source event
+        :type event:    QEvent
+        :return:        Whether to handle the event further down
+        :rtype:         bool
         """
         if event.type() == QEvent.FocusOut:
             if source is self.hex8:
@@ -354,8 +349,8 @@ class ColorPicker(QDialog):
     def getColor(self):
         """Gets the chosen color from the color picker
 
-        :return: Chosen color
-        :rtype: QColor
+        :return:    Chosen color
+        :rtype:     QColor
         """
         return self.color
 
@@ -363,10 +358,12 @@ class ColorPicker(QDialog):
     def setColor(self, value):
         """Sets the chosen color of the color picker
 
-        :param value: The color to be set
-        :type value: QColor
+        :param value:   The color to be set
+        :type value:    QColor
         """
-        self.color = QColor(*normalize(value.red(), value.green(), value.blue()))
+        self.color = QColor(
+            *normalize(value.red(), value.green(), value.blue())
+        )
         self.preview_color.emit(self.color)
         self.preview_pixmap.fill(self.color)
         self.preview.setPixmap(self.preview_pixmap)

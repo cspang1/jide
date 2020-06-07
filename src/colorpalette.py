@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QLineF
-from PyQt5.QtGui import QColor, QIcon, QPixmap, QKeySequence, QPainter, QPen, QBrush
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QPainter, QPen, QBrush
 from PyQt5.QtWidgets import (
     QWidget,
     QLabel,
@@ -11,24 +11,22 @@ from PyQt5.QtWidgets import (
     QToolButton,
     QHBoxLayout,
     QComboBox,
-    qApp,
-    QUndoStack,
     QInputDialog,
     QLineEdit,
     QMessageBox,
 )
-from colorpicker import ColorPicker, upsample, downsample, normalize
-import resources
+from colorpicker import ColorPicker
 from source import Source
+import resources  # noqa: F401
 
 
 class ColorPreview(QWidget):
     """Color preview widget showing primary and secondary color selections
 
-    :param source: Subject source of preview, either sprite or tile
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param source:  Subject source of preview, either sprite or tile
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     switch = pyqtSignal()
@@ -57,8 +55,8 @@ class ColorPreview(QWidget):
     def paintEvent(self, event):
         """Preview paint event to draw regular and transparent color selections
 
-        :param event: Paint event
-        :type event: QPaintEvent
+        :param event:   Paint event
+        :type event:    QPaintEvent
         """
         super().paintEvent(event)
         painter = QPainter(self)
@@ -88,8 +86,8 @@ class ColorPreview(QWidget):
     def setPrimaryColor(self, color):
         """Sets the primary color of the preview
 
-        :param color: Color to be set as the primary
-        :type color: QColor
+        :param color:   Color to be set as the primary
+        :type color:    QColor
         """
         self.primary_color = color
         self.update()
@@ -97,8 +95,8 @@ class ColorPreview(QWidget):
     def setPrimaryIndex(self, index):
         """Sets the index of the chosen primary color of the preview
 
-        :param index: Index to be set as the primary
-        :type index: int
+        :param index:   Index to be set as the primary
+        :type index:    int
         """
         self.primary_index = index
         self.update()
@@ -106,8 +104,8 @@ class ColorPreview(QWidget):
     def setSecondaryColor(self, color):
         """Sets the secondary color of the preview
 
-        :param color: Color to be set as the secondary
-        :type color: QColor
+        :param color:   Color to be set as the secondary
+        :type color:    QColor
         """
         self.secondary_color = color
         self.update()
@@ -115,8 +113,8 @@ class ColorPreview(QWidget):
     def setSecondaryIndex(self, index):
         """Sets the index of the chosen secondary color of the preview
 
-        :param index: Index to be set as the secondary
-        :type index: int
+        :param index:   Index to be set as the secondary
+        :type index:    int
         """
         self.secondary_index = index
         self.update()
@@ -126,7 +124,7 @@ class ColorPreview(QWidget):
         """Sets the switch color aciton/button to be enabled/disabled
 
         :param enabled: Whether color switch is to be enabled or disabled
-        :type enabled: bool
+        :type enabled:  bool
         """
         self.switch_color.setEnabled(enabled)
         self.switch_button.setIcon(self.switch_icon)
@@ -135,12 +133,12 @@ class ColorPreview(QWidget):
 class Color(QLabel):
     """Representation of a single color in the color palette
 
-    :param index: Numerical index of the color in a color table
-    :type index: int
-    :param source: Source subject of the color, either sprite or tile
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param index:   Numerical index of the color in a color table
+    :type index:    int
+    :param source:  Source subject of the color, either sprite or tile
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     color_selected = pyqtSignal(int, QColor, Qt.MouseButton)
@@ -157,8 +155,8 @@ class Color(QLabel):
     def paintEvent(self, event):
         """Color paint event to draw grid and transaprency indications
 
-        :param event: Paint event
-        :type event: QPaintEvent
+        :param event:   Paint event
+        :type event:    QPaintEvent
         """
         super().paintEvent(event)
         painter = QPainter(self)
@@ -179,8 +177,8 @@ class Color(QLabel):
     def fill(self, color):
         """Fills color
 
-        :param color: Color to be filled with
-        :type color: QColor
+        :param color:   Color to be filled with
+        :type color:    QColor
         """
         self.color = color
         self.pixmap().fill(self.color)
@@ -189,8 +187,8 @@ class Color(QLabel):
     def mouseDoubleClickEvent(self, event):
         """Handles double clicking on a given color to open the color picker
 
-        :param event: Source event
-        :type event: QMouseEvent
+        :param event:   Source event
+        :type event:    QMouseEvent
         """
         if (
             self.index != 0 or self.source is Source.TILE
@@ -200,8 +198,8 @@ class Color(QLabel):
     def mousePressEvent(self, event):
         """Handles clicking on a given color to select that color
 
-        :param event: Source event
-        :type event: QMouseEvent
+        :param event:   Source event
+        :type event:    QMouseEvent
         """
         if event.button() in [Qt.LeftButton, Qt.RightButton]:
             self.color_selected.emit(self.index, self.color, event.button())
@@ -222,10 +220,10 @@ class Color(QLabel):
 class ColorPalette(QWidget):
     """Represents a palette of colors
 
-    :param source: Subject source of the palette, either sprite or tile
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param source:  Subject source of the palette, either sprite or tile
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     palette_updated = pyqtSignal(str)
@@ -257,8 +255,8 @@ class ColorPalette(QWidget):
     def setup(self, data):
         """Sets up the data source for the palette and initial selection
 
-        :param data: Data source of palette
-        :type data: GameData
+        :param data:    Data source of palette
+        :type data:     GameData
         """
         self.data = data
         self.data.col_pal_updated.connect(self.setPalette)
@@ -268,10 +266,10 @@ class ColorPalette(QWidget):
     def openPicker(self, index, orig_color):
         """Handles opening the color picker after double-clicking on a color
 
-        :param index: Index of the color selected
-        :type index: int
-        :param orig_color: Original color of the selection color
-        :type orig_color: QColor
+        :param index:       Index of the color selected
+        :type index:        int
+        :param orig_color:  Original color of the selection color
+        :type orig_color:   QColor
         """
         self.picker.setColor(orig_color)
         self.picker.preview_color.connect(
@@ -288,12 +286,12 @@ class ColorPalette(QWidget):
     def sendColorUpdate(self, index, new_color, orig_color=None):
         """Sends color update to centralized GameData data
 
-        :param index: Index of changed color in palette
-        :type index: int
-        :param new_color: Color to be changed to
-        :type new_color: QColor
-        :param orig_color: Original color, defaults to None
-        :type orig_color: QColor, optional
+        :param index:       Index of changed color in palette
+        :type index:        int
+        :param new_color:   Color to be changed to
+        :type new_color:    QColor
+        :param orig_color:  Original color, defaults to None
+        :type orig_color:   QColor, optional
         """
         self.data.setColor(
             self.current_palette, index, new_color, self.source, orig_color
@@ -301,12 +299,13 @@ class ColorPalette(QWidget):
 
     @pyqtSlot(QColor)
     def previewColor(self, index, color):
-        """Triggers preview of color throughout application when interacting with color picker
+        """Triggers preview of color throughout application when interacting
+        with color picker
 
-        :param index: Index of the color being changed
-        :type index: int
-        :param color: Color to be previewed
-        :type color: QColor
+        :param index:   Index of the color being changed
+        :type index:    int
+        :param color:   Color to be previewed
+        :type color:    QColor
         """
         self.data.previewColor(self.current_palette, index, color, self.source)
 
@@ -314,15 +313,17 @@ class ColorPalette(QWidget):
     def setPalette(self, source, palette):
         """Sets the overall color palette colors
 
-        :param source: Subject source of color palette, either sprite or tile
-        :type source: Source
+        :param source:  Subject source of color palette, either sprite or tile
+        :type source:   Source
         :param palette: Name of the color palette to be set to
-        :type palette: str
+        :type palette:  str
         """
         if source is not self.source:
             return
         self.current_palette = palette
-        widgets = [self.grid.itemAt(index) for index in range(self.grid.count())]
+        widgets = [
+            self.grid.itemAt(index) for index in range(self.grid.count())
+        ]
         for color, widget in zip(
             self.data.getColPal(self.current_palette, self.source), widgets
         ):
@@ -359,12 +360,13 @@ class ColorPalette(QWidget):
     def selectColor(self, index, color, button):
         """Selects a primary or secondary color from the palette
 
-        :param index: Index of the chosen color
-        :type index: int
-        :param color: Color chosen
-        :type color: QColor
-        :param button: Which mouse button was used to select the primary or secondary color
-        :type button: Qt.MouseButton
+        :param index:   Index of the chosen color
+        :type index:    int
+        :param color:   Color chosen
+        :type color:    QColor
+        :param button:  Which mouse button was used to select the primary or
+                        secondary color
+        :type button:   Qt.MouseButton
         """
         if button == Qt.LeftButton:
             self.color_preview.setPrimaryColor(color)
@@ -383,10 +385,11 @@ class ColorPalette(QWidget):
 class ColorPaletteDock(QDockWidget):
     """Dock containing the color palette and preview area
 
-    :param source: Subject source for the dock and its contents, either sprite or tile
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param source:  Subject source for the dock and its contents, either
+                    sprite or tile
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     palette_updated = pyqtSignal(str)
@@ -401,13 +404,19 @@ class ColorPaletteDock(QDockWidget):
         self.docked_widget = QWidget(self)
         self.setWidget(self.docked_widget)
         self.docked_widget.setLayout(QVBoxLayout())
-        self.docked_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.docked_widget.setSizePolicy(
+            QSizePolicy.Maximum, QSizePolicy.Maximum
+        )
         self.color_palette = ColorPalette(self.source, self)
         self.color_palette_list = QComboBox()
-        self.color_palette_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
+        self.color_palette_list.setSizePolicy(
+            QSizePolicy.Minimum, QSizePolicy.Maximum
+        )
         self.palette_picker = QHBoxLayout()
         self.palette_label = QLabel("Palette:")
-        self.palette_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.palette_label.setSizePolicy(
+            QSizePolicy.Maximum, QSizePolicy.Maximum
+        )
         self.palette_picker.addWidget(self.palette_label)
         self.palette_picker.addWidget(self.color_palette_list)
         self.add_palette = QToolButton(self)
@@ -443,15 +452,17 @@ class ColorPaletteDock(QDockWidget):
     def setup(self, data):
         """Sets up the data source for the dock's contents and enables UI elements
 
-        :param data: Data source of dock
-        :type data: GameData
+        :param data:    Data source of dock
+        :type data:     GameData
         """
         self.data = data
         self.data.col_pal_renamed.connect(self.renamePalette)
         self.data.col_pal_added.connect(self.addPalette)
         self.data.col_pal_removed.connect(self.removePalette)
         self.color_palette.setup(self.data)
-        self.color_palette_list.currentIndexChanged.connect(self.setColorPalette)
+        self.color_palette_list.currentIndexChanged.connect(
+            self.setColorPalette
+        )
         self.color_palette_list.setEnabled(True)
         self.color_palette.setEnabled(True)
         self.add_palette.setEnabled(True)
@@ -463,8 +474,9 @@ class ColorPaletteDock(QDockWidget):
     def addPaletteReq(self, event=None):
         """Sends command to GameData source to add a color palette
 
-        :param event: Mouse click event which triggered the request, defaults to None
-        :type event: QMouseEvent, optional
+        :param event:   Mouse click event which triggered the request,
+                        defaults to None
+        :type event:    QMouseEvent, optional
         """
         name, accepted = QInputDialog.getText(
             self, "Add", "Palette name:", QLineEdit.Normal, "New palette"
@@ -475,14 +487,16 @@ class ColorPaletteDock(QDockWidget):
     def removePaletteReq(self, event=None):
         """Sends command to GameData source to remove a color palette
 
-        :param event: Mouse click event which triggered the request, defaults to None
-        :type event: QMouseEvent, optional
+        :param event:   Mouse click event which triggered the request,
+                        defaults to None
+        :type event:    QMouseEvent, optional
         """
         if self.color_palette_list.count() == 1:
             QMessageBox(
                 QMessageBox.Critical,
                 "Error",
-                "There must be at least one sprite and tile color palette in the project",
+                "There must be at least one sprite and tile color palette in \
+                the project",
             ).exec()
         else:
             name = self.color_palette_list.currentText()
@@ -491,8 +505,9 @@ class ColorPaletteDock(QDockWidget):
     def renamePaletteReq(self, event=None):
         """Sends command to GameData source to rename a color palette
 
-        :param event: Mouse click event which triggered the request, defaults to None
-        :type event: QMouseEvent, optional
+        :param event:   Mouse click event which triggered the request,
+                        defaults to None
+        :type event:    QMouseEvent, optional
         """
         cur_name = self.color_palette_list.currentText()
         new_name, accepted = QInputDialog.getText(
@@ -505,22 +520,24 @@ class ColorPaletteDock(QDockWidget):
     def addPalette(self, source, name, index):
         """Adds a new color palette
 
-        :param source: Subject source of the addition, either sprite or tile
-        :type source: Source
-        :param name: Name of the added color palette
-        :type name: str
-        :param index: Index in color palette list to insert the new palette
-        :type index: int
+        :param source:  Subject source of the addition, either sprite or tile
+        :type source:   Source
+        :param name:    Name of the added color palette
+        :type name:     str
+        :param index:   Index in color palette list to insert the new palette
+        :type index:    int
         """
         if source is not self.source:
             return
-        if name != None:
+        if name is not None:
             self.color_palette_list.insertItem(index, name)
             self.color_palette_list.setCurrentIndex(index)
             self.color_palette.current_palette = name
         else:
             QMessageBox(
-                QMessageBox.Critical, "Error", "Palette with that name already exists"
+                QMessageBox.Critical,
+                "Error",
+                "Palette with that name already exists",
             ).exec()
             self.addPaletteReq()
 
@@ -528,14 +545,14 @@ class ColorPaletteDock(QDockWidget):
     def removePalette(self, source, name):
         """Removes a color palette
 
-        :param source: Subject source of the removal, either sprite or tile
-        :type source: Source
-        :param name: Name of the removed color palette
-        :type name: str
+        :param source:  Subject source of the removal, either sprite or tile
+        :type source:   Source
+        :param name:    Name of the removed color palette
+        :type name:     str
         """
         if source is not self.source:
             return
-        if name != None:
+        if name is not None:
             index = self.color_palette_list.findText(name)
             self.color_palette_list.removeItem(index)
             name = self.color_palette_list.currentText()
@@ -551,12 +568,13 @@ class ColorPaletteDock(QDockWidget):
     def renamePalette(self, source, cur_name, new_name):
         """Renames a color palette
 
-        :param source: Subject source of the removal, either sprite or tile
-        :type source: Source
-        :param cur_name: Current name of the target color palette
-        :type cur_name: str
-        :param new_name: New name of the target color palette
-        :type new_name: str
+        :param source:      Subject source of the removal, either sprite or
+                            tile
+        :type source:       Source
+        :param cur_name:    Current name of the target color palette
+        :type cur_name:     str
+        :param new_name:    New name of the target color palette
+        :type new_name:     str
         """
         if source is not self.source:
             return
@@ -570,7 +588,9 @@ class ColorPaletteDock(QDockWidget):
             self.color_palette.current_palette = new_name
         else:
             QMessageBox(
-                QMessageBox.Critical, "Error", "Palette with that name already exists"
+                QMessageBox.Critical,
+                "Error",
+                "Palette with that name already exists",
             ).exec()
             self.renamePaletteReq()
 
@@ -578,10 +598,12 @@ class ColorPaletteDock(QDockWidget):
     def verifyCurrentPalette(self, name):
         """Ensures that the current color palette in the selection list is accurate
 
-        :param name: Name of the selected color palette
-        :type name: str
+        :param name:    Name of the selected color palette
+        :type name:     str
         """
-        self.color_palette_list.setCurrentIndex(self.color_palette_list.findText(name))
+        self.color_palette_list.setCurrentIndex(
+            self.color_palette_list.findText(name)
+        )
         self.palette_updated.emit(name)
 
     def setColorPalette(self):
@@ -594,7 +616,7 @@ class ColorPaletteDock(QDockWidget):
     def closeEvent(self, event):
         """Intercepts the dock close event to prevent its closure
 
-        :param event: Source event
-        :type event: QEvent
+        :param event:   Source event
+        :type event:    QEvent
         """
         event.ignore()

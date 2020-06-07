@@ -58,8 +58,12 @@ class jide(QMainWindow):
         self.sprite_pixel_palette_dock = PixelPaletteDock(Source.SPRITE, self)
         self.tile_color_palette_dock = ColorPaletteDock(Source.TILE, self)
         self.tile_pixel_palette_dock = PixelPaletteDock(Source.TILE, self)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_color_palette_dock)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock)
+        self.addDockWidget(
+            Qt.RightDockWidgetArea, self.sprite_color_palette_dock
+        )
+        self.addDockWidget(
+            Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock
+        )
         self.removeDockWidget(self.tile_color_palette_dock)
         self.removeDockWidget(self.tile_pixel_palette_dock)
 
@@ -87,11 +91,15 @@ class jide(QMainWindow):
         )
         self.line_tool.setShortcut("L")
         self.rect_tool = QAction(
-            QIcon(":/icons/rect_tool.png"), "&Rectangle tool", self.tool_actions
+            QIcon(":/icons/rect_tool.png"),
+            "&Rectangle tool",
+            self.tool_actions,
         )
         self.rect_tool.setShortcut("R")
         self.ellipse_tool = QAction(
-            QIcon(":/icons/ellipse_tool.png"), "&Ellipse tool", self.tool_actions
+            QIcon(":/icons/ellipse_tool.png"),
+            "&Ellipse tool",
+            self.tool_actions,
         )
         self.ellipse_tool.setShortcut("E")
         self.tools = [
@@ -184,8 +192,9 @@ class jide(QMainWindow):
     def setCopyActive(self, active):
         """Set whether the copy action is available
 
-        :param active: Variable representing whether copy action should be set to available or unavailable
-        :type active: bool
+        :param active:  Variable representing whether copy action should be set
+                        to available or unavailable
+        :type active:   bool
         """
         self.copy_act.isEnabled(active)
 
@@ -193,8 +202,9 @@ class jide(QMainWindow):
     def setPasteActive(self, active):
         """Set whether the paste action is available
 
-        :param active: Variable representing whether paste action should be set to available or unavailable
-        :type active: bool
+        :param active:  Variable representing whether paste action should be
+                        set to available or unavailable
+        :type active:   bool
         """
         self.paste_act.isEnabled(active)
 
@@ -221,7 +231,9 @@ class jide(QMainWindow):
                 return
             except OSError:
                 QMessageBox(
-                    QMessageBox.Critical, "Error", "Unable to open project file"
+                    QMessageBox.Critical,
+                    "Error",
+                    "Unable to open project file",
                 ).exec()
                 return
 
@@ -237,11 +249,16 @@ class jide(QMainWindow):
         self.sprite_view.setStyleSheet("background-color: #494949;")
         self.tile_view.setStyleSheet("background-color: #494949;")
 
-        self.sprite_pixel_palette_dock.pixel_palette.subject_selected.connect(
+        sprite_pixel_palette = self.sprite_pixel_palette_dock.pixel_palette
+        tile_pixel_palette = self.tile_pixel_palette_dock.pixel_palette
+        sprite_color_palette = self.sprite_color_palette_dock.color_palette
+        tile_color_palette = self.tile_color_palette_dock.color_palette
+
+        sprite_pixel_palette.subject_selected.connect(
             self.sprite_scene.setSubject
         )
         self.sprite_scene.set_color_switch_enabled.connect(
-            self.sprite_color_palette_dock.color_palette.color_preview.setColorSwitchEnabled
+            sprite_color_palette.color_preview.setColorSwitchEnabled
         )
         self.sprite_color_palette_dock.palette_updated.connect(
             self.sprite_scene.setColorPalette
@@ -249,15 +266,12 @@ class jide(QMainWindow):
         self.sprite_color_palette_dock.palette_updated.connect(
             self.sprite_pixel_palette_dock.palette_updated
         )
-        self.sprite_color_palette_dock.color_palette.color_selected.connect(
+        sprite_color_palette.color_selected.connect(
             self.sprite_scene.setPrimaryColor
         )
-
-        self.tile_pixel_palette_dock.pixel_palette.subject_selected.connect(
-            self.tile_scene.setSubject
-        )
+        tile_pixel_palette.subject_selected.connect(self.tile_scene.setSubject)
         self.tile_scene.set_color_switch_enabled.connect(
-            self.tile_color_palette_dock.color_palette.color_preview.setColorSwitchEnabled
+            tile_color_palette.color_preview.setColorSwitchEnabled
         )
         self.tile_color_palette_dock.palette_updated.connect(
             self.tile_scene.setColorPalette
@@ -265,7 +279,7 @@ class jide(QMainWindow):
         self.tile_color_palette_dock.palette_updated.connect(
             self.tile_pixel_palette_dock.palette_updated
         )
-        self.tile_color_palette_dock.color_palette.color_selected.connect(
+        tile_color_palette.color_selected.connect(
             self.tile_scene.setPrimaryColor
         )
 
@@ -314,7 +328,9 @@ class jide(QMainWindow):
             lambda checked, tool=Tools.PEN: self.tile_scene.setTool(tool)
         )
         self.fill_tool.triggered.connect(
-            lambda checked, tool=Tools.FLOODFILL: self.sprite_scene.setTool(tool)
+            lambda checked, tool=Tools.FLOODFILL: self.sprite_scene.setTool(
+                tool
+            )
         )
         self.fill_tool.triggered.connect(
             lambda checked, tool=Tools.FLOODFILL: self.tile_scene.setTool(tool)
@@ -326,7 +342,9 @@ class jide(QMainWindow):
             lambda checked, tool=Tools.LINE: self.tile_scene.setTool(tool)
         )
         self.rect_tool.triggered.connect(
-            lambda checked, tool=Tools.RECTANGLE: self.sprite_scene.setTool(tool)
+            lambda checked, tool=Tools.RECTANGLE: self.sprite_scene.setTool(
+                tool
+            )
         )
         self.rect_tool.triggered.connect(
             lambda checked, tool=Tools.RECTANGLE: self.tile_scene.setTool(tool)
@@ -345,19 +363,14 @@ class jide(QMainWindow):
         self.pen_tool.triggered.emit(True)
 
     def setCanvas(self, index):
-        """Set the dock and signal/slot layout to switch between sprite/tile/tile map tabs
+        """Set the dock and signal/slot layout to switch between sprite/tile/
+        tile map tabs
 
         :param index: Index of canvas tab
         :type index: int
         """
-        try:
-            self.paste_act.triggered.disconnect()
-        except:
-            pass
-        try:
-            self.copy_act.triggered.disconnect()
-        except:
-            pass
+        self.paste_act.triggered.disconnect()
+        self.copy_act.triggered.disconnect()
 
         if index == 0:
             self.copy_act.triggered.connect(self.sprite_scene.copy)
@@ -368,8 +381,12 @@ class jide(QMainWindow):
             self.sprite_pixel_palette_dock.show()
             self.removeDockWidget(self.tile_color_palette_dock)
             self.removeDockWidget(self.tile_pixel_palette_dock)
-            self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_color_palette_dock)
-            self.addDockWidget(Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock)
+            self.addDockWidget(
+                Qt.RightDockWidgetArea, self.sprite_color_palette_dock
+            )
+            self.addDockWidget(
+                Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock
+            )
             self.copy_act.triggered.connect(self.sprite_scene.copy)
             self.paste_act.triggered.connect(self.sprite_scene.startPasting)
             self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
@@ -383,8 +400,12 @@ class jide(QMainWindow):
             self.tile_pixel_palette_dock.show()
             self.removeDockWidget(self.sprite_color_palette_dock)
             self.removeDockWidget(self.sprite_pixel_palette_dock)
-            self.addDockWidget(Qt.RightDockWidgetArea, self.tile_color_palette_dock)
-            self.addDockWidget(Qt.RightDockWidgetArea, self.tile_pixel_palette_dock)
+            self.addDockWidget(
+                Qt.RightDockWidgetArea, self.tile_color_palette_dock
+            )
+            self.addDockWidget(
+                Qt.RightDockWidgetArea, self.tile_pixel_palette_dock
+            )
             self.copy_act.triggered.connect(self.tile_scene.copy)
             self.paste_act.triggered.connect(self.tile_scene.startPasting)
             self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
@@ -437,7 +458,9 @@ class jide(QMainWindow):
         with path.open("wb") as dat_file:
             for palette in source:
                 for color in palette:
-                    r, g, b = downsample(color.red(), color.green(), color.blue())
+                    r, g, b = downsample(
+                        color.red(), color.green(), color.blue()
+                    )
                     rgb = (r << 5) | (g << 2) | (b)
                     dat_file.write(bytes([rgb]))
 

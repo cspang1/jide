@@ -15,13 +15,14 @@ from PyQt5.QtWidgets import (
     QToolTip,
 )
 from source import Source
+import resources  # noqa: F401
 
 
 class Overlay(QLabel):
     """Pixel palette overlay used to draw gridlines and selection box
 
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     tiles_selected = pyqtSignal(int, int, int)
@@ -38,8 +39,8 @@ class Overlay(QLabel):
     def setDims(self, height):
         """Set height in sprites/tiles of pixel palette
 
-        :param height: Number of rows in pixel palette
-        :type height: int
+        :param height:  Number of rows in pixel palette
+        :type height:   int
         """
         self.height = height
         self.setFixedSize(16 * 25, self.height * 25)
@@ -47,12 +48,12 @@ class Overlay(QLabel):
     def selectSubjects(self, root, width, height):
         """Select rectangular region of sprites/tiles
 
-        :param root: Index of root selected element
-        :type root: int
-        :param width: Width of selection from root
-        :type width: int
-        :param height: Height of selection from root
-        :type height: int
+        :param root:    Index of root selected element
+        :type root:     int
+        :param width:   Width of selection from root
+        :type width:    int
+        :param height:  Height of selection from root
+        :type height:   int
         """
         self.selected = (root, width, height)
         self.update()
@@ -60,8 +61,8 @@ class Overlay(QLabel):
     def paintEvent(self, event):
         """Paint event for the overlay
 
-        :param event: QPaintEvent event
-        :type event: QPaintEvent
+        :param event:   QPaintEvent event
+        :type event:    QPaintEvent
         """
         super().paintEvent(event)
         painter = QPainter(self)
@@ -90,10 +91,11 @@ class Overlay(QLabel):
     def getCoords(self, event):
         """Get bounded coordinates of a mouse event
 
-        :param event: Source event
-        :type event: QMouseEvent
-        :return: Bounded horizontal and vertical coordinate of mouse event
-        :rtype: tuple(int, int)
+        :param event:   Source event
+        :type event:    QMouseEvent
+        :return:        Bounded horizontal and vertical coordinate of mouse
+                        event
+        :rtype:         tuple(int, int)
         """
         x = min(max(0, math.floor(event.localPos().x() / 25)), 16)
         y = min(max(0, math.floor(event.localPos().y() / 25)), self.height)
@@ -102,22 +104,22 @@ class Overlay(QLabel):
     def clamp(self, value, lower=0, upper=16):
         """Clamp a coordinate to bounded dimensions
 
-        :param value: Value to clamp
-        :type value: int
-        :param lower: Lower bound of clamp, defaults to 0
-        :type lower: int, optional
-        :param upper: Upper bound of clamp, defaults to 16
-        :type upper: int, optional
-        :return: Clamped coordinate
-        :rtype: int
+        :param value:   Value to clamp
+        :type value:    int
+        :param lower:   Lower bound of clamp, defaults to 0
+        :type lower:    int, optional
+        :param upper:   Upper bound of clamp, defaults to 16
+        :type upper:    int, optional
+        :return:        Clamped coordinate
+        :rtype:         int
         """
         return min(max(lower, value), upper)
 
     def mousePressEvent(self, event):
         """Event to handle mouse clicks on overlay
 
-        :param event: Source event
-        :type event: QMouseEvent
+        :param event:   Source event
+        :type event:    QMouseEvent
         """
         if event.buttons() == Qt.LeftButton:
             self.orig_x, self.orig_y = (
@@ -132,10 +134,12 @@ class Overlay(QLabel):
     def mouseMoveEvent(self, event):
         """Event to handle mouse movement after clicking on overlay
 
-        :param event: Source event
-        :type event: QMouseEvent
+        :param event:   Source event
+        :type event:    QMouseEvent
         """
-        if event.buttons() == Qt.LeftButton and event.modifiers() == Qt.ControlModifier:
+        lclick = event.buttons() == Qt.LeftButton
+        ctrl = event.modifiers() == Qt.ControlModifier
+        if ctrl and lclick:
             x, y = (
                 self.clamp(math.ceil(event.pos().x() / 25)),
                 self.clamp(math.ceil(event.pos().y() / 25), upper=self.height),
@@ -157,10 +161,10 @@ class Tile(QLabel):
     def __init__(self, index, parent=None):
         """Tile representing rendered version of single tile/sprite
 
-        :param index: Index of element in centralized GameData data
-        :type index: intr
-        :param parent: Parent widget, defaults to None
-        :type parent: QWidget, optional
+        :param index:   Index of element in centralized GameData data
+        :type index:    intr
+        :param parent:  Parent widget, defaults to None
+        :type parent:   QWidget, optional
         """
         super().__init__(parent)
         self.setFixedSize(25, 25)
@@ -171,8 +175,8 @@ class Tile(QLabel):
     def setData(self, data):
         """Set pixel data of tile
 
-        :param data: Pixel data list
-        :type data: list(int)
+        :param data:    Pixel data list
+        :type data:     list(int)
         """
         self.data = bytes([pix for sub in data for pix in sub])
 
@@ -180,7 +184,7 @@ class Tile(QLabel):
         """Set color palette of tile
 
         :param palette: List of colors representing color palette
-        :type palette: list(QColor)
+        :type palette:  list(QColor)
         """
         self.color_palette = palette
 
@@ -195,10 +199,10 @@ class Tile(QLabel):
 class PixelPalette(QFrame):
     """Palette of sprite/tiles to be used to select canvas editing area
 
-    :param source: Source subject of the palette, either tile or sprite
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param source:  Source subject of the palette, either tile or sprite
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     subject_selected = pyqtSignal(int, int, int)
@@ -226,8 +230,8 @@ class PixelPalette(QFrame):
     def setup(self, data):
         """Sets up the data source for the palette and generates the palette
 
-        :param data: Data source of palette
-        :type data: GameData
+        :param data:    Data source of palette
+        :type data:     GameData
         """
         self.data = data
         self.selected = 0
@@ -243,7 +247,8 @@ class PixelPalette(QFrame):
             self.grid.itemAt(i).widget().setParent(None)
         self.contents.clear()
         row = col = index = 0
-        for index, element in enumerate(self.data.getPixelPalettes(self.source)):
+        palettes = enumerate(self.data.getPixelPalettes(self.source))
+        for index, element in palettes:
             tile = Tile(index, self)
             tile.setColors(self.current_palette)
             tile.setData(element)
@@ -262,14 +267,16 @@ class PixelPalette(QFrame):
     pyqtSlot(int, int, int)
 
     def selectSubjects(self, index=None, width=-1, height=-1):
-        """Selects a rectangular region of tiles in the palette. None and negative index/width/height values result in internal values being used.
+        """Selects a rectangular region of tiles in the palette. None and
+        negative index/width/height values result in internal values being
+        used.
 
-        :param index: Root index of selection, defaults to None
-        :type index: int, optional
-        :param width: Width of selection from index, defaults to -1
-        :type width: int, optional
-        :param height: Height of selection from index, defaults to -1
-        :type height: int, optional
+        :param index:   Root index of selection, defaults to None
+        :type index:    int, optional
+        :param width:   Width of selection from index, defaults to -1
+        :type width:    int, optional
+        :param height:  Height of selection from index, defaults to -1
+        :type height:   int, optional
         """
         self.select_width = width if width > 0 else self.select_width
         self.select_height = height if height > 0 else self.select_height
@@ -277,8 +284,9 @@ class PixelPalette(QFrame):
         data = self.data.getPixelPalettes(self.source)
         num_rows = math.floor(data.__len__() / 16)
         initial_row = math.floor(self.selected / 16)
-        if math.floor((self.selected + self.select_width - 1) / 16) > initial_row:
-            self.selected = math.floor(self.selected / 16) * 16 + 16 - self.select_width
+        width = math.floor((self.selected + self.select_width - 1) / 16)
+        if width > initial_row:
+            self.selected = initial_row * 16 + 16 - self.select_width
         if initial_row + self.select_height > num_rows:
             temp_index = self.selected - 16 * (
                 initial_row + self.select_height - num_rows
@@ -294,17 +302,19 @@ class PixelPalette(QFrame):
         self.overlay.selectSubjects(
             self.selected, self.select_width, self.select_height
         )
-        self.subject_selected.emit(self.selected, self.select_width, self.select_height)
+        self.subject_selected.emit(
+            self.selected, self.select_width, self.select_height
+        )
 
     pyqtSlot(Source, set)
 
     def updateSubjects(self, source, subjects):
         """Updates the palette's tiles with data from the centralized GameData
 
-        :param source: Source subject of update, either sprite or tile
-        :type source: Source
-        :param subjects: A set of subject indexes which need to be updated
-        :type subjects: set(int)
+        :param source:      Source subject of update, either sprite or tile
+        :type source:       Source
+        :param subjects:    A set of subject indexes which need to be updated
+        :type subjects:     set(int)
         """
         if source is not self.source:
             return
@@ -327,7 +337,7 @@ class PixelPalette(QFrame):
         """Set the color palette to be used by the sprites/tiles
 
         :param palette: Name of the color palette
-        :type palette: str
+        :type palette:  str
         """
         if self.data is not None:
             self.current_palette = self.data.getColPal(palette, self.source)
@@ -338,10 +348,10 @@ class PixelPalette(QFrame):
     def inSelection(self, index):
         """Determine if an index is inside the rectangular selection area
 
-        :param index: Target index
-        :type index: int
-        :return: Whether the target index is inside the selection
-        :rtype: bool
+        :param index:   Target index
+        :type index:    int
+        :return:        Whether the target index is inside the selection
+        :rtype:         bool
         """
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right
@@ -352,8 +362,8 @@ class PixelPalette(QFrame):
     def genLocCache(self, height):
         """Generates a cache of 2D locations for indexes
 
-        :param height: Height of the pixel palette in tiles/sprites
-        :type height: int
+        :param height:  Height of the pixel palette in tiles/sprites
+        :type height:   int
         """
         self.loc_cache.clear()
         for loc in range(height * 16):
@@ -362,10 +372,10 @@ class PixelPalette(QFrame):
     def genCoords(self, index):
         """Generates the 2D coordinates for a given element index
 
-        :param index: Index of the element
-        :type index: int
-        :return: (x,y) coordinates of the element
-        :rtype: tuple(int, int)
+        :param index:   Index of the element
+        :type index:    int
+        :return:        (x,y) coordinates of the element
+        :rtype:         tuple(int, int)
         """
         return (index % 16, math.floor(index / 16))
 
@@ -373,12 +383,12 @@ class PixelPalette(QFrame):
 class Contents(QWidget):
     """Visual contents of the pixel palette
 
-    :param source: Subject source of the contents, either sprite or tile
-    :type source: Source
+    :param source:  Subject source of the contents, either sprite or tile
+    :type source:   Source
     :param palette: Palette to render in contents
-    :type palette: PixelPalette
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :type palette:  PixelPalette
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     height_changed = pyqtSignal()
@@ -411,7 +421,9 @@ class Contents(QWidget):
         row_ctrl_layout.addStretch()
 
         scroll_area = QScrollArea(self)
-        self.setFixedWidth(scroll_area.verticalScrollBar().sizeHint().width() + 420)
+        self.setFixedWidth(
+            scroll_area.verticalScrollBar().sizeHint().width() + 420
+        )
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         scroll_area.setWidgetResizable(True)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -424,12 +436,14 @@ class Contents(QWidget):
     def setup(self, data):
         """Sets up the data source for the contents and set dimensions
 
-        :param data: Data source of contents
-        :type data: GameData
+        :param data:    Data source of contents
+        :type data:     GameData
         """
         self.data = data
         self.data.row_count_updated.connect(self.palRowCntChanged)
-        self.height = math.floor(self.data.getPixelPalettes(self.source).__len__() / 16)
+        self.height = math.floor(
+            self.data.getPixelPalettes(self.source).__len__() / 16
+        )
         if self.height <= 1:
             self.rem_row.setEnabled(False)
         self.add_row.setEnabled(True)
@@ -452,10 +466,10 @@ class Contents(QWidget):
     def palRowCntChanged(self, source, num_rows):
         """Limits changes to the palette row count by enabling/disable UI elements
 
-        :param source: [description]
-        :type source: [type]
-        :param num_rows: [description]
-        :type num_rows: [type]
+        :param source:      [description]
+        :type source:       [type]
+        :param num_rows:    [description]
+        :type num_rows:     [type]
         """
         if source is not self.source:
             return
@@ -470,10 +484,10 @@ class Contents(QWidget):
 class PixelPaletteDock(QDockWidget):
     """Dock containing the pixel palette
 
-    :param source: Subject source of the dock, either sprite or tile
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param source:  Subject source of the dock, either sprite or tile
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     palette_updated = pyqtSignal(str)
@@ -493,8 +507,8 @@ class PixelPaletteDock(QDockWidget):
     def setup(self, data):
         """Sets up the data source for the dock
 
-        :param data: Data source of dock
-        :type data: GameData
+        :param data:    Data source of dock
+        :type data:     GameData
         """
         self.pixel_palette.setup(data)
         self.contents.setup(data)
@@ -503,7 +517,7 @@ class PixelPaletteDock(QDockWidget):
     def closeEvent(self, event):
         """Handles the close event of the dock by disable it
 
-        :param event: Close event
-        :type event: QCloseEvent
+        :param event:   Close event
+        :type event:    QCloseEvent
         """
         event.ignore()

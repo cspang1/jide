@@ -1,11 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
-from dataclasses import dataclass, field
-from itertools import product
 import math
-import os
-import sys
-from typing import List
 from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
@@ -16,14 +11,21 @@ from PyQt5.QtCore import (
     QPointF,
     QRectF,
 )
-from PyQt5.QtGui import QGuiApplication, QImage, QPixmap, QColor, QBrush, QPen, QPainter
+from PyQt5.QtGui import (
+    QGuiApplication,
+    QImage,
+    QPixmap,
+    QColor,
+    QBrush,
+    QPen,
+    QPainter,
+)
 from PyQt5.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QGraphicsPixmapItem,
     QApplication,
     QStyleOptionGraphicsItem,
-    QAction,
 )
 from canvastools import Tools
 from source import Source
@@ -32,10 +34,10 @@ from source import Source
 class GraphicsView(QGraphicsView):
     """QGraphicsView into sprite/tile canvas
 
-    :param scene: QGraphicsScene representing sprite/tile canvas
-    :type scene: QGraphicsScene, defaults to None
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget
+    :param scene:   QGraphicsScene representing sprite/tile canvas
+    :type scene:    QGraphicsScene, defaults to None
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget
     """
 
     def __init__(self, scene=None, parent=None):
@@ -48,12 +50,12 @@ class GraphicsView(QGraphicsView):
     def eventFilter(self, source, event):
         """Event filter for handling zoom/pan events
 
-        :param source: Source of event
-        :type source: QObject
-        :param event: Triggered event
-        :type event: QEvent
-        :return: Whether to continue processing event downstream
-        :rtype: bool
+        :param source:  Source of event
+        :type source:   QObject
+        :param event:   Triggered event
+        :type event:    QEvent
+        :return:        Whether to continue processing event downstream
+        :rtype:         bool
         """
         if (
             event.type() == QEvent.GraphicsSceneWheel
@@ -67,13 +69,15 @@ class GraphicsView(QGraphicsView):
     def zoomCanvas(self, event):
         """Zoom view into sprite/tile canvas
 
-        :param event: Source event
-        :type event: QEvent
+        :param event:   Source event
+        :type event:    QEvent
         """
         zoomFactor = 2
         oldPos = event.scenePos()
 
-        detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(self.transform())
+        detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(
+            self.transform()
+        )
         if detail < 100 and event.delta() > 0:
             self.scale(zoomFactor, zoomFactor)
         if detail > 10 and event.delta() < 0:
@@ -87,8 +91,8 @@ class GraphicsView(QGraphicsView):
 class Subject(QGraphicsPixmapItem):
     """Object representing pixel contents of canvas
 
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget
     """
 
     def __init__(self, parent=None):
@@ -108,20 +112,20 @@ class Subject(QGraphicsPixmapItem):
     def setPixel(self, x, y, value):
         """Set value of pixel in subject at (x,y) coordinates
 
-        :param x: X-coordinate of pixel
-        :type x: int
-        :param y: Y-coordinate of pixel
-        :type y: int
-        :param value: Color table index value to set pixel to
-        :type value: int
+        :param x:       X-coordinate of pixel
+        :type x:        int
+        :param y:       Y-coordinate of pixel
+        :type y:        int
+        :param value:   Color table index value to set pixel to
+        :type value:    int
         """
         self.subject.setPixel(x, y, value)
 
     def setColorTable(self, colors):
         """Set color table of currently rendered subject
 
-        :param colors: List of colors to set color table to
-        :type colors: list(int)
+        :param colors:  List of colors to set color table to
+        :type colors:   list(int)
         """
         self.color_table = colors
         self.subject.setColorTable(self.color_table)
@@ -134,8 +138,8 @@ class Subject(QGraphicsPixmapItem):
     def setWidth(self, width):
         """Set width of subject in pixels
 
-        :param width: New width of subject in pixels
-        :type width: int
+        :param width:   New width of subject in pixels
+        :type width:    int
         """
         self.width = width
         self.resizeSubject()
@@ -143,8 +147,8 @@ class Subject(QGraphicsPixmapItem):
     def setHeight(self, height):
         """Set height of subject in pixels
 
-        :param height: New height of subject in pixels
-        :type height: int
+        :param height:  New height of subject in pixels
+        :type height:   int
         """
         self.height = height
         self.resizeSubject()
@@ -163,17 +167,20 @@ class Subject(QGraphicsPixmapItem):
     def copy(self, selected_region):
         """Copy selected region of pixels to the QGuiApplication clipboard
 
-        :param selected_region: Rectangular region of pixels to copy to clipboard
-        :type selected_region: QRect
+        :param selected_region: Rectangular region of pixels to copy to
+                                clipboard
+        :type selected_region:  QRect
         """
-        QGuiApplication.clipboard().setImage(self.subject.copy(selected_region))
+        QGuiApplication.clipboard().setImage(
+            self.subject.copy(selected_region)
+        )
 
 
 class Overlay(QGraphicsPixmapItem):
     """Overlay of canvas which handles graphics tools interactions
 
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     def __init__(self, parent=None):
@@ -206,10 +213,11 @@ class Overlay(QGraphicsPixmapItem):
     def setTool(self, tool, filled=False):
         """Sets the active tool based on user selection in toolbar
 
-        :param tool: Tool selection
-        :type tool: Tools
-        :param filled: Whether a selected shape tool will be filled or outline, defaults to False
-        :type filled: bool, optional
+        :param tool:    Tool selection
+        :type tool:     Tools
+        :param filled:  Whether a selected shape tool will be filled or
+                        outline, defaults to False
+        :type filled:   bool, optional
         """
         self.tool = tool
         self.filled = filled
@@ -227,7 +235,8 @@ class Overlay(QGraphicsPixmapItem):
         self.color = color if color != 0 else QColor(Qt.magenta).rgba()
 
     def setWidth(self, width):
-        """Set the width of the overlay to remain consistent with the underlying subject
+        """Set the width of the overlay to remain consistent with the
+        underlying subject
 
         :param width: New width of the overlay
         :type width: int
@@ -236,7 +245,8 @@ class Overlay(QGraphicsPixmapItem):
         self.setPixmap(self.pixmap().scaled(self.width, self.height))
 
     def setHeight(self, height):
-        """Set the height of the overlay to remain consistent with the underlying subject
+        """Set the height of the overlay to remain consistent with the
+        underlying subject
 
         :param width: New height of the overlay
         :type width: int
@@ -254,10 +264,10 @@ class Overlay(QGraphicsPixmapItem):
     def floodFill(self, x, y):
         """Recursive floodfill tool entry point
 
-        :param x: Starting x coordinate for floodfill
-        :type x: int
-        :param y: Starting y coordinate for floodfill
-        :type y: int
+        :param x:   Starting x coordinate for floodfill
+        :type x:    int
+        :param y:   Starting y coordinate for floodfill
+        :type y:    int
         """
         self.base_image = self.scene.subject.subject.copy()
         old_color = self.base_image.pixelIndex(x, y)
@@ -269,14 +279,14 @@ class Overlay(QGraphicsPixmapItem):
     def fillPixel(self, x, y, old_color, new_color):
         """Recursive floodfill function
 
-        :param x: Current x coordinate
-        :type x: int
-        :param y: Current y coordinate
-        :type y: int
-        :param old_color: Target color to fill
-        :type old_color: int
-        :param new_color: New color to replace target color
-        :type new_color: int
+        :param x:           Current x coordinate
+        :type x:            int
+        :param y:           Current y coordinate
+        :type y:            int
+        :param old_color:   Target color to fill
+        :type old_color:    int
+        :param new_color:   New color to replace target color
+        :type new_color:    int
         """
         if (
             not 0 <= x < self.base_image.width()
@@ -309,7 +319,7 @@ class Overlay(QGraphicsPixmapItem):
         """Set color table used by overlay when pasting
 
         :param color_table: List of RGB values to set color table to
-        :type color_table: list(int)
+        :type color_table:  list(int)
         """
         if self.pasting:
             self.copied.setColorTable(color_table)
@@ -318,8 +328,8 @@ class Overlay(QGraphicsPixmapItem):
     def hoverMoveEvent(self, event):
         """Mouse hover move event for handling updating pasting location
 
-        :param event: Source event
-        :type event: QGraphicsSceneHoverEvent
+        :param event:   Source event
+        :type event:    QGraphicsSceneHoverEvent
         """
         self.last_pos = event.pos()
         if self.pasting:
@@ -328,8 +338,8 @@ class Overlay(QGraphicsPixmapItem):
     def renderPaste(self, position):
         """Render a currently pasting pixel region onto the overlay
 
-        :param position: Location on overlay to render paste
-        :type position: QPointF
+        :param position:    Location on overlay to render paste
+        :type position:     QPointF
         """
         x = int(position.x())
         y = int(position.y())
@@ -345,9 +355,17 @@ class Overlay(QGraphicsPixmapItem):
         if self.scene.source is Source.SPRITE:
             color_table[0] = QColor(Qt.magenta).rgba()
         self.pasted.setColorTable(color_table)
-        for i in range(y, min(self.pasted.height(), self.copied.height() + y)):
-            for j in range(x, min(self.pasted.width(), self.copied.width() + x)):
-                self.pasted.setPixel(j, i, self.copied.pixelIndex(cur_x, cur_y))
+        height_range = range(
+            y, min(self.pasted.height(), self.copied.height() + y)
+        )
+        width_range = range(
+            x, min(self.pasted.width(), self.copied.width() + x)
+        )
+        for i in height_range:
+            for j in width_range:
+                self.pasted.setPixel(
+                    j, i, self.copied.pixelIndex(cur_x, cur_y)
+                )
                 cur_x += 1
             cur_x = 0
             cur_y += 1
@@ -356,8 +374,8 @@ class Overlay(QGraphicsPixmapItem):
     def mousePressEvent(self, event):
         """Mouse press event to handle mouse clicks with various tools
 
-        :param event: Source event
-        :type event: QGraphicsSceneMouseEvent
+        :param event:   Source event
+        :type event:    QGraphicsSceneMouseEvent
         """
         if event.buttons() == Qt.LeftButton and not self.pasting:
             self.scene.setColorSwitchEnabled(False)
@@ -366,7 +384,8 @@ class Overlay(QGraphicsPixmapItem):
                     math.floor(event.pos().x()), math.floor(event.pos().y())
                 )
                 self.start_scene_pos = QPointF(
-                    math.floor(event.scenePos().x()), math.floor(event.scenePos().y())
+                    math.floor(event.scenePos().x()),
+                    math.floor(event.scenePos().y()),
                 )
             self.last_pos = self.start_pos
             if self.tool is Tools.SELECT:
@@ -386,8 +405,8 @@ class Overlay(QGraphicsPixmapItem):
     def mouseMoveEvent(self, event):
         """Mouse move event to handle mouse movement after clicking with various tools
 
-        :param event: Source event
-        :type event: QGraphicsSceneMouseEvent
+        :param event:   Source event
+        :type event:    QGraphicsSceneMouseEvent
         """
         if event.buttons() == Qt.LeftButton:
             if not self.pasting:
@@ -399,7 +418,8 @@ class Overlay(QGraphicsPixmapItem):
                     math.floor(event.pos().x()), math.floor(event.pos().y())
                 )
                 self.cur_scene_pos = QPointF(
-                    math.ceil(event.scenePos().x()), math.ceil(event.scenePos().y())
+                    math.ceil(event.scenePos().x()),
+                    math.ceil(event.scenePos().y()),
                 )
                 pen = QPen(QColor.fromRgba(self.color))
                 pen.setWidth(1)
@@ -430,13 +450,15 @@ class Overlay(QGraphicsPixmapItem):
     def mouseReleaseEvent(self, event):
         """Mouse release event to handle mouse release with various tools
 
-        :param event: Source event
-        :type event: QGraphicsSceneMouseEvent
+        :param event:   Source event
+        :type event:    QGraphicsSceneMouseEvent
         """
         self.start_pos = None
         self.scene.setColorSwitchEnabled(True)
         if event.button() == Qt.LeftButton and self.tool is Tools.FLOODFILL:
-            self.floodFill(math.floor(event.pos().x()), math.floor(event.pos().y()))
+            self.floodFill(
+                math.floor(event.pos().x()), math.floor(event.pos().y())
+            )
             self.scene.bakeDiff(self.base_image)
         elif event.button() == Qt.LeftButton and self.tool is not Tools.SELECT:
             self.scene.bakeOverlay(self.pixmap().toImage())
@@ -454,7 +476,8 @@ class Overlay(QGraphicsPixmapItem):
         self.clear()
 
     def marchAnts(self):
-        """Simply updates the offset of marching ants offset for box around a selected area
+        """Simply updates the offset of marching ants offset for box around a
+        selected area
         """
         self.ants_offset += 4
         self.updateSceneForeground()
@@ -486,14 +509,15 @@ class Overlay(QGraphicsPixmapItem):
 
 
 class GraphicsScene(QGraphicsScene):
-    """Canvas representing the current state of the subject including overlayed grid lines
+    """Canvas representing the current state of the subject including
+    overlayed grid lines
 
-    :param data: Source of sprite/tile data
-    :type data: GameData
-    :param source: Specifies the subject of the table, either tile or sprite
-    :type source: Source
-    :param parent: Parent widget, defaults to None
-    :type parent: QWidget, optional
+    :param data:    Source of sprite/tile data
+    :type data:     GameData
+    :param source:  Specifies the subject of the table, either tile or sprite
+    :type source:   Source
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
     """
 
     set_pixel_palette = pyqtSignal(int, int, int)
@@ -517,10 +541,11 @@ class GraphicsScene(QGraphicsScene):
         self.primary_color = 0
 
     def setColorSwitchEnabled(self, enabled):
-        """Emits signal to disable the color palette primary/secondary color switch functionality
+        """Emits signal to disable the color palette primary/secondary color
+        switch functionality
 
         :param enabled: Whether to enable or disable the switch functionality
-        :type enabled: bool
+        :type enabled:  bool
         """
         self.set_color_switch_enabled.emit(enabled)
 
@@ -528,12 +553,14 @@ class GraphicsScene(QGraphicsScene):
     def setSubject(self, root, width, height):
         """Sets the pixel contents of the canvas
 
-        :param root: The root index of the tiles/sprites to be rendered
-        :type root: int
-        :param width: The width of sprites/tiles starting at the root to render
-        :type width: int
-        :param height: The height of sprites/tiles starting at the root to render
-        :type height: int
+        :param root:    The root index of the tiles/sprites to be rendered
+        :type root:     int
+        :param width:   The width of sprites/tiles starting at the root to
+                        render
+        :type width:    int
+        :param height:  The height of sprites/tiles starting at the root to
+                        render
+        :type height:   int
         """
         self.root = root
         self.subject.setWidth(width * 8)
@@ -559,8 +586,8 @@ class GraphicsScene(QGraphicsScene):
     def setTool(self, tool):
         """Set the current tool being used on the canvas
 
-        :param tool: Current tool to be used
-        :type tool: Tools
+        :param tool:    Current tool to be used
+        :type tool:     Tools
         """
         self.overlay.setTool(tool, True)  # Need True to be based on tool
 
@@ -569,7 +596,7 @@ class GraphicsScene(QGraphicsScene):
         """Set the color palette used by the canvas subject
 
         :param palette: Name of the target color palette
-        :type palette: str
+        :type palette:  str
         """
         self.current_color_palette = self.data.getColPal(palette, self.source)
         color_table = [color.rgba() for color in self.current_color_palette]
@@ -582,11 +609,14 @@ class GraphicsScene(QGraphicsScene):
     def setPrimaryColor(self, color):
         """Set the color used by graphics tools
 
-        :param color: Index of the color in the current color table to be set as the primary
-        :type color: int
+        :param color:   Index of the color in the current color table to be
+                        set as the primary
+        :type color:    int
         """
         self.primary_color = color
-        self.overlay.setColor(self.current_color_palette[self.primary_color].rgba())
+        self.overlay.setColor(
+            self.current_color_palette[self.primary_color].rgba()
+        )
 
     @pyqtSlot()
     def copy(self):
@@ -604,17 +634,18 @@ class GraphicsScene(QGraphicsScene):
     def selectRegion(self, region):
         """Select a region of pixels chosen with the select tool
 
-        :param region: Rectangular region of pixels to select
-        :type region: QRect
+        :param region:  Rectangular region of pixels to select
+        :type region:   QRect
         """
         self.selected_region = region.toRect()
         self.region_selected.emit(True)
 
     def bakeDiff(self, image):
-        """Generate a differential list of pixel values based on the overlay and bake it onto the centralized GameData data.
+        """Generate a differential list of pixel values based on the overlay
+        and bake it onto the centralized GameData data.
 
-        :param image: Image derived from overlay to bake
-        :type image: QImage
+        :param image:   Image derived from overlay to bake
+        :type image:    QImage
         """
         original = self.subject.subject
         batch = defaultdict(list)
@@ -623,7 +654,11 @@ class GraphicsScene(QGraphicsScene):
                 new_pixel = image.pixelIndex(col, row)
                 old_pixel = original.pixelIndex(col, row)
                 if old_pixel != new_pixel and new_pixel != 16:
-                    index = self.root + math.floor(col / 8) + 16 * math.floor(row / 8)
+                    index = (
+                        self.root
+                        + math.floor(col / 8)
+                        + 16 * math.floor(row / 8)
+                    )
                     row_norm = row % 8
                     col_norm = col % 8
                     batch[index].append((row_norm, col_norm, new_pixel))
@@ -634,16 +669,22 @@ class GraphicsScene(QGraphicsScene):
         """Bake the overlay data directly into the centralized GameData data
 
         :param overlay: Overlay to bake
-        :type overlay: QImage
+        :type overlay:  QImage
         """
         batch = defaultdict(list)
         for row in range(overlay.height()):
             for col in range(overlay.width()):
                 if overlay.pixel(col, row) != 0:
-                    index = self.root + math.floor(col / 8) + 16 * math.floor(row / 8)
+                    index = (
+                        self.root
+                        + math.floor(col / 8)
+                        + 16 * math.floor(row / 8)
+                    )
                     row_norm = row % 8
                     col_norm = col % 8
-                    batch[index].append((row_norm, col_norm, self.primary_color))
+                    batch[index].append(
+                        (row_norm, col_norm, self.primary_color)
+                    )
         if batch:
             self.data.setPixBatch(batch, self.source)
 
@@ -651,9 +692,9 @@ class GraphicsScene(QGraphicsScene):
         """Draw the gridlines overlaying the canvas
 
         :param painter: QPainter object to paint with
-        :type painter: QPainter
-        :param rect: Exposed rectangle to paint over
-        :type rect: QRectF
+        :type painter:  QPainter
+        :param rect:    Exposed rectangle to paint over
+        :type rect:     QRectF
         """
         pen = QPen(Qt.darkCyan)
         pen.setWidth(0)
@@ -685,14 +726,18 @@ class GraphicsScene(QGraphicsScene):
             pen.setCosmetic(True)
             painter.setPen(pen)
             painter.drawRect(
-                QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos)
+                QRectF(
+                    self.overlay.start_scene_pos, self.overlay.cur_scene_pos
+                )
             )
             pen.setColor(Qt.black)
             pen.setStyle(Qt.DotLine)
             pen.setDashOffset(self.overlay.ants_offset)
             painter.setPen(pen)
             painter.drawRect(
-                QRectF(self.overlay.start_scene_pos, self.overlay.cur_scene_pos)
+                QRectF(
+                    self.overlay.start_scene_pos, self.overlay.cur_scene_pos
+                )
             )
 
     def drawBackground(self, painter, rect):

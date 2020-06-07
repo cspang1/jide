@@ -4,3 +4,6 @@ ignore =
 show_source = True
 statistics = True
 count = True
+exclude =
+    tests,
+    docs
