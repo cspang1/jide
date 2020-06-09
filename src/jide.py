@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 import subprocess
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QSettings, QCoreApplication
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import (
     QGraphicsView,
@@ -22,6 +22,7 @@ from colorpicker import downsample
 from gamedata import GameData
 from pixelpalette import PixelPaletteDock
 from source import Source
+from preferences import Preferences
 
 
 class jide(QMainWindow):
@@ -41,6 +42,7 @@ class jide(QMainWindow):
         self.setupToolbar()
         self.setupActions()
         self.setupStatusBar()
+        self.setupPrefs()
 
     def setupWindow(self):
         """Entry point to set up primary window attributes
@@ -140,6 +142,11 @@ class jide(QMainWindow):
         open_file.setStatusTip("Open file")
         open_file.triggered.connect(self.selectFile)
 
+        # Open preferences
+        open_prefs = QAction("&Preferences", self)
+        open_prefs.setStatusTip("Edit preferences")
+        open_prefs.triggered.connect(self.openPrefs)
+
         # Undo/redo
         self.undo_stack = QUndoStack(self)
         undo_act = self.undo_stack.createUndoAction(self, "&Undo")
@@ -173,6 +180,8 @@ class jide(QMainWindow):
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("&File")
         file_menu.addAction(open_file)
+        file_menu.addSeparator()
+        file_menu.addAction(open_prefs)
         file_menu.addAction(exit_act)
         edit_menu = menu_bar.addMenu("&Edit")
         edit_menu.addAction(undo_act)
@@ -187,6 +196,12 @@ class jide(QMainWindow):
         """Set up bottom status bar
         """
         self.statusBar = self.statusBar()
+
+    def setupPrefs(self):
+        QCoreApplication.setOrganizationName("Connor Spangler")
+        QCoreApplication.setOrganizationDomain("https://github.com/cspang1")
+        QCoreApplication.setApplicationName("JIDE")
+        self.prefs = QSettings("config", QSettings.NativeFormat)
 
     @pyqtSlot(bool)
     def setCopyActive(self, active):
@@ -410,6 +425,13 @@ class jide(QMainWindow):
             self.paste_act.triggered.connect(self.tile_scene.startPasting)
             self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
             self.tile_scene.region_selected.connect(self.copy_act.setEnabled)
+
+    def openPrefs(self):
+        prefs = Preferences()
+        if prefs.exec():
+            print("Preferences set!")
+        else:
+            print("Preferences discarded!")
 
     def genDATFiles(self):
         """Generate .dat files from project for use by JCAP
