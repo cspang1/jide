@@ -201,7 +201,8 @@ class jide(QMainWindow):
         QCoreApplication.setOrganizationName("Connor Spangler")
         QCoreApplication.setOrganizationDomain("https://github.com/cspang1")
         QCoreApplication.setApplicationName("JIDE")
-        self.prefs = QSettings("config", QSettings.NativeFormat)
+        self.prefs = QSettings()
+        self.prefs.setValue("test", 69)
 
     @pyqtSlot(bool)
     def setCopyActive(self, active):
@@ -251,9 +252,10 @@ class jide(QMainWindow):
                     "Unable to open project file",
                 ).exec()
                 return
+        else:
+            return
 
         self.setWindowTitle("JIDE - " + self.data.getGameName())
-
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
@@ -498,10 +500,20 @@ class jide(QMainWindow):
         for dat_file in dat_path.glob("**/*"):
             shutil.copy(str(dat_file), str(jcap_path))
 
+        self.prefs.beginGroup("ports")
+        if not self.prefs.contains("cpu_port") or not self.prefs.contains(
+            "gpu_port"
+        ):
+            # Popup error
+            self.openPrefs()
+            return
+        cpu_port = self.prefs.value("cpu_port")
+        gpu_port = self.prefs.value("gpu_port")
+        self.prefs.endGroup()
+
         result = subprocess.run(
-            ["bash.exe", str(sysload_path), "-c", "COM3", "-g", "COM4"],
+            ["bash.exe", str(sysload_path), "-c", cpu_port, "-g", gpu_port],
             capture_output=True,
         )
-        print(result.stdout)
         print(result.stderr)
         self.statusBar.showMessage("JCAP Loaded!", 5000)
