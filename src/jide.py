@@ -1,7 +1,7 @@
 from pathlib import Path
 import shutil
 import subprocess
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QSettings, QCoreApplication
 from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import (
     QGraphicsView,
@@ -22,6 +22,7 @@ from colorpicker import downsample
 from gamedata import GameData
 from pixelpalette import PixelPaletteDock
 from source import Source
+from preferences import Preferences
 
 
 class jide(QMainWindow):
@@ -41,6 +42,7 @@ class jide(QMainWindow):
         self.setupToolbar()
         self.setupActions()
         self.setupStatusBar()
+        self.setupPrefs()
 
     def setupWindow(self):
         """Entry point to set up primary window attributes
@@ -140,6 +142,11 @@ class jide(QMainWindow):
         open_file.setStatusTip("Open file")
         open_file.triggered.connect(self.selectFile)
 
+        # Open preferences
+        open_prefs = QAction("&Preferences", self)
+        open_prefs.setStatusTip("Edit preferences")
+        open_prefs.triggered.connect(self.openPrefs)
+
         # Undo/redo
         self.undo_stack = QUndoStack(self)
         undo_act = self.undo_stack.createUndoAction(self, "&Undo")
@@ -173,6 +180,8 @@ class jide(QMainWindow):
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("&File")
         file_menu.addAction(open_file)
+        file_menu.addSeparator()
+        file_menu.addAction(open_prefs)
         file_menu.addAction(exit_act)
         edit_menu = menu_bar.addMenu("&Edit")
         edit_menu.addAction(undo_act)
@@ -187,6 +196,13 @@ class jide(QMainWindow):
         """Set up bottom status bar
         """
         self.statusBar = self.statusBar()
+
+    def setupPrefs(self):
+        QCoreApplication.setOrganizationName("Connor Spangler")
+        QCoreApplication.setOrganizationDomain("https://github.com/cspang1")
+        QCoreApplication.setApplicationName("JIDE")
+        self.prefs = QSettings()
+        self.prefs.setValue("test", 69)
 
     @pyqtSlot(bool)
     def setCopyActive(self, active):
@@ -236,9 +252,10 @@ class jide(QMainWindow):
                     "Unable to open project file",
                 ).exec()
                 return
+        else:
+            return
 
         self.setWindowTitle("JIDE - " + self.data.getGameName())
-
         self.gendat_act.setEnabled(True)
         self.load_jcap.setEnabled(True)
         self.data.setUndoStack(self.undo_stack)
@@ -411,6 +428,10 @@ class jide(QMainWindow):
             self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
             self.tile_scene.region_selected.connect(self.copy_act.setEnabled)
 
+    def openPrefs(self):
+        prefs = Preferences()
+        prefs.exec()
+
     def genDATFiles(self):
         """Generate .dat files from project for use by JCAP
         """
@@ -476,10 +497,20 @@ class jide(QMainWindow):
         for dat_file in dat_path.glob("**/*"):
             shutil.copy(str(dat_file), str(jcap_path))
 
+        self.prefs.beginGroup("ports")
+        if not self.prefs.contains("cpu_port") or not self.prefs.contains(
+            "gpu_port"
+        ):
+            # Popup error
+            self.openPrefs()
+            return
+        cpu_port = self.prefs.value("cpu_port")
+        gpu_port = self.prefs.value("gpu_port")
+        self.prefs.endGroup()
+
         result = subprocess.run(
-            ["bash.exe", str(sysload_path), "-c", "COM3", "-g", "COM4"],
+            ["bash.exe", str(sysload_path), "-c", cpu_port, "-g", gpu_port],
             capture_output=True,
         )
-        print(result.stdout)
         print(result.stderr)
         self.statusBar.showMessage("JCAP Loaded!", 5000)
