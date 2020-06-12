@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -228,7 +229,10 @@ class jide(QMainWindow):
         """Open file action to hand file handle to GameData
         """
         file_name, _ = QFileDialog.getOpenFileName(
-            self, "Open file", "", "JCAP Resource File (*.jrf)"
+            self,
+            "Open file",
+            str(Path(__file__)),
+            "JCAP Resource File (*.jrf)",
         )
         self.loadProject(file_name)
 
@@ -490,18 +494,51 @@ class jide(QMainWindow):
         """
         self.statusBar.showMessage("Loading JCAP...")
         self.genDATFiles()
+
+        self.prefs.beginGroup("paths")
         dat_path = Path(__file__).parents[1] / "data" / "DAT Files"
-        jcap_path = Path(__file__).parents[2] / "jcap" / "dev" / "software"
-        sysload_path = jcap_path / "sysload.sh"
+        if not self.prefs.contains("jcap_path"):
+            QMessageBox(
+                QMessageBox.Critical, "Error", "Path to JCAP not set."
+            ).exec()
+            self.openPrefs()
+            return
+        jcap_path = self.prefs.value("jcap_path")
+        if not os.path.exists(jcap_path):
+            QMessageBox(
+                QMessageBox.Critical, "Error", "Invalid JCAP path."
+            ).exec()
+            self.openPrefs()
+            return
+        # jcap_path = Path(__file__).parents[2] / "jcap" / "dev" / "software"
+        self.prefs.endGroup()
+
+        sysload_path = Path(jcap_path) / "sysload.sh"
+
+        if not os.path.exists(sysload_path):
+            QMessageBox(
+                QMessageBox.Critical,
+                "Error",
+                (
+                    "sysload.sh not found in JCAP path; Verify that the path "
+                    "is correct, or try re-downloading the JCAP files"
+                ),
+            ).exec()
+            self.openPrefs()
+            return
 
         for dat_file in dat_path.glob("**/*"):
-            shutil.copy(str(dat_file), str(jcap_path))
+            shutil.copy(str(dat_file), jcap_path)
 
         self.prefs.beginGroup("ports")
         if not self.prefs.contains("cpu_port") or not self.prefs.contains(
             "gpu_port"
         ):
-            # Popup error
+            QMessageBox(
+                QMessageBox.Critical,
+                "Error",
+                "CPU and/or GPU COM ports not set.",
+            ).exec()
             self.openPrefs()
             return
         cpu_port = self.prefs.value("cpu_port")
