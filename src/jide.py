@@ -430,10 +430,7 @@ class jide(QMainWindow):
 
     def openPrefs(self):
         prefs = Preferences()
-        if prefs.exec():
-            print("Preferences set!")
-        else:
-            print("Preferences discarded!")
+        prefs.exec()
 
     def genDATFiles(self):
         """Generate .dat files from project for use by JCAP
