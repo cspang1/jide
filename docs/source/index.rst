@@ -1,57 +1,57 @@
-.. JIDE documentation master file, created by
-   sphinx-quickstart on Tue Jun  2 19:11:44 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to JIDE's documentation!
-================================
+JCAP Integrated Development Environment (JIDE) Documentation
+============================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-JIDE Class
-=====================
+Main JIDE Class
+===============
 .. automodule:: jide
    :members:
 
-JIDE gamedata
-=====================
+Game Data Management
+====================
 .. automodule:: gamedata
    :members:
 
-JIDE history
-=====================
+Undo/Redo History Management
+============================
 .. automodule:: history
    :members:
 
-JIDE canvas
-=====================
+Canvas Display/Manipulation
+===========================
 .. automodule:: canvas
    :members:
 
-JIDE pixelpalette
-=====================
+Sprite/Tile Palette Display
+===========================
 .. automodule:: pixelpalette
    :members:
 
-JIDE colorpalette
+Color Palette Display
 =====================
 .. automodule:: colorpalette
    :members:
 
-JIDE colorpicker
-=====================
+Color Picker Display
+====================
 .. automodule:: colorpicker
    :members:
 
-JIDE canvastools
-=====================
+Preferences Managements
+=======================
+.. automodule:: preferences
+   :members:
+
+Graphics Toolbox
+================
 .. automodule:: gamedata
    :members:
 
-JIDE source
-=====================
+Data Sources
+============
 .. automodule:: source
    :members:
 
