@@ -40,7 +40,7 @@ Color Picker Display
 .. automodule:: colorpicker
    :members:
 
-Preferences Managements
+Preferences Management
 =======================
 .. automodule:: preferences
    :members:
