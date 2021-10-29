@@ -13,7 +13,7 @@ coverage==5.1
 distlib==0.3.0
 docutils==0.16
 EasyProcess==0.3
-filelock==3.0.12
+filelock==3.3.2
 flake8==3.8.3
 future==0.18.2
 identify==1.4.20
