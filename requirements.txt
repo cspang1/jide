@@ -14,7 +14,7 @@ distlib==0.3.0
 docutils==0.16
 EasyProcess==0.3
 filelock==3.0.12
-flake8==3.8.3
+flake8==5.0.1
 future==0.18.2
 identify==1.4.20
 idna==2.9
