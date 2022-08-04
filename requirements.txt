@@ -62,6 +62,6 @@ sphinxcontrib-serializinghtml==1.1.4
 toml==0.10.1
 typed-ast==1.4.1
 urllib3==1.25.9
-virtualenv==20.0.24
+virtualenv==20.16.3
 wcwidth==0.2.4
 zipp==3.1.0
