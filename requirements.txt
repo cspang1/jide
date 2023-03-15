@@ -26,7 +26,7 @@ mccabe==0.6.1
 more-itertools==8.4.0
 nodeenv==1.4.0
 packaging==20.4
-pathspec==0.8.0
+pathspec==0.11.1
 pefile==2019.4.18
 pluggy==0.13.1
 pre-commit==2.5.1
