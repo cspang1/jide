@@ -253,8 +253,8 @@ class ColorPalette(QWidget):
         self.main_layout = QHBoxLayout()
         self.main_layout.addLayout(self.grid)
         self.main_layout.addWidget(self.color_preview)
-        self.main_layout.setContentsMargins(0, 0, 5, 0)
-        self.main_layout.setSpacing(20)
+        # self.main_layout.setContentsMargins(0, 0, 5, 0)
+        # self.main_layout.setSpacing(20)
         self.setLayout(self.main_layout)
 
     def setup(self, data):

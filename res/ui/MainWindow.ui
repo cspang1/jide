@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>772</width>
+    <width>709</width>
     <height>597</height>
    </rect>
   </property>
@@ -118,7 +118,7 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="QWidget" name="sprite_pixel_palette"/>
+   <widget class="PixelPalette" name="sprite_pixel_palette"/>
   </widget>
   <widget class="QDockWidget" name="tile_color_palette_dock">
    <property name="features">
@@ -142,14 +142,14 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="QWidget" name="tile_pixel_palette"/>
+   <widget class="PixelPalette" name="tile_pixel_palette"/>
   </widget>
   <widget class="QMenuBar" name="menu_bar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>772</width>
+     <width>709</width>
      <height>22</height>
     </rect>
    </property>
@@ -368,6 +368,12 @@
    <class>ColorPalette</class>
    <extends>QWidget</extends>
    <header>color_palette</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PixelPalette</class>
+   <extends>QWidget</extends>
+   <header>pixel_palette</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

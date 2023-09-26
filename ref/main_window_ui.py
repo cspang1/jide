@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_main_window(object):
     def setupUi(self, main_window):
         main_window.setObjectName("main_window")
-        main_window.resize(772, 597)
+        main_window.resize(709, 597)
         self.central_widget = QtWidgets.QWidget(main_window)
         self.central_widget.setObjectName("central_widget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.central_widget)
@@ -61,7 +61,7 @@ class Ui_main_window(object):
         self.sprite_pixel_palette_dock = QtWidgets.QDockWidget(main_window)
         self.sprite_pixel_palette_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetFloatable|QtWidgets.QDockWidget.DockWidgetMovable)
         self.sprite_pixel_palette_dock.setObjectName("sprite_pixel_palette_dock")
-        self.sprite_pixel_palette = QtWidgets.QWidget()
+        self.sprite_pixel_palette = PixelPalette()
         self.sprite_pixel_palette.setObjectName("sprite_pixel_palette")
         self.sprite_pixel_palette_dock.setWidget(self.sprite_pixel_palette)
         main_window.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.sprite_pixel_palette_dock)
@@ -75,12 +75,12 @@ class Ui_main_window(object):
         self.tile_pixel_palette_dock = QtWidgets.QDockWidget(main_window)
         self.tile_pixel_palette_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetFloatable|QtWidgets.QDockWidget.DockWidgetMovable)
         self.tile_pixel_palette_dock.setObjectName("tile_pixel_palette_dock")
-        self.tile_pixel_palette = QtWidgets.QWidget()
+        self.tile_pixel_palette = PixelPalette()
         self.tile_pixel_palette.setObjectName("tile_pixel_palette")
         self.tile_pixel_palette_dock.setWidget(self.tile_pixel_palette)
         main_window.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.tile_pixel_palette_dock)
         self.menu_bar = QtWidgets.QMenuBar(main_window)
-        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 772, 22))
+        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 709, 22))
         self.menu_bar.setDefaultUp(False)
         self.menu_bar.setObjectName("menu_bar")
         self.menuFile = QtWidgets.QMenu(self.menu_bar)
@@ -218,4 +218,5 @@ class Ui_main_window(object):
         self.action_ellipse_tool.setText(_translate("main_window", "Ellipse Tool"))
         self.action_ellipse_tool.setToolTip(_translate("main_window", "Ellipse Tool"))
 from color_palette import ColorPalette
+from pixel_palette import PixelPalette
 import resources_rc
