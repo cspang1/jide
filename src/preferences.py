@@ -6,10 +6,14 @@ from serial.tools import list_ports
 from PyQt5.QtWidgets import (
     QDialog,
     QFormLayout,
+    QHBoxLayout,
     QDialogButtonBox,
     QLabel,
     QComboBox,
     QPushButton,
+    QLineEdit,
+    QFileDialog,
+    QMessageBox,
 )
 from PyQt5.QtCore import QSettings
 
@@ -25,8 +29,6 @@ class Preferences(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Preferences")
         self.prefs = QSettings()
-        self.cpu_port = None
-        self.gpu_port = None
 
         self.actions = QDialogButtonBox(
             QDialogButtonBox.Ok
@@ -45,14 +47,14 @@ class Preferences(QDialog):
         self.gpu_port_combo_box.addItems(com_ports)
         self.prefs.beginGroup("ports")
         if self.prefs.contains("cpu_port"):
-            self.cpu_port = self.prefs.value("cpu_port")
-            self.cpu_port_combo_box.setCurrentText(self.cpu_port)
+            self.cpu_port_combo_box.setCurrentText(
+                self.prefs.value("cpu_port")
+            )
         if self.prefs.contains("gpu_port"):
-            self.gpu_port = self.prefs.value("gpu_port")
-            self.gpu_port_combo_box.setCurrentText(self.gpu_port)
+            self.gpu_port_combo_box.setCurrentText(
+                self.prefs.value("gpu_port")
+            )
         self.prefs.endGroup()
-        self.cpu_port_combo_box.currentTextChanged.connect(self.setCpuPort)
-        self.gpu_port_combo_box.currentTextChanged.connect(self.setGpuPort)
 
         auto_ident = QPushButton("Auto-Identify CPU/GPU")
         auto_ident.clicked.connect(self.idUcs)
@@ -60,8 +62,33 @@ class Preferences(QDialog):
         settings_form.addRow("CPU Port:", self.cpu_port_combo_box)
         settings_form.addRow("GPU Port:", self.gpu_port_combo_box)
         settings_form.addRow(auto_ident)
-        settings_form.addWidget(self.actions)
+
+        jcap_path_prefs = QHBoxLayout()
+        self.jcap_path = QLineEdit()
+        self.prefs.beginGroup("paths")
+        if self.prefs.contains("jcap_path"):
+            self.jcap_path.setText(self.prefs.value("jcap_path"))
+        self.prefs.endGroup()
+        self.jcap_browse = QPushButton("Browse")
+        self.jcap_browse.clicked.connect(self.browseToJcap)
+        jcap_path_prefs.addWidget(QLabel("JCAP Path:"))
+        jcap_path_prefs.addWidget(self.jcap_path)
+        jcap_path_prefs.addWidget(self.jcap_browse)
+        settings_form.addRow(jcap_path_prefs)
+
+        settings_form.addRow(self.actions)
         self.setLayout(settings_form)
+
+    def browseToJcap(self):
+        dir = QFileDialog.getExistingDirectory(
+            self,
+            "Select JCAP Directory",
+            self.jcap_path.text(),
+            QFileDialog.ShowDirsOnly,
+        )
+
+        if dir:
+            self.jcap_path.setText(dir)
 
     def idUcs(self):
         """Executes the serial routines necessary to identify which COM ports
@@ -100,31 +127,30 @@ class Preferences(QDialog):
                 elif response == b"GPU":
                     new_gpu_port = port
 
-        if not new_cpu_port or not new_gpu_port:
-            # Error dialog
+        message = ""
+        error = False
+        if not new_cpu_port:
+            message = (
+                "CPU not detected on any COM port.\nPlease ensure that "
+                "the debug switch is enabled and that the CPU serial "
+                "plug is properly connected.\n\n"
+            )
+            error = True
+
+        if not new_gpu_port:
+            message += (
+                "GPU not detected on any COM port.\nPlease ensure "
+                "that the debug switch is enabled and that the GPU "
+                "serial plug is properly connected.\n\n"
+            )
+            error = True
+
+        if error:
+            QMessageBox(QMessageBox.Critical, "Error", message).exec()
             return
 
-        self.setCpuPort(new_cpu_port)
-        self.setGpuPort(new_gpu_port)
-
-        self.cpu_port_combo_box.setCurrentText(self.cpu_port)
-        self.gpu_port_combo_box.setCurrentText(self.gpu_port)
-
-    def setCpuPort(self, port):
-        """Sets the GPU COM port in preferences
-
-        :param port: COM port hosting the CPU
-        :type port: str
-        """
-        self.cpu_port = port
-
-    def setGpuPort(self, port):
-        """Sets the GPU COM port in preferences
-
-        :param port: COM port hosting the GPU
-        :type port: str
-        """
-        self.gpu_port = port
+        self.cpu_port_combo_box.setCurrentText(new_cpu_port)
+        self.gpu_port_combo_box.setCurrentText(new_gpu_port)
 
     def handlePrefsBtns(self, button):
         """Handles Ok/Apply/Cancel preferences buttons
@@ -134,9 +160,26 @@ class Preferences(QDialog):
         """
         if button is self.actions.button(QDialogButtonBox.Cancel):
             self.reject()
+            return
+
+        cpu_port = self.cpu_port_combo_box.currentText()
+        gpu_port = self.gpu_port_combo_box.currentText()
+        if cpu_port == gpu_port:
+            QMessageBox(
+                QMessageBox.Critical,
+                "Error",
+                "CPU and GPU COM ports cannot be the same",
+            ).exec()
+            return
+
         self.prefs.beginGroup("ports")
-        self.prefs.setValue("cpu_port", self.cpu_port)
-        self.prefs.setValue("gpu_port", self.gpu_port)
+        self.prefs.setValue("cpu_port", cpu_port)
+        self.prefs.setValue("gpu_port", gpu_port)
         self.prefs.endGroup()
+
+        self.prefs.beginGroup("paths")
+        self.prefs.setValue("jcap_path", self.jcap_path.text())
+        self.prefs.endGroup()
+
         if button is self.actions.button(QDialogButtonBox.Ok):
             self.accept()
