@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>main_window</class>
+ <widget class="QMainWindow" name="main_window">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>772</width>
+    <height>597</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="central_widget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="editor_tabs">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="sprite_tab">
+       <property name="styleSheet">
+        <string notr="true">background-color: #494949;</string>
+       </property>
+       <attribute name="title">
+        <string>Sprites</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="tile_tab">
+       <property name="styleSheet">
+        <string notr="true">background-color: #494949;</string>
+       </property>
+       <attribute name="title">
+        <string>Tiles</string>
+       </attribute>
+      </widget>
+      <widget class="QWidget" name="map_tab">
+       <property name="styleSheet">
+        <string notr="true">background-color: #494949;</string>
+       </property>
+       <attribute name="title">
+        <string>Maps</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="status_bar"/>
+  <widget class="QToolBar" name="tool_bar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>LeftToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_select_tool"/>
+   <addaction name="action_pen_tool"/>
+   <addaction name="action_fill_tool"/>
+   <addaction name="action_line_tool"/>
+   <addaction name="action_rectangle_tool"/>
+   <addaction name="action_ellipse_tool"/>
+  </widget>
+  <widget class="QDockWidget" name="sprite_color_palette_dock">
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="ColorPalette" name="sprite_color_palette"/>
+  </widget>
+  <widget class="QDockWidget" name="sprite_pixel_palette_dock">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="sprite_pixel_palette"/>
+  </widget>
+  <widget class="QDockWidget" name="tile_color_palette_dock">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="ColorPalette" name="tile_color_palette"/>
+  </widget>
+  <widget class="QDockWidget" name="tile_pixel_palette_dock">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="tile_pixel_palette"/>
+  </widget>
+  <widget class="QMenuBar" name="menu_bar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>772</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="defaultUp">
+    <bool>false</bool>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="action_open"/>
+    <addaction name="separator"/>
+    <addaction name="action_preferences"/>
+    <addaction name="action_exit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="action_undo"/>
+    <addaction name="action_redo"/>
+    <addaction name="action_copy"/>
+    <addaction name="action_paste"/>
+   </widget>
+   <widget class="QMenu" name="menuJCAP">
+    <property name="title">
+     <string>JCAP</string>
+    </property>
+    <addaction name="action_gen_dat_files"/>
+    <addaction name="action_load_jcap_system"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuJCAP"/>
+  </widget>
+  <action name="action_open">
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="action_preferences">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="action_undo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="action_redo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="action_copy">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="action_paste">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_gen_dat_files">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Generate .DAT Files</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="action_load_jcap_system">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load JCAP System</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_select_tool">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/select_tool.png</normaloff>:/icons/select_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Tool</string>
+   </property>
+  </action>
+  <action name="action_pen_tool">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/pencil_tool.png</normaloff>:/icons/pencil_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Pen Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Pen Tool</string>
+   </property>
+  </action>
+  <action name="action_fill_tool">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/fill_tool.png</normaloff>:/icons/fill_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Fill Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Fill Tool</string>
+   </property>
+  </action>
+  <action name="action_line_tool">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/line_tool.png</normaloff>:/icons/line_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Line Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Line Tool</string>
+   </property>
+  </action>
+  <action name="action_rectangle_tool">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/rect_tool.png</normaloff>:/icons/rect_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Rectangle Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Rectangle Tool</string>
+   </property>
+  </action>
+  <action name="action_ellipse_tool">
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/ellipse_tool.png</normaloff>:/icons/ellipse_tool.png</iconset>
+   </property>
+   <property name="text">
+    <string>Ellipse Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Ellipse Tool</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ColorPalette</class>
+   <extends>QWidget</extends>
+   <header>color_palette</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>editor_tabs</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../resources.qrc"/>
+ </resources>
+ <connections/>
+</ui>
