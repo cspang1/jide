@@ -45,6 +45,10 @@ class jide(QMainWindow):
         self.setupStatusBar()
         self.setupPrefs()
 
+        QCoreApplication.processEvents()
+
+        self.loadProject("./data/demo.jrf")
+
     def setupWindow(self):
         """Entry point to set up primary window attributes
         """
