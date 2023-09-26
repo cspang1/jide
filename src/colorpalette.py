@@ -121,7 +121,7 @@ class ColorPreview(QWidget):
 
     @pyqtSlot(bool)
     def setColorSwitchEnabled(self, enabled):
-        """Sets the switch color aciton/button to be enabled/disabled
+        """Sets the switch color action/button to be enabled/disabled
 
         :param enabled: Whether color switch is to be enabled or disabled
         :type enabled:  bool
@@ -151,6 +151,7 @@ class Color(QLabel):
         self.selected = False
         self.setPixmap(QPixmap(75, 75))
         self.fill(QColor(211, 211, 211))
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
     def paintEvent(self, event):
         """Color paint event to draw grid and transaprency indications
@@ -164,15 +165,18 @@ class Color(QLabel):
             pen = QPen(Qt.red)
             pen.setWidth(5)
             painter.setPen(pen)
-            painter.drawLine(QLineF(0, 0, 75, 75))
+            painter.drawLine(QLineF(0, 0, 72, 72))
         if self.selected:
             pen = QPen(Qt.red)
-            pen.setWidth(10)
+            pen.setWidth(5)
+            pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
+            painter.setPen(pen)
+            painter.drawRect(2, 2, 70, 70)
         else:
             pen = QPen(Qt.black)
             pen.setWidth(1)
-        painter.setPen(pen)
-        painter.drawRect(0, 0, 74, 74)
+            painter.setPen(pen)
+            painter.drawRect(0, 0, 74, 74)
 
     def fill(self, color):
         """Fills color
@@ -245,11 +249,12 @@ class ColorPalette(QWidget):
             swatch.edit.connect(self.openPicker)
             self.grid.addWidget(swatch, *position)
         self.enabled = False
+
         self.main_layout = QHBoxLayout()
         self.main_layout.addLayout(self.grid)
         self.main_layout.addWidget(self.color_preview)
         self.main_layout.setContentsMargins(0, 0, 5, 0)
-        self.main_layout.setSpacing(19)
+        self.main_layout.setSpacing(20)
         self.setLayout(self.main_layout)
 
     def setup(self, data):
@@ -407,17 +412,11 @@ class ColorPaletteDock(QDockWidget):
         self.docked_widget.setSizePolicy(
             QSizePolicy.Maximum, QSizePolicy.Maximum
         )
+
         self.color_palette = ColorPalette(self.source, self)
         self.color_palette_list = QComboBox()
-        self.color_palette_list.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Maximum
-        )
+
         self.palette_picker = QHBoxLayout()
-        self.palette_label = QLabel("Palette:")
-        self.palette_label.setSizePolicy(
-            QSizePolicy.Maximum, QSizePolicy.Maximum
-        )
-        self.palette_picker.addWidget(self.palette_label)
         self.palette_picker.addWidget(self.color_palette_list)
         self.add_palette = QToolButton(self)
         self.add_palette.mousePressEvent = self.addPaletteReq
@@ -443,6 +442,7 @@ class ColorPaletteDock(QDockWidget):
         self.palette_picker.addWidget(self.add_palette)
         self.palette_picker.addWidget(self.remove_palette)
         self.palette_picker.addWidget(self.rename_palette)
+
         self.docked_widget.layout().addLayout(self.palette_picker)
         self.docked_widget.layout().addWidget(self.color_palette)
         self.color_palette_list.setEnabled(False)
