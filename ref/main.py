@@ -12,6 +12,8 @@ class Window(QMainWindow, Ui_main_window):
         super().__init__(parent)
         self.setupUi(self)
         self.setup_actions()
+        self.tile_color_palette_dock.hide()
+        self.tile_pixel_palette_dock.hide()
 
     def setup_actions(self):
         self.action_open.triggered.connect(self.selectFile)
@@ -25,7 +27,7 @@ class Window(QMainWindow, Ui_main_window):
             str(Path(__file__)),
             "JCAP Resource File (*.jrf)",
         )
-        self.loadProject(file_name)
+        # self.loadProject(file_name)
 
     def open_preferences(self):
         prefs_dialog = PreferencesDialog()

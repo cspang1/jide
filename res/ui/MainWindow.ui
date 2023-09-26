@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>JCAP IDE</string>
   </property>
   <widget class="QWidget" name="central_widget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -88,11 +88,20 @@
    <addaction name="action_ellipse_tool"/>
   </widget>
   <widget class="QDockWidget" name="sprite_color_palette_dock">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="autoFillBackground">
     <bool>false</bool>
    </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Color Palettes</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -103,6 +112,9 @@
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
+   <property name="windowTitle">
+    <string>Sprite Palettes</string>
+   </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
@@ -112,6 +124,9 @@
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
+   <property name="windowTitle">
+    <string>Color Palettes</string>
+   </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
@@ -120,6 +135,9 @@
   <widget class="QDockWidget" name="tile_pixel_palette_dock">
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Tile Palettes</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -255,6 +273,9 @@
    </property>
   </action>
   <action name="action_select_tool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
      <normaloff>:/icons/select_tool.png</normaloff>:/icons/select_tool.png</iconset>
@@ -267,6 +288,9 @@
    </property>
   </action>
   <action name="action_pen_tool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
      <normaloff>:/icons/pencil_tool.png</normaloff>:/icons/pencil_tool.png</iconset>
@@ -279,6 +303,9 @@
    </property>
   </action>
   <action name="action_fill_tool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
      <normaloff>:/icons/fill_tool.png</normaloff>:/icons/fill_tool.png</iconset>
@@ -291,6 +318,9 @@
    </property>
   </action>
   <action name="action_line_tool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
      <normaloff>:/icons/line_tool.png</normaloff>:/icons/line_tool.png</iconset>
@@ -303,6 +333,9 @@
    </property>
   </action>
   <action name="action_rectangle_tool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
      <normaloff>:/icons/rect_tool.png</normaloff>:/icons/rect_tool.png</iconset>
@@ -315,6 +348,9 @@
    </property>
   </action>
   <action name="action_ellipse_tool">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
      <normaloff>:/icons/ellipse_tool.png</normaloff>:/icons/ellipse_tool.png</iconset>
