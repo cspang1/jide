@@ -4,3 +4,4 @@ pyuic5 -o ref/pixel_palette_ui.py ./res/ui/PixelPalette.ui
 pyuic5 -o ref/color_palette_ui.py ./res/ui/ColorPalette.ui
 pyuic5 -o ref/preferences_dialog_ui.py ./res/ui/PreferencesDialog.ui
 pyuic5 -o ref/color_preview_ui.py ./res/ui/ColorPreview.ui
+pyuic5 -o ref/color_picker_dialog_ui.py ./res/ui/ColorPickerDialog.ui

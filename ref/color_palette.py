@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import (
-    QWidget, QLabel
+    QWidget
 )
 
 from source import Source
 from color import Color
 from color_palette_ui import Ui_color_palette
+from color_picker_dialog import ColorPickerDialog
 
 class ColorPalette(QWidget, Ui_color_palette):
     def __init__(self, parent=None):
@@ -18,3 +19,10 @@ class ColorPalette(QWidget, Ui_color_palette):
             # color.color_selected.connect(self.selectColor)
             # color.edit.connect(self.openPicker)
             self.color_layout.addWidget(color, *position)
+
+        self.add_color_palette.setEnabled(True)
+        self.add_color_palette.clicked.connect(self.open_color_picker)
+
+    def open_color_picker(self):
+        color_picker = ColorPickerDialog()
+        color_picker.exec()
