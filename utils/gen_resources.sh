@@ -1,4 +1,4 @@
-pyrcc5 ../res/resources.qrc -o resources_rc.py
+pyrcc5 -o resources_rc.py ./res/resources.qrc
 pyuic5 -o ref/main_window_ui.py ./res/ui/MainWindow.ui
 pyuic5 -o ref/pixel_palette_ui.py ./res/ui/PixelPalette.ui
 pyuic5 -o ref/color_palette_ui.py ./res/ui/ColorPalette.ui

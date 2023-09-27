@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>709</width>
-    <height>597</height>
+    <width>1116</width>
+    <height>908</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,6 +48,26 @@
        <attribute name="title">
         <string>Sprites</string>
        </attribute>
+       <layout class="QHBoxLayout" name="sprite_editor_layout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QGraphicsView" name="sprite_editor_view"/>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="tile_tab">
        <property name="styleSheet">
@@ -56,6 +76,26 @@
        <attribute name="title">
         <string>Tiles</string>
        </attribute>
+       <layout class="QHBoxLayout" name="tile_editor_layout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QGraphicsView" name="tile_editor_view"/>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="map_tab">
        <property name="styleSheet">
@@ -64,6 +104,26 @@
        <attribute name="title">
         <string>Maps</string>
        </attribute>
+       <layout class="QHBoxLayout" name="map_editor_layout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QGraphicsView" name="map_editor_view"/>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -149,8 +209,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>709</width>
-     <height>22</height>
+     <width>1116</width>
+     <height>26</height>
     </rect>
    </property>
    <property name="defaultUp">

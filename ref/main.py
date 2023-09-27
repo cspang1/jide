@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
 from main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
 
+
 class Window(QMainWindow, Ui_main_window):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,6 +33,7 @@ class Window(QMainWindow, Ui_main_window):
     def open_preferences(self):
         prefs_dialog = PreferencesDialog()
         prefs_dialog.exec()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

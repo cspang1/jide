@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_preferences_dialog(object):
     def setupUi(self, preferences_dialog):
         preferences_dialog.setObjectName("preferences_dialog")
-        preferences_dialog.resize(284, 221)
+        preferences_dialog.resize(330, 221)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -96,7 +96,7 @@ class Ui_preferences_dialog(object):
 
     def retranslateUi(self, preferences_dialog):
         _translate = QtCore.QCoreApplication.translate
-        preferences_dialog.setWindowTitle(_translate("preferences_dialog", "Dialog"))
+        preferences_dialog.setWindowTitle(_translate("preferences_dialog", "JIDE Preferences"))
         self.ident_props_button.setText(_translate("preferences_dialog", "Auto-Identify CPU/GPU"))
         self.cpu_port_label.setText(_translate("preferences_dialog", "CPU Port:"))
         self.gpu_port_label.setText(_translate("preferences_dialog", "GPU Port:"))
