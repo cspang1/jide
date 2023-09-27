@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1116</width>
-    <height>908</height>
+    <width>597</width>
+    <height>596</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -65,7 +65,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QGraphicsView" name="sprite_editor_view"/>
+         <widget class="TestView" name="sprite_editor_view"/>
         </item>
        </layout>
       </widget>
@@ -209,8 +209,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1116</width>
-     <height>26</height>
+     <width>597</width>
+     <height>22</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -220,6 +220,7 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="action_new"/>
     <addaction name="action_open"/>
     <addaction name="separator"/>
     <addaction name="action_preferences"/>
@@ -247,7 +248,10 @@
   </widget>
   <action name="action_open">
    <property name="text">
-    <string>Open</string>
+    <string>Open Project</string>
+   </property>
+   <property name="toolTip">
+    <string>Open Project</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -422,6 +426,17 @@
     <string>Ellipse Tool</string>
    </property>
   </action>
+  <action name="action_new">
+   <property name="text">
+    <string>New Project</string>
+   </property>
+   <property name="toolTip">
+    <string>New Project</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -435,6 +450,11 @@
    <extends>QWidget</extends>
    <header>pixel_palette</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>TestView</class>
+   <extends>QGraphicsView</extends>
+   <header>test_view</header>
   </customwidget>
  </customwidgets>
  <tabstops>

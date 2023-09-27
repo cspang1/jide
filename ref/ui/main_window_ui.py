@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_main_window(object):
     def setupUi(self, main_window):
         main_window.setObjectName("main_window")
-        main_window.resize(1116, 908)
+        main_window.resize(597, 596)
         self.central_widget = QtWidgets.QWidget(main_window)
         self.central_widget.setObjectName("central_widget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.central_widget)
@@ -32,7 +32,7 @@ class Ui_main_window(object):
         self.sprite_editor_layout.setContentsMargins(0, 0, 0, 0)
         self.sprite_editor_layout.setSpacing(0)
         self.sprite_editor_layout.setObjectName("sprite_editor_layout")
-        self.sprite_editor_view = QtWidgets.QGraphicsView(self.sprite_tab)
+        self.sprite_editor_view = TestView(self.sprite_tab)
         self.sprite_editor_view.setObjectName("sprite_editor_view")
         self.sprite_editor_layout.addWidget(self.sprite_editor_view)
         self.editor_tabs.addTab(self.sprite_tab, "")
@@ -101,7 +101,7 @@ class Ui_main_window(object):
         self.tile_pixel_palette_dock.setWidget(self.tile_pixel_palette)
         main_window.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.tile_pixel_palette_dock)
         self.menu_bar = QtWidgets.QMenuBar(main_window)
-        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1116, 26))
+        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 597, 22))
         self.menu_bar.setDefaultUp(False)
         self.menu_bar.setObjectName("menu_bar")
         self.menuFile = QtWidgets.QMenu(self.menu_bar)
@@ -171,12 +171,15 @@ class Ui_main_window(object):
         icon5.addPixmap(QtGui.QPixmap(":/icons/ellipse_tool.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_ellipse_tool.setIcon(icon5)
         self.action_ellipse_tool.setObjectName("action_ellipse_tool")
+        self.action_new = QtWidgets.QAction(main_window)
+        self.action_new.setObjectName("action_new")
         self.tool_bar.addAction(self.action_select_tool)
         self.tool_bar.addAction(self.action_pen_tool)
         self.tool_bar.addAction(self.action_fill_tool)
         self.tool_bar.addAction(self.action_line_tool)
         self.tool_bar.addAction(self.action_rectangle_tool)
         self.tool_bar.addAction(self.action_ellipse_tool)
+        self.menuFile.addAction(self.action_new)
         self.menuFile.addAction(self.action_open)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.action_preferences)
@@ -209,7 +212,8 @@ class Ui_main_window(object):
         self.menuFile.setTitle(_translate("main_window", "File"))
         self.menuEdit.setTitle(_translate("main_window", "Edit"))
         self.menuJCAP.setTitle(_translate("main_window", "JCAP"))
-        self.action_open.setText(_translate("main_window", "Open"))
+        self.action_open.setText(_translate("main_window", "Open Project"))
+        self.action_open.setToolTip(_translate("main_window", "Open Project"))
         self.action_open.setShortcut(_translate("main_window", "Ctrl+O"))
         self.action_preferences.setText(_translate("main_window", "Preferences"))
         self.action_exit.setText(_translate("main_window", "Exit"))
@@ -238,6 +242,10 @@ class Ui_main_window(object):
         self.action_rectangle_tool.setToolTip(_translate("main_window", "Rectangle Tool"))
         self.action_ellipse_tool.setText(_translate("main_window", "Ellipse Tool"))
         self.action_ellipse_tool.setToolTip(_translate("main_window", "Ellipse Tool"))
+        self.action_new.setText(_translate("main_window", "New Project"))
+        self.action_new.setToolTip(_translate("main_window", "New Project"))
+        self.action_new.setShortcut(_translate("main_window", "Ctrl+N"))
 from color_palette import ColorPalette
 from pixel_palette import PixelPalette
+from test_view import TestView
 import resources_rc
