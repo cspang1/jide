@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 # from source import Source
-from color_preview_ui import Ui_color_preview
+from ui.color_preview_ui import Ui_color_preview
 
 class ColorPreview(QWidget, Ui_color_preview):
     """Color preview widget showing primary and secondary color selections

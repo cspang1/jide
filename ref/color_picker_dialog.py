@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
 
 from source import Source
 from color import Color
-from color_picker_dialog_ui import Ui_color_picker_dialog
+from ui.color_picker_dialog_ui import Ui_color_picker_dialog
 
 class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
     def __init__(self, parent=None):

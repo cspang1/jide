@@ -4,7 +4,9 @@ from PyQt5.QtWidgets import (
 
 from source import Source
 from color import Color
-from color_palette_ui import Ui_color_palette
+from ui.color_palette_ui import (
+    Ui_color_palette
+)
 from color_picker_dialog import ColorPickerDialog
 
 class ColorPalette(QWidget, Ui_color_palette):

@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QFileDialog
 )
 
-from main_window_ui import Ui_main_window
+from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
 
 
