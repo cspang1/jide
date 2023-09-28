@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>625</width>
-    <height>571</height>
+    <width>275</width>
+    <height>238</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <item>
       <widget class="QToolButton" name="add_pixel_palette">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>...</string>
@@ -33,7 +33,7 @@
      <item>
       <widget class="QToolButton" name="remove_pixel_palette">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>...</string>
@@ -64,7 +64,7 @@
      <item>
       <widget class="QGraphicsView" name="palette_view">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>

@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "./ref/main.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            // "preLaunchTask": "gen_resources"
         }
     ]
 }

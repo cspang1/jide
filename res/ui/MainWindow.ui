@@ -131,6 +131,9 @@
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
   <widget class="QToolBar" name="tool_bar">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="windowTitle">
     <string>toolBar</string>
    </property>
@@ -148,6 +151,9 @@
    <addaction name="action_ellipse_tool"/>
   </widget>
   <widget class="QDockWidget" name="sprite_color_palette_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="sizePolicy">
     <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
      <horstretch>0</horstretch>
@@ -166,9 +172,16 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="ColorPalette" name="sprite_color_palette"/>
+   <widget class="ColorPalette" name="sprite_color_palette">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QDockWidget" name="sprite_pixel_palette_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -178,9 +191,16 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="PixelPalette" name="sprite_pixel_palette"/>
+   <widget class="PixelPalette" name="sprite_pixel_palette">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QDockWidget" name="tile_color_palette_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -190,9 +210,16 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="ColorPalette" name="tile_color_palette"/>
+   <widget class="ColorPalette" name="tile_color_palette">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QDockWidget" name="tile_pixel_palette_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="features">
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
@@ -202,7 +229,11 @@
    <attribute name="dockWidgetArea">
     <number>2</number>
    </attribute>
-   <widget class="PixelPalette" name="tile_pixel_palette"/>
+   <widget class="PixelPalette" name="tile_pixel_palette">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menu_bar">
    <property name="geometry">
@@ -216,35 +247,72 @@
    <property name="defaultUp">
     <bool>false</bool>
    </property>
-   <widget class="QMenu" name="menuFile">
+   <widget class="QMenu" name="menu_file">
     <property name="title">
      <string>File</string>
     </property>
     <addaction name="action_new"/>
     <addaction name="action_open"/>
+    <addaction name="action_save"/>
     <addaction name="separator"/>
     <addaction name="action_preferences"/>
     <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menuEdit">
+   <widget class="QMenu" name="menu_edit">
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="action_undo"/>
-    <addaction name="action_redo"/>
     <addaction name="action_copy"/>
     <addaction name="action_paste"/>
    </widget>
-   <widget class="QMenu" name="menuJCAP">
+   <widget class="QMenu" name="menu_jcap">
     <property name="title">
      <string>JCAP</string>
     </property>
     <addaction name="action_gen_dat_files"/>
     <addaction name="action_load_jcap_system"/>
    </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
-   <addaction name="menuJCAP"/>
+   <addaction name="menu_file"/>
+   <addaction name="menu_edit"/>
+   <addaction name="menu_jcap"/>
+  </widget>
+  <widget class="QDockWidget" name="map_pixel_palette_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Tile Palettes</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="PixelPalette" name="map_pixel_palette">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="map_color_palette_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Color Palettes</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="ColorPalette" name="map_color_palette">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
   </widget>
   <action name="action_open">
    <property name="text">
@@ -270,28 +338,6 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="action_undo">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Undo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Z</string>
-   </property>
-  </action>
-  <action name="action_redo">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Redo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Y</string>
-   </property>
-  </action>
   <action name="action_copy">
    <property name="enabled">
     <bool>false</bool>
@@ -311,7 +357,7 @@
     <string>Paste</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+V</string>
    </property>
   </action>
   <action name="action_gen_dat_files">
@@ -333,12 +379,15 @@
     <string>Load JCAP System</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+L</string>
    </property>
   </action>
   <action name="action_select_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -352,8 +401,11 @@
    </property>
   </action>
   <action name="action_pen_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -367,8 +419,11 @@
    </property>
   </action>
   <action name="action_fill_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -382,8 +437,11 @@
    </property>
   </action>
   <action name="action_line_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -397,8 +455,11 @@
    </property>
   </action>
   <action name="action_rectangle_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -412,8 +473,11 @@
    </property>
   </action>
   <action name="action_ellipse_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="../resources.qrc">
@@ -435,6 +499,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="action_save">
+   <property name="text">
+    <string>Save Project</string>
+   </property>
+   <property name="toolTip">
+    <string>Save Project</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>

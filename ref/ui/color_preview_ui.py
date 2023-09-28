@@ -16,7 +16,7 @@ class Ui_color_preview(object):
         color_preview.setObjectName("color_preview")
         color_preview.resize(95, 95)
         self.switch_color = QtWidgets.QToolButton(color_preview)
-        self.switch_color.setEnabled(False)
+        self.switch_color.setEnabled(True)
         self.switch_color.setGeometry(QtCore.QRect(-1, 63, 28, 28))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/switch_color.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
