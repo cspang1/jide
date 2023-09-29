@@ -94,11 +94,7 @@
    <item>
     <layout class="QHBoxLayout" name="palette_layout">
      <item>
-      <layout class="QGridLayout" name="color_layout">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-      </layout>
+      <widget class="ColorPaletteGrid" name="color_palette_grid" native="true"/>
      </item>
      <item>
       <widget class="ColorPreview" name="color_preview" native="true">
@@ -138,6 +134,12 @@
    <class>ColorPreview</class>
    <extends>QWidget</extends>
    <header>color_preview</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ColorPaletteGrid</class>
+   <extends>QWidget</extends>
+   <header>color_palette_grid</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

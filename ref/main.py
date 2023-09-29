@@ -108,23 +108,37 @@ class Window(QMainWindow, Ui_main_window):
             ).exec()
             return
         
-        self.enable_ui()
+        self.init_ui()
 
     def setup_models(self, project_data):
         self.sprite_color_data = ColorData()
         self.tile_color_data = ColorData()
+        self.sprite_color_palette.color_palette_name_combo.currentIndexChanged.connect(
+            lambda: self.sprite_color_palette.update_palette(
+                self.sprite_color_data.get_color_palette(
+                    self.sprite_color_palette.color_palette_name_combo.currentText()
+                )
+            )
+        )
+        self.tile_color_palette.color_palette_name_combo.currentIndexChanged.connect(
+            lambda: self.tile_color_palette.update_palette(
+                self.tile_color_data.get_color_palette(
+                    self.tile_color_palette.color_palette_name_combo.currentText()
+                )
+            )
+        )
+
         self.sprite_color_data.color_palette_added.connect(self.sprite_color_palette.add_color_palette)
         self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
-
         for palette in parse_color_data(project_data["spriteColorPalettes"]):
-            print(*palette)
             self.sprite_color_data.add_color_palette(*palette)
         for palette in parse_color_data(project_data["tileColorPalettes"]):
             self.tile_color_data.add_color_palette(*palette)
+
         self.sprite_pixel_data = PixelData(*parse_pixel_data(project_data["sprites"]))
         self.tile_pixel_data = PixelData(*parse_pixel_data(project_data["tiles"]))
 
-    def enable_ui(self):
+    def init_ui(self):
         self.tool_bar.setEnabled(True)
         self.editor_tabs.setEnabled(True)
         for menu in self.menu_bar.findChildren(QMenu):
@@ -134,6 +148,8 @@ class Window(QMainWindow, Ui_main_window):
             palette.setEnabled(True)
         for palette in self.findChildren(PixelPalette):
             palette.setEnabled(True)
+
+        print()
 
     def test_scene(self):
         self.sprite_scene = QGraphicsScene()
@@ -171,7 +187,6 @@ def parse_pixel_data(data):
     width = element_width * elements_per_line
     height = ceil(len(pixel_data) / width)
     return (pixel_data, width, height, names)
-
 
 def parse_color_data(data):
     for palette in data:

@@ -67,10 +67,9 @@ class Ui_color_palette(object):
         self.verticalLayout_2.addLayout(self.tool_layout)
         self.palette_layout = QtWidgets.QHBoxLayout()
         self.palette_layout.setObjectName("palette_layout")
-        self.color_layout = QtWidgets.QGridLayout()
-        self.color_layout.setSpacing(0)
-        self.color_layout.setObjectName("color_layout")
-        self.palette_layout.addLayout(self.color_layout)
+        self.color_palette_grid = ColorPaletteGrid(color_palette)
+        self.color_palette_grid.setObjectName("color_palette_grid")
+        self.palette_layout.addWidget(self.color_palette_grid)
         self.color_preview = ColorPreview(color_palette)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -93,5 +92,6 @@ class Ui_color_palette(object):
         self.add_color_palette_btn.setText(_translate("color_palette", "..."))
         self.remove_color_palette_btn.setText(_translate("color_palette", "..."))
         self.rename_color_palette.setText(_translate("color_palette", "..."))
+from color_palette_grid import ColorPaletteGrid
 from color_preview import ColorPreview
 import resources_rc
