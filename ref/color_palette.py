@@ -6,7 +6,6 @@ from PyQt5.QtCore import pyqtSlot
 from ui.color_palette_ui import (
     Ui_color_palette
 )
-from color_picker_dialog import ColorPickerDialog
 
 class ColorPalette(QWidget, Ui_color_palette):
     def __init__(self, parent=None):
@@ -14,7 +13,6 @@ class ColorPalette(QWidget, Ui_color_palette):
         self.setupUi(self)
 
         self.add_color_palette_btn.setEnabled(True)
-        self.add_color_palette_btn.clicked.connect(self.open_color_picker)
 
     @pyqtSlot(str)
     def add_color_palette(self, color_palette_name):
@@ -24,6 +22,3 @@ class ColorPalette(QWidget, Ui_color_palette):
     def update_palette(self, color_data):
         self.color_palette_grid.update_palette(color_data)
 
-    def open_color_picker(self):
-        color_picker = ColorPickerDialog()
-        color_picker.exec()

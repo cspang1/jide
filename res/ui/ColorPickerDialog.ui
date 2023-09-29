@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>684</width>
-    <height>578</height>
+    <width>702</width>
+    <height>439</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,10 +21,16 @@
     <layout class="QHBoxLayout" name="main_layout">
      <item>
       <widget class="QFrame" name="color_swatches_frame">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
-         <width>406</width>
-         <height>406</height>
+         <width>500</width>
+         <height>0</height>
         </size>
        </property>
        <property name="frameShape">
@@ -33,31 +39,79 @@
        <property name="frameShadow">
         <enum>QFrame::Sunken</enum>
        </property>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="EightBitColorGrid" name="color_swatches_grid" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>
       <layout class="QVBoxLayout" name="values_layout">
        <item>
-        <widget class="QLabel" name="color_preview">
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>50</height>
-          </size>
-         </property>
+        <widget class="QFrame" name="color_preview_frame">
          <property name="frameShape">
-          <enum>QFrame::Panel</enum>
+          <enum>QFrame::StyledPanel</enum>
          </property>
          <property name="frameShadow">
           <enum>QFrame::Sunken</enum>
          </property>
-         <property name="text">
-          <string/>
-         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="color_preview" native="true">
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
        <item>
         <widget class="QFrame" name="e_bit_val_frame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -87,7 +141,7 @@
           <item>
            <layout class="QFormLayout" name="e_bit_val_layout">
             <item row="0" column="1">
-             <widget class="QLineEdit" name="ebit_red_value"/>
+             <widget class="QLineEdit" name="e_bit_red_value"/>
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="e_bit_red_label">
@@ -104,7 +158,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLineEdit" name="ebit_green_value"/>
+             <widget class="QLineEdit" name="e_bit_green_value"/>
             </item>
             <item row="2" column="0">
              <widget class="QLabel" name="e_bit_blue_label">
@@ -114,7 +168,7 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QLineEdit" name="ebit_blue_value"/>
+             <widget class="QLineEdit" name="e_bit_blue_value"/>
             </item>
             <item row="3" column="0">
              <widget class="QLabel" name="e_bit_hex_label">
@@ -124,7 +178,7 @@
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLineEdit" name="ebit_hex_value"/>
+             <widget class="QLineEdit" name="e_bit_hex_value"/>
             </item>
            </layout>
           </item>
@@ -133,6 +187,12 @@
        </item>
        <item>
         <widget class="QFrame" name="f_color_val_frame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -157,46 +217,46 @@
            </widget>
           </item>
           <item>
-           <layout class="QFormLayout" name="f_bit_val_layout">
+           <layout class="QFormLayout" name="f_color_val_layout">
             <item row="0" column="0">
-             <widget class="QLabel" name="f_bit_red_label">
+             <widget class="QLabel" name="f_color_red_label">
               <property name="text">
                <string>Red:</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLineEdit" name="f_bit_red_value"/>
+             <widget class="QLineEdit" name="f_color_red_value"/>
             </item>
             <item row="1" column="0">
-             <widget class="QLabel" name="f_bit_green_label">
+             <widget class="QLabel" name="f_color_green_label">
               <property name="text">
                <string>Green:</string>
               </property>
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QLineEdit" name="f_bit_green_value"/>
+             <widget class="QLineEdit" name="f_color_green_value"/>
             </item>
             <item row="2" column="0">
-             <widget class="QLabel" name="f_bit_blue_label">
+             <widget class="QLabel" name="f_color_blue_label">
               <property name="text">
                <string>Blue:</string>
               </property>
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QLineEdit" name="f_bit_blue_value"/>
+             <widget class="QLineEdit" name="f_color_blue_value"/>
             </item>
             <item row="3" column="0">
-             <widget class="QLabel" name="f_bit_hex_label">
+             <widget class="QLabel" name="f_color_hex_label">
               <property name="text">
                <string>Hex:</string>
               </property>
              </widget>
             </item>
             <item row="3" column="1">
-             <widget class="QLineEdit" name="f_bit_hex_value"/>
+             <widget class="QLineEdit" name="f_color_hex_value"/>
             </item>
            </layout>
           </item>
@@ -219,6 +279,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>EightBitColorGrid</class>
+   <extends>QWidget</extends>
+   <header>eight_bit_color_grid</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
