@@ -17,7 +17,7 @@
    <item>
     <layout class="QHBoxLayout" name="tool_layout">
      <item>
-      <widget class="QComboBox" name="color_palette_name">
+      <widget class="QComboBox" name="color_palette_name_combo">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -30,7 +30,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="add_color_palette">
+      <widget class="QToolButton" name="add_color_palette_btn">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -50,7 +50,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="remove_color_palette">
+      <widget class="QToolButton" name="remove_color_palette_btn">
        <property name="enabled">
         <bool>true</bool>
        </property>

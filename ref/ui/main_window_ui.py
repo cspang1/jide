@@ -201,6 +201,7 @@ class Ui_main_window(object):
         self.action_new = QtWidgets.QAction(main_window)
         self.action_new.setObjectName("action_new")
         self.action_save = QtWidgets.QAction(main_window)
+        self.action_save.setEnabled(False)
         self.action_save.setObjectName("action_save")
         self.tool_bar.addAction(self.action_select_tool)
         self.tool_bar.addAction(self.action_pen_tool)

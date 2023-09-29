@@ -19,25 +19,19 @@ from source import Source
 
 class ColorData(QObject):
 
-    def __init__(self, jrf_data, parent=None):
+    color_palette_added = pyqtSignal(str)
+
+    def __init__(self, parent=None):
         super().__init__(parent)
 
         self.color_data = OrderedDict()
-        for palette in jrf_data:
-            cur_pal = palette["contents"]
-            cur_pal[:] = [
-                QColor(*upsample(color >> 5, (color >> 2) & 7, color & 3))
-                for color in cur_pal
-            ]
-            # cur_pal[0] = QColor(0, 0, 0, 0)
-            self.color_data[palette["name"]] = cur_pal
 
-            # for palette in self.color_data:
-            #     for color in self.color_data[palette]:
-            #         print(*downsample(color.red(), color.green(), color.blue()))
+    def add_color_palette(self, color_palette_name, color_palette_data):
+        self.color_data[color_palette_name] = color_palette_data
+        self.color_palette_added.emit(color_palette_name)
 
-    def color_table(self, color_table_name):
-        return self.color_data[color_table_name]
+    def get_color_palette(self, color_palette_name):
+        return self.color_data[color_palette_name]
 
 def upsample(red, green, blue):
     """Upsamples RGB from 8-bit to 24-bit
