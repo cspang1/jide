@@ -91,4 +91,6 @@ class EightBitColorGrid(QWidget):
                 self.selected_cell = (index % self.grid_width, index // self.grid_width)
                 break
         self.color_selected.emit(self.palette[index])
+        print(f'Returning from grid: {self.palette[index].red()}, {self.palette[index].green()}, {self.palette[index].blue()}')
+        print()
         self.update()
