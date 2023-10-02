@@ -21,7 +21,6 @@ class Ui_color_preview(object):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icons/switch_color.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.switch_color.setIcon(icon)
-        self.switch_color.setShortcut("")
         self.switch_color.setObjectName("switch_color")
 
         self.retranslateUi(color_preview)
@@ -32,4 +31,5 @@ class Ui_color_preview(object):
         color_preview.setWindowTitle(_translate("color_preview", "Form"))
         self.switch_color.setToolTip(_translate("color_preview", "Switch Color (X)"))
         self.switch_color.setText(_translate("color_preview", "..."))
+        self.switch_color.setShortcut(_translate("color_preview", "X"))
 import resources_rc

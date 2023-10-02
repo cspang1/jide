@@ -15,6 +15,10 @@ from PyQt5.QtGui import (
 from color_picker_dialog import ColorPickerDialog
 
 class ColorPaletteGrid(QWidget):
+
+    primary_color_selected = pyqtSignal(QColor, int)
+    secondary_color_selected = pyqtSignal(QColor, int)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.grid_width = 4  # Number of columns
@@ -24,11 +28,12 @@ class ColorPaletteGrid(QWidget):
         self.total_width = (self.grid_width + 1) * self.line_width + self.grid_width * self.square_size + 2
         self.total_height = (self.grid_height + 1) * self.line_width + self.grid_height * self.square_size + 2
         self.setFixedSize(self.total_width, self.total_height)
-        self.selected_cell = None
+        self.primary_cell = None
+        self.secondary_cell = None
         self.palette = [QColor(211, 211, 211)] * self.grid_width * self.grid_height
 
-    def update_palette(self, color_data):
-        self.palette = color_data
+    def set_color(self, index, color):
+        self.palette[index] = color
         self.update()
 
     def paintEvent(self, event):
@@ -61,7 +66,7 @@ class ColorPaletteGrid(QWidget):
                     x_line = (col + 1) * (self.square_size + self.line_width) + 1  # Add 1 for the left border
                     painter.fillRect(x_line, y, self.line_width, self.square_size, QColor(0, 0, 0))
 
-                if (col, row) == self.selected_cell:
+                if (col, row) == (self.primary_cell % self.grid_width, self.primary_cell // self.grid_width):
                     selected_x = x
                     selected_y = y
 
@@ -83,16 +88,31 @@ class ColorPaletteGrid(QWidget):
         # Calculate the cell index based on the mouse click position
         col = event.x() // (self.square_size + self.line_width)
         row = event.y() // (self.square_size + self.line_width)
-        
+
         if 0 <= col < self.grid_width and 0 <= row < self.grid_height:
             index = max(0, min(row * self.grid_width + col, self.grid_width * self.grid_height - 1))
-            self.select_color(index)
+            if event.buttons() == Qt.LeftButton:
+                self.select_primary_color(index)
+            elif event.buttons() == Qt.RightButton:
+                self.select_secondary_color(index)
 
     def open_color_picker(self, index, color):
-        color_picker = ColorPickerDialog(index, color)
-        color_picker.exec()
+        color_picker = ColorPickerDialog(color)
+        if color_picker.exec():
+            self.set_color(index, color_picker.get_color())
 
-    def select_color(self, index):
-        self.selected_cell = (index % self.grid_width, index // self.grid_width)
-        # self.color_selected.emit(self.palette[index])
+    def select_primary_color(self, index):
+        self.primary_cell = index
+        self.primary_color_selected.emit(self.palette[index], index)
         self.update()
+
+    def select_secondary_color(self, index):
+        self.secondary_cell = index
+        self.secondary_color_selected.emit(self.palette[index], index)
+        self.update()
+
+    @pyqtSlot()
+    def swap_colors(self):
+        temp_cell = self.primary_cell
+        self.select_primary_color(self.secondary_cell)
+        self.select_secondary_color(temp_cell)

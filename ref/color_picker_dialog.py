@@ -20,14 +20,13 @@ from color_data import (
 )
 
 class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
-    def __init__(self, index, color, parent=None):
+    def __init__(self, color, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.index = index
         self.color = color
 
         self.color_swatches_grid.color_selected.connect(self.color_selected)
-        self.color_swatches_grid.select_color(color)
+        self.color_swatches_grid.select_color(self.color)
 
         e_bit_red_width = 3
         e_bit_green_width = 3
@@ -109,6 +108,7 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
             self.color_swatches_grid.select_color(QColor(*f_color))
 
     def color_selected(self, color):
+        self.color = color
         preview_palette = self.color_preview.palette()
         preview_palette.setColor(self.color_preview.backgroundRole(), color)
         self.color_preview.setPalette(preview_palette)
@@ -125,6 +125,9 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
         self.f_color_green_value.setText(str(color.green()))
         self.f_color_blue_value.setText(str(color.blue()))
         self.f_color_hex_value.setText(color.name().upper())
+
+    def get_color(self):
+        return self.color
 
 class ColorValidator(QValidator):
     def __init__(self, top, parent=None):

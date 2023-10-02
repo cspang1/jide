@@ -41,62 +41,24 @@ class ColorPreview(QWidget, Ui_color_preview):
         painter.setPen(rect_pen)
         painter.setBrush(sec_brush)
         painter.drawRect(27, 27, 61, 61)
-        # if self.source is Source.SPRITE:
-        if True:
-            if self.secondary_index == 0:
-                painter.setPen(trans_pen)
-                painter.drawLine(30, 30, 61 + 25, 61 + 25)
+        if self.secondary_index == 0:
+            painter.setPen(trans_pen)
+            painter.drawLine(30, 30, 61 + 25, 61 + 25)
         painter.setPen(rect_pen)
         painter.setBrush(prim_brush)
         painter.drawRect(1, 1, 61, 61)
-        # if self.source is Source.SPRITE:
-        if True:
-            if self.primary_index == 0:
-                painter.setPen(trans_pen)
-                painter.drawLine(4, 4, 61 - 1, 61 - 1)
+        if self.primary_index == 0:
+            painter.setPen(trans_pen)
+            painter.drawLine(4, 4, 61 - 1, 61 - 1)
 
-    # def setPrimaryColor(self, color):
-    #     """Sets the primary color of the preview
+    @pyqtSlot(QColor, int)
+    def set_primary_color(self, color, index):
+        self.primary_color = color
+        self.primary_index = index
+        self.update()
 
-    #     :param color:   Color to be set as the primary
-    #     :type color:    QColor
-    #     """
-    #     self.primary_color = color
-    #     self.update()
-
-    # def setPrimaryIndex(self, index):
-    #     """Sets the index of the chosen primary color of the preview
-
-    #     :param index:   Index to be set as the primary
-    #     :type index:    int
-    #     """
-    #     self.primary_index = index
-    #     self.update()
-
-    # def setSecondaryColor(self, color):
-    #     """Sets the secondary color of the preview
-
-    #     :param color:   Color to be set as the secondary
-    #     :type color:    QColor
-    #     """
-    #     self.secondary_color = color
-    #     self.update()
-
-    # def setSecondaryIndex(self, index):
-    #     """Sets the index of the chosen secondary color of the preview
-
-    #     :param index:   Index to be set as the secondary
-    #     :type index:    int
-    #     """
-    #     self.secondary_index = index
-    #     self.update()
-
-    # @pyqtSlot(bool)
-    # def setColorSwitchEnabled(self, enabled):
-    #     """Sets the switch color action/button to be enabled/disabled
-
-    #     :param enabled: Whether color switch is to be enabled or disabled
-    #     :type enabled:  bool
-    #     """
-    #     self.switch_color.setEnabled(enabled)
-    #     self.switch_button.setIcon(self.switch_icon)
+    @pyqtSlot(QColor, int)
+    def set_secondary_color(self, color, index):
+        self.secondary_color = color
+        self.secondary_index = index
+        self.update()

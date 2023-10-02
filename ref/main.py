@@ -134,6 +134,10 @@ class Window(QMainWindow, Ui_main_window):
             self.sprite_color_data.add_color_palette(*palette)
         for palette in parse_color_data(project_data["tileColorPalettes"]):
             self.tile_color_data.add_color_palette(*palette)
+        self.sprite_color_palette.color_palette_grid.select_primary_color(0)
+        self.sprite_color_palette.color_palette_grid.select_secondary_color(0)
+        self.tile_color_palette.color_palette_grid.select_primary_color(0)
+        self.tile_color_palette.color_palette_grid.select_secondary_color(0)
 
         self.sprite_pixel_data = PixelData(*parse_pixel_data(project_data["sprites"]))
         self.tile_pixel_data = PixelData(*parse_pixel_data(project_data["tiles"]))
