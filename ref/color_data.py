@@ -66,3 +66,24 @@ def downsample(red, green, blue):
     green = round((green / 255) * 7)
     blue = round((blue / 255) * 3)
     return (red, green, blue)
+
+def normalize(red, green, blue):
+    """Normalizes any RGB value to be representable by a whole 8-bit value
+
+    :param red:     Red value
+    :type red:      int
+    :param green:   Green value
+    :type green:    int
+    :param blue:    Blue value
+    :type blue:     int
+    :return:        24-bit normalized RGB tuple
+    :rtype:         tuple(int, int, int)
+    """
+    return upsample(*downsample(red, green, blue))
+
+def e_bit_hex_to_rgb(hex):
+    return (
+        (hex >> 5) & 7,
+        (hex >> 2) & 7,
+        hex & 3
+    )

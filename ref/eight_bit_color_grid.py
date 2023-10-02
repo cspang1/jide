@@ -13,7 +13,11 @@ from PyQt5.QtGui import (
     QPainter,
     QPen
 )
-from color_data import upsample
+from color_data import (
+    upsample,
+    downsample,
+    normalize
+)
 
 class EightBitColorGrid(QWidget):
 
@@ -89,8 +93,7 @@ class EightBitColorGrid(QWidget):
         for index, palette_color in enumerate(self.palette):
             if palette_color.rgb() == color.rgb():
                 self.selected_cell = (index % self.grid_width, index // self.grid_width)
-                break
-        self.color_selected.emit(self.palette[index])
-        print(f'Returning from grid: {self.palette[index].red()}, {self.palette[index].green()}, {self.palette[index].blue()}')
-        print()
+                self.color_selected.emit(self.palette[index])
+                self.update()
+                return
         self.update()

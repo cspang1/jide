@@ -149,8 +149,6 @@ class Window(QMainWindow, Ui_main_window):
         for palette in self.findChildren(PixelPalette):
             palette.setEnabled(True)
 
-        print()
-
     def test_scene(self):
         self.sprite_scene = QGraphicsScene()
         self.tile_scene = QGraphicsScene()

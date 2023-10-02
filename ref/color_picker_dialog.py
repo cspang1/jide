@@ -13,7 +13,11 @@ from PyQt5.QtGui import (
     QPen,
 )
 from ui.color_picker_dialog_ui import Ui_color_picker_dialog
-from color_data import upsample, downsample
+from color_data import (
+    upsample,
+    downsample,
+    normalize
+)
 
 class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
     def __init__(self, index, color, parent=None):
@@ -47,9 +51,11 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
         self.e_bit_red_value.editingFinished.connect(self.e_bit_color_changed)
         self.e_bit_green_value.editingFinished.connect(self.e_bit_color_changed)
         self.e_bit_blue_value.editingFinished.connect(self.e_bit_color_changed)
+        self.e_bit_hex_value.editingFinished.connect(self.e_bit_hex_changed)
         self.f_color_red_value.editingFinished.connect(self.f_color_changed)
         self.f_color_green_value.editingFinished.connect(self.f_color_changed)
         self.f_color_blue_value.editingFinished.connect(self.f_color_changed)
+        self.f_color_hex_value.editingFinished.connect(self.f_color_hex_changed)
 
     def e_bit_color_changed(self):
         r, g, b = downsample(
@@ -63,20 +69,46 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
         self.color_swatches_grid.select_color(QColor(*upsample(r, g, b)))
 
     def f_color_changed(self):
-        r, g, b = upsample(
+        r, g, b = (
             int(self.e_bit_red_value.text()),
             int(self.e_bit_green_value.text()),
             int(self.e_bit_blue_value.text())
             )
-        print(f'Before: {r}, {g}, {b}')
         r = r if self.f_color_red_value.text() == "" else int(self.f_color_red_value.text())
         g = g if self.f_color_green_value.text() == "" else int(self.f_color_green_value.text())
         b = b if self.f_color_blue_value.text() == "" else int(self.f_color_blue_value.text())
-        print(f'After: {r}, {g}, {b}')
-        self.color_swatches_grid.select_color(QColor(r, g, b))
+        self.color_swatches_grid.select_color(QColor(*normalize(r, g, b)))
+
+    def e_bit_hex_changed(self):
+        hex_e = self.e_bit_hex_value.text().lstrip("#")
+        if hex_e == "":
+            self.color_swatches_grid.select_color(QColor(self.f_color_hex_value.text()))
+        else:
+            hex = int(hex_e.zfill(2), 16)
+            r = (hex >> 5) & 7
+            g = (hex >> 2) & 7
+            b = hex & 3
+            self.color_swatches_grid.select_color(QColor(*upsample(r, g, b)))
+
+    def f_color_hex_changed(self):
+        e_bit_color = QColor(*upsample(
+            int(self.e_bit_red_value.text()),
+            int(self.e_bit_green_value.text()),
+            int(self.e_bit_blue_value.text())
+        ))
+        hex = self.f_color_hex_value.text().lstrip("#")
+        if hex == "":
+            self.color_swatches_grid.select_color(e_bit_color)
+        else:
+            f_color = QColor("#" + hex.zfill(6))
+            f_color = normalize(
+                f_color.red(),
+                f_color.green(),
+                f_color.blue()
+            )
+            self.color_swatches_grid.select_color(QColor(*f_color))
 
     def color_selected(self, color):
-        print(f'Selecting: {color.red()}, {color.green()}, {color.blue()}')
         preview_palette = self.color_preview.palette()
         preview_palette.setColor(self.color_preview.backgroundRole(), color)
         self.color_preview.setPalette(preview_palette)
