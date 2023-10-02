@@ -18,6 +18,7 @@ class ColorPaletteGrid(QWidget):
 
     primary_color_selected = pyqtSignal(QColor, int)
     secondary_color_selected = pyqtSignal(QColor, int)
+    primary_color_changed = pyqtSignal(QColor, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -44,6 +45,9 @@ class ColorPaletteGrid(QWidget):
         select_pen = QPen(QColor(255, 0, 0))
         select_pen.setJoinStyle(Qt.MiterJoin)
         select_pen.setWidth(6)
+        trans_pen = QPen(Qt.red)
+        trans_pen.setWidth(5)
+        trans_pen.setCapStyle(Qt.RoundCap)
 
         selected_x = -1
         selected_y = -1
@@ -55,6 +59,10 @@ class ColorPaletteGrid(QWidget):
                 cur_index = row_index * self.grid_width + col_index
                 square_color = self.palette[cur_index]
                 painter.fillRect(x, y, self.square_size, self.square_size, square_color)
+
+                if cur_index == 0:
+                    painter.setPen(trans_pen)
+                    painter.drawLine(x + 2, y + 2, self.square_size + 2, self.square_size + 2)
 
                 # Draw horizontal lines
                 if row < self.grid_height - 1:
@@ -99,7 +107,10 @@ class ColorPaletteGrid(QWidget):
     def open_color_picker(self, index, color):
         color_picker = ColorPickerDialog(color)
         if color_picker.exec():
-            self.set_color(index, color_picker.get_color())
+            new_color = color_picker.get_color()
+            self.set_color(index, new_color)
+            self.primary_color_changed.emit(new_color, index)
+
 
     def select_primary_color(self, index):
         self.primary_cell = index

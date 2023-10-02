@@ -55,6 +55,8 @@ class ColorPreview(QWidget, Ui_color_preview):
     def set_primary_color(self, color, index):
         self.primary_color = color
         self.primary_index = index
+        if self.secondary_index == self.primary_index:
+            self.set_secondary_color(self.primary_color, self.primary_index)
         self.update()
 
     @pyqtSlot(QColor, int)
@@ -62,3 +64,6 @@ class ColorPreview(QWidget, Ui_color_preview):
         self.secondary_color = color
         self.secondary_index = index
         self.update()
+
+    def get_secondary_index(self):
+        return self.secondary_index
