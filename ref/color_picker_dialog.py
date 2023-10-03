@@ -20,6 +20,9 @@ from color_data import (
 )
 
 class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
+
+    color_previewed = pyqtSignal(QColor)
+
     def __init__(self, color, parent=None):
         super().__init__(parent)
         self.setupUi(self)
@@ -107,6 +110,7 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
             )
             self.color_swatches_grid.select_color(QColor(*f_color))
 
+    @pyqtSlot(QColor)
     def color_selected(self, color):
         self.color = color
         preview_palette = self.color_preview.palette()
@@ -125,6 +129,9 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
         self.f_color_green_value.setText(str(color.green()))
         self.f_color_blue_value.setText(str(color.blue()))
         self.f_color_hex_value.setText(color.name().upper())
+
+        if self.preview_checkbox.isChecked():
+            self.color_previewed.emit(color)
 
     def get_color(self):
         return self.color

@@ -3,7 +3,7 @@ from itertools import chain
 from math import ceil, floor
 from pathlib import Path
 import sys
-from PyQt5.QtCore import QSize, QSettings, QCoreApplication
+from PyQt5.QtCore import QSize, QSettings, QCoreApplication, pyqtSlot
 from PyQt5.QtGui import QPixmap, QKeySequence, QColor, QImage
 from PyQt5.QtWidgets import (
     QApplication,
@@ -113,23 +113,58 @@ class Window(QMainWindow, Ui_main_window):
     def setup_models(self, project_data):
         self.sprite_color_data = ColorData()
         self.tile_color_data = ColorData()
+
+        self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
+        self.tile_color_data.error_thrown.connect(self.show_error_dialog)
+
         self.sprite_color_palette.color_palette_name_combo.currentIndexChanged.connect(
-            lambda: self.sprite_color_palette.update_palette(
+            lambda: self.sprite_color_palette.change_palette(
                 self.sprite_color_data.get_color_palette(
                     self.sprite_color_palette.color_palette_name_combo.currentText()
                 )
             )
         )
         self.tile_color_palette.color_palette_name_combo.currentIndexChanged.connect(
-            lambda: self.tile_color_palette.update_palette(
+            lambda: self.tile_color_palette.change_palette(
                 self.tile_color_data.get_color_palette(
                     self.tile_color_palette.color_palette_name_combo.currentText()
                 )
             )
         )
-
         self.sprite_color_data.color_palette_added.connect(self.sprite_color_palette.add_color_palette)
+        self.sprite_color_data.color_palette_removed.connect(self.sprite_color_palette.remove_color_palette)
         self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
+        self.tile_color_data.color_palette_removed.connect(self.tile_color_palette.remove_color_palette)
+        self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
+        self.sprite_color_palette.color_changed.connect(
+            lambda color, index: self.sprite_color_data.update_color(
+                self.sprite_color_palette.color_palette_name_combo.currentText(),
+                color,
+                index
+            )
+        )
+        self.tile_color_palette.color_changed.connect(
+            lambda color, index: self.tile_color_data.update_color(
+                self.tile_color_palette.color_palette_name_combo.currentText(),
+                color,
+                index
+            )
+        )
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index:  self.sprite_color_palette.update_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index:  self.tile_color_palette.update_color(color, index)
+        )
+        self.sprite_color_palette.color_palette_added.connect(
+            lambda name: self.sprite_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
+        )
+        self.tile_color_palette.color_palette_added.connect(
+            lambda name: self.tile_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
+        )
+        self.sprite_color_palette.color_palette_renamed.connect(self.sprite_color_data.rename_color_palette)
+        self.sprite_color_palette.color_palette_removed.connect(self.sprite_color_data.remove_color_palette)
+        self.tile_color_palette.color_palette_removed.connect(self.tile_color_data.remove_color_palette)
         for palette in parse_color_data(project_data["spriteColorPalettes"]):
             self.sprite_color_data.add_color_palette(*palette)
         for palette in parse_color_data(project_data["tileColorPalettes"]):
@@ -164,6 +199,14 @@ class Window(QMainWindow, Ui_main_window):
         self.tile_scene.addPixmap(tile_pixmap)
         self.sprite_editor_view.setScene(self.sprite_scene)
         self.tile_editor_view.setScene(self.tile_scene)
+
+    @pyqtSlot(str)
+    def show_error_dialog(self, message):
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setText(message)
+        msg_box.setWindowTitle("Error")
+        msg_box.exec_()
 
 def parse_pixel_data(data):
     pixels_per_element = 64

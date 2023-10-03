@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_color_picker_dialog(object):
     def setupUi(self, color_picker_dialog):
         color_picker_dialog.setObjectName("color_picker_dialog")
-        color_picker_dialog.resize(702, 439)
+        color_picker_dialog.resize(702, 427)
         color_picker_dialog.setModal(True)
         self.verticalLayout = QtWidgets.QVBoxLayout(color_picker_dialog)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -155,11 +155,18 @@ class Ui_color_picker_dialog(object):
         self.values_layout.addWidget(self.f_color_val_frame)
         self.main_layout.addLayout(self.values_layout)
         self.verticalLayout.addLayout(self.main_layout)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.preview_checkbox = QtWidgets.QCheckBox(color_picker_dialog)
+        self.preview_checkbox.setChecked(True)
+        self.preview_checkbox.setObjectName("preview_checkbox")
+        self.horizontalLayout_3.addWidget(self.preview_checkbox)
         self.buttons = QtWidgets.QDialogButtonBox(color_picker_dialog)
         self.buttons.setOrientation(QtCore.Qt.Horizontal)
         self.buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttons.setObjectName("buttons")
-        self.verticalLayout.addWidget(self.buttons)
+        self.horizontalLayout_3.addWidget(self.buttons)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
 
         self.retranslateUi(color_picker_dialog)
         self.buttons.accepted.connect(color_picker_dialog.accept) # type: ignore
@@ -179,4 +186,5 @@ class Ui_color_picker_dialog(object):
         self.f_color_green_label.setText(_translate("color_picker_dialog", "Green:"))
         self.f_color_blue_label.setText(_translate("color_picker_dialog", "Blue:"))
         self.f_color_hex_label.setText(_translate("color_picker_dialog", "Hex:"))
+        self.preview_checkbox.setText(_translate("color_picker_dialog", "Preview"))
 from eight_bit_color_grid import EightBitColorGrid

@@ -70,7 +70,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="rename_color_palette">
+      <widget class="QToolButton" name="rename_color_palette_btn">
        <property name="enabled">
         <bool>true</bool>
        </property>

@@ -19,6 +19,7 @@ class ColorPaletteGrid(QWidget):
     primary_color_selected = pyqtSignal(QColor, int)
     secondary_color_selected = pyqtSignal(QColor, int)
     primary_color_changed = pyqtSignal(QColor, int)
+    color_previewed = pyqtSignal(QColor, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,11 +30,11 @@ class ColorPaletteGrid(QWidget):
         self.total_width = (self.grid_width + 1) * self.line_width + self.grid_width * self.square_size + 2
         self.total_height = (self.grid_height + 1) * self.line_width + self.grid_height * self.square_size + 2
         self.setFixedSize(self.total_width, self.total_height)
-        self.primary_cell = None
-        self.secondary_cell = None
+        self.primary_cell = 0
+        self.secondary_cell = 0
         self.palette = [QColor(211, 211, 211)] * self.grid_width * self.grid_height
 
-    def set_color(self, index, color):
+    def set_color(self, color, index):
         self.palette[index] = color
         self.update()
 
@@ -90,7 +91,9 @@ class ColorPaletteGrid(QWidget):
         col = (mouse_pos.x() - self.line_width) // (self.square_size + self.line_width)
         row = (mouse_pos.y() - self.line_width) // (self.square_size + self.line_width)
         index = max(0, min(row * self.grid_width + col, self.grid_width * self.grid_height - 1))
-        self.open_color_picker(index, self.palette[index])
+        if index == 0:
+            return
+        self.open_color_picker(self.palette[index], index)
 
     def mousePressEvent(self, event):
         # Calculate the cell index based on the mouse click position
@@ -104,13 +107,20 @@ class ColorPaletteGrid(QWidget):
             elif event.buttons() == Qt.RightButton:
                 self.select_secondary_color(index)
 
-    def open_color_picker(self, index, color):
+    def open_color_picker(self, color, index):
         color_picker = ColorPickerDialog(color)
+        color_picker.color_previewed.connect(
+            lambda preview_color: self.preview_color(preview_color, index)
+        )
+        new_color = color
         if color_picker.exec():
             new_color = color_picker.get_color()
-            self.set_color(index, new_color)
-            self.primary_color_changed.emit(new_color, index)
+        self.primary_color_changed.emit(new_color, index)
 
+    @pyqtSlot(QColor, int)
+    def preview_color(self, color, index):
+        self.set_color(color, index)
+        self.color_previewed.emit(color, index)
 
     def select_primary_color(self, index):
         self.primary_cell = index
