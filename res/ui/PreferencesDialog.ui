@@ -30,19 +30,6 @@
     <enum>QLayout::SetFixedSize</enum>
    </property>
    <item>
-    <widget class="QPushButton" name="ident_props_button">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Auto-Identify CPU/GPU</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QHBoxLayout" name="cpu_port_layout">
      <item>
       <widget class="QLabel" name="cpu_port_label">
@@ -81,6 +68,28 @@
       <widget class="QComboBox" name="gpu_port_combo"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="com_port_warning">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;Not enough COM ports are populated to support both the CPU and GPU. Check the connections between your PC and the JCAP board.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="jcap_path_layout">
