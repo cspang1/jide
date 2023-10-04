@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_pixel_palette(object):
     def setupUi(self, pixel_palette):
         pixel_palette.setObjectName("pixel_palette")
-        pixel_palette.resize(275, 238)
+        pixel_palette.resize(383, 328)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(pixel_palette)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.tool_layout = QtWidgets.QHBoxLayout()
@@ -36,13 +36,19 @@ class Ui_pixel_palette(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.tool_layout.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.tool_layout)
-        self.palette_layout = QtWidgets.QHBoxLayout()
-        self.palette_layout.setObjectName("palette_layout")
-        self.palette_view = QtWidgets.QGraphicsView(pixel_palette)
-        self.palette_view.setEnabled(True)
-        self.palette_view.setObjectName("palette_view")
-        self.palette_layout.addWidget(self.palette_view)
-        self.verticalLayout_2.addLayout(self.palette_layout)
+        self.verticalLayout = QtWidgets.QVBoxLayout()
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.pixel_palette_grid = PixelPaletteGrid(pixel_palette)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pixel_palette_grid.sizePolicy().hasHeightForWidth())
+        self.pixel_palette_grid.setSizePolicy(sizePolicy)
+        self.pixel_palette_grid.setObjectName("pixel_palette_grid")
+        self.verticalLayout.addWidget(self.pixel_palette_grid)
+        self.verticalLayout_2.addLayout(self.verticalLayout)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_2.addItem(spacerItem1)
 
         self.retranslateUi(pixel_palette)
         QtCore.QMetaObject.connectSlotsByName(pixel_palette)
@@ -52,4 +58,5 @@ class Ui_pixel_palette(object):
         pixel_palette.setWindowTitle(_translate("pixel_palette", "Form"))
         self.add_pixel_palette.setText(_translate("pixel_palette", "..."))
         self.remove_pixel_palette.setText(_translate("pixel_palette", "..."))
+from pixel_palette_grid import PixelPaletteGrid
 import resources_rc

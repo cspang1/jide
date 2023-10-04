@@ -1,5 +1,8 @@
+from PyQt5.QtGui import QPixmap, QKeySequence, QColor, QImage
 from PyQt5.QtWidgets import (
-    QWidget, QLabel
+    QWidget,
+    QLabel,
+    QGraphicsScene
 )
 
 from source import Source

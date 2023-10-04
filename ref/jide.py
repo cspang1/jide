@@ -19,8 +19,14 @@ from PyQt5.QtWidgets import (
 
 from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
-from pixel_data import PixelData
-from color_data import ColorData
+from pixel_data import (
+    PixelData,
+    parse_pixel_data
+)
+from color_data import (
+    ColorData,
+    parse_color_data
+)
 from color_data import upsample, downsample
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
@@ -231,33 +237,3 @@ class Jide(QMainWindow, Ui_main_window):
         msg_box.setText(message)
         msg_box.setWindowTitle("Error")
         msg_box.exec_()
-
-def parse_pixel_data(data):
-    pixels_per_element = 64
-    element_width = 8
-    element_height = 8
-    elements_per_line = 16
-    pixel_data = bytearray([0] * len(data) * pixels_per_element)
-    names = []
-
-    for index, palette in enumerate(data):
-        names.append(palette["name"])
-        col_index = floor(index / elements_per_line) * element_width * elements_per_line * element_height
-        col_offset = (index % elements_per_line) * element_width
-        for pixel_row, pixel_row_data in enumerate(palette["contents"]):
-            row_offset = pixel_row * elements_per_line * element_width
-            pixel_data_index = col_index + row_offset + col_offset
-            pixel_data[pixel_data_index:pixel_data_index+8] = pixel_row_data
-
-    width = element_width * elements_per_line
-    height = ceil(len(pixel_data) / width)
-    return (pixel_data, width, height, names)
-
-def parse_color_data(data):
-    for palette in data:
-        cur_pal = palette["contents"]
-        cur_pal[:] = [
-            QColor(*upsample(color >> 5, (color >> 2) & 7, color & 3))
-            for color in cur_pal
-        ]
-        yield (palette["name"], cur_pal)

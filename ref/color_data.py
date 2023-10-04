@@ -114,9 +114,11 @@ def normalize(red, green, blue):
     """
     return upsample(*downsample(red, green, blue))
 
-def e_bit_hex_to_rgb(hex):
-    return (
-        (hex >> 5) & 7,
-        (hex >> 2) & 7,
-        hex & 3
-    )
+def parse_color_data(data):
+    for palette in data:
+        cur_pal = palette["contents"]
+        cur_pal[:] = [
+            QColor(*upsample(color >> 5, (color >> 2) & 7, color & 3))
+            for color in cur_pal
+        ]
+        yield (palette["name"], cur_pal)

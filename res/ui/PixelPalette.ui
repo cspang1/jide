@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>275</width>
-    <height>238</height>
+    <width>383</width>
+    <height>328</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,18 +60,42 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="palette_layout">
+    <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QGraphicsView" name="palette_view">
-       <property name="enabled">
-        <bool>true</bool>
+      <widget class="PixelPaletteGrid" name="pixel_palette_grid" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
       </widget>
      </item>
     </layout>
    </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PixelPaletteGrid</class>
+   <extends>QWidget</extends>
+   <header>pixel_palette_grid</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../resources.qrc"/>
  </resources>
