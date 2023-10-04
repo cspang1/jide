@@ -202,6 +202,7 @@ class Jide(QMainWindow, Ui_main_window):
 
         self.sprite_pixel_data = PixelData(*parse_pixel_data(project_data["sprites"]))
         self.tile_pixel_data = PixelData(*parse_pixel_data(project_data["tiles"]))
+        self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data)
 
     def init_ui(self):
         self.tool_bar.setEnabled(True)

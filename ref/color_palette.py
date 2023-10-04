@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QLineEdit
 )
-from PyQt5.QtGui import QColor, QImage
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QColor, QImage, QPainter, QPen
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 
 from ui.color_palette_ui import (
     Ui_color_palette
@@ -25,7 +25,6 @@ class ColorPalette(QWidget, Ui_color_palette):
         self.color_palette_grid.secondary_color_selected.connect(self.color_preview.set_secondary_color)
         self.color_palette_grid.primary_color_changed.connect(self.color_preview.set_primary_color)
         self.color_palette_grid.primary_color_changed.connect(self.color_changed)
-        # self.color_palette_grid.color_previewed.connect(self.color_previewed)
         self.color_palette_grid.color_previewed.connect(
             lambda color, index: print(f'Color selected @ {index}: ({color.red()}, {color.green()}, {color.blue()})')
         )
