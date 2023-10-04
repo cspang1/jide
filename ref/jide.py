@@ -3,7 +3,7 @@ from itertools import chain
 from math import ceil, floor
 from pathlib import Path
 import sys
-from PyQt5.QtCore import QSize, QSettings, QCoreApplication, pyqtSlot
+from PyQt5.QtCore import Qt, QSize, QSettings, QCoreApplication, pyqtSlot, QRect
 from PyQt5.QtGui import QPixmap, QKeySequence, QColor, QImage
 from PyQt5.QtWidgets import (
     QApplication,
@@ -203,6 +203,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_pixel_data = PixelData(*parse_pixel_data(project_data["sprites"]))
         self.tile_pixel_data = PixelData(*parse_pixel_data(project_data["tiles"]))
         self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data)
+        self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data)
 
     def init_ui(self):
         self.tool_bar.setEnabled(True)
@@ -218,6 +219,7 @@ class Jide(QMainWindow, Ui_main_window):
     def test_scene(self):
         self.sprite_scene = QGraphicsScene()
         self.tile_scene = QGraphicsScene()
+        self.sprite_pixel_palette.elements_selected.connect(self.test_func)
         self.tile_pixel_data.setColorTable(
             [color.rgba() for color in self.tile_color_data.get_color_palette("tile_color_palette0")]
             )
@@ -230,6 +232,20 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_scene.addPixmap(tile_pixmap)
         self.sprite_editor_view.setScene(self.sprite_scene)
         self.tile_editor_view.setScene(self.tile_scene)
+
+    @pyqtSlot(QRect)
+    def test_func(self, crop_rect):
+        self.sprite_scene.clear()
+
+        scale_factor = 8
+        x = crop_rect.x() * scale_factor
+        y = crop_rect.y() * scale_factor
+        width = crop_rect.width() * scale_factor
+        height = crop_rect.height() * scale_factor
+        cropped_image = self.sprite_pixel_data.copy(QRect(x, y, width, height))
+
+        self.sprite_scene.addPixmap(QPixmap.fromImage(cropped_image))
+        self.sprite_scene.setSceneRect(self.sprite_scene.itemsBoundingRect())
 
     @pyqtSlot(str)
     def show_error_dialog(self, message):

@@ -14,8 +14,6 @@ from PyQt5.QtWidgets import QUndoStack, QMessageBox
 #     cmdSetColPalName,
 #     cmdSetPixBatch,
 # )
-from source import Source
-
 
 class ColorData(QObject):
 
