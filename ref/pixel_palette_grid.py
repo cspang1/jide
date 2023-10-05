@@ -46,6 +46,15 @@ class PixelPaletteGrid(QWidget):
         self.aspect_ratio = self.palette.width() / self.palette.height()
         self.update()
 
+    def set_color_table(self, color_table):
+        for index, color in enumerate(color_table):
+            self.palette.setColor(index, color.rgb())
+        self.update()
+
+    def set_color(self, color, index):
+        self.palette.setColor(index, color.rgb())
+        self.update()
+
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)

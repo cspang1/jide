@@ -22,6 +22,7 @@ from color_data import (
 class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
 
     color_previewed = pyqtSignal(QColor)
+    color_previewing = pyqtSignal(bool)
 
     def __init__(self, color, parent=None):
         super().__init__(parent)
@@ -30,6 +31,10 @@ class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
 
         self.color_swatches_grid.color_selected.connect(self.color_selected)
         self.color_swatches_grid.select_color(self.color)
+
+        self.preview_checkbox.stateChanged.connect(
+            lambda checkbox_status: self.color_previewing.emit(checkbox_status == Qt.Checked)
+        )
 
         e_bit_red_width = 3
         e_bit_green_width = 3

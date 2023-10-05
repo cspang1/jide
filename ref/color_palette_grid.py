@@ -20,6 +20,7 @@ class ColorPaletteGrid(QWidget):
     secondary_color_selected = pyqtSignal(QColor, int)
     primary_color_changed = pyqtSignal(QColor, int)
     color_previewed = pyqtSignal(QColor, int)
+    color_previewing = pyqtSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -33,6 +34,8 @@ class ColorPaletteGrid(QWidget):
         self.primary_cell = 0
         self.secondary_cell = 0
         self.scale_factor = 0.0
+        self.original_color = QColor()
+        self.current_index = 0
         self.palette = [QColor(211, 211, 211)] * self.grid_width * self.grid_height
 
     def set_color(self, color, index):
@@ -109,14 +112,30 @@ class ColorPaletteGrid(QWidget):
                 self.select_secondary_color(index)
 
     def open_color_picker(self, color, index):
-        color_picker = ColorPickerDialog(color)
-        color_picker.color_previewed.connect(
+        self.original_color = color
+        self.current_index = index
+        self.color_picker = ColorPickerDialog(color)
+        self.set_preview_state(self.color_picker.preview_checkbox.isChecked())
+        self.color_picker.color_previewed.connect(
             lambda preview_color: self.preview_color(preview_color, index)
         )
+        self.color_picker.color_previewing.connect(self.set_preview_state)
         new_color = color
-        if color_picker.exec():
-            new_color = color_picker.get_color()
+        if self.color_picker.exec():
+            new_color = self.color_picker.get_color()
+
+        else:
+            self.set_preview_state(False)
         self.primary_color_changed.emit(new_color, index)
+        del self.color_picker
+
+    @pyqtSlot(bool)
+    def set_preview_state(self, previewing):
+        if previewing:
+            self.preview_color(self.color_picker.get_color(), self.current_index)
+        else:
+            self.preview_color(self.original_color, self.current_index)
+
 
     @pyqtSlot(QColor, int)
     def preview_color(self, color, index):

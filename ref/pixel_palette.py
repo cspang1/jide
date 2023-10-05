@@ -28,3 +28,10 @@ class PixelPalette(QWidget, Ui_pixel_palette):
 
     def set_pixel_palette(self, pixel_palette_data):
         self.pixel_palette_grid.set_pixel_palette(pixel_palette_data)
+
+    def set_color_table(self, color_table):
+        self.pixel_palette_grid.set_color_table(color_table)
+
+    @pyqtSlot(QColor, int)
+    def set_color(self, color, index):
+        self.pixel_palette_grid.set_color(color, index)

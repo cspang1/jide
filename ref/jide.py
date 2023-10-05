@@ -147,20 +147,29 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
         self.tile_color_data.error_thrown.connect(self.show_error_dialog)
 
-        self.sprite_color_palette.color_palette_name_combo.currentIndexChanged.connect(
-            lambda: self.sprite_color_palette.change_palette(
-                self.sprite_color_data.get_color_palette(
-                    self.sprite_color_palette.color_palette_name_combo.currentText()
-                )
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_color_palette.change_palette(
+                self.sprite_color_data.get_color_palette(palette_name)
             )
         )
-        self.tile_color_palette.color_palette_name_combo.currentIndexChanged.connect(
-            lambda: self.tile_color_palette.change_palette(
-                self.tile_color_data.get_color_palette(
-                    self.tile_color_palette.color_palette_name_combo.currentText()
-                )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_color_palette.change_palette(
+                self.tile_color_data.get_color_palette(palette_name)
             )
         )
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_pixel_palette.set_color_table(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_pixel_palette.set_color_table(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+
+        self.sprite_color_palette.color_previewed.connect(self.sprite_pixel_palette.set_color)
+
         self.sprite_color_data.color_palette_added.connect(self.sprite_color_palette.add_color_palette)
         self.sprite_color_data.color_palette_removed.connect(self.sprite_color_palette.remove_color_palette)
         self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
