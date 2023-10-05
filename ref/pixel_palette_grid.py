@@ -73,35 +73,15 @@ class PixelPaletteGrid(QWidget):
 
         # Draw the selection rectangle if it's not empty
         if self.selection:
-            select_start_coordinates = QPoint(
-                self.calculate_grid_coords(self.select_start.x()),
-                self.calculate_grid_coords(self.select_start.y())
-            )
-            select_end_coordinates = QPoint(
-                self.constrain_coords(
-                    self.calculate_grid_coords(self.select_end.x()),
-                    self.width(),
-                    0
-                ),
-                self.constrain_coords(
-                    self.calculate_grid_coords(self.select_end.y()),
-                    self.height(),
-                    0
-                )
-            )
-            if select_start_coordinates.x() <= select_end_coordinates.x():
-                select_end_coordinates.setX(select_end_coordinates.x() + round(self.grid_cell_size * self.scale_factor))
-            if select_start_coordinates.y() <= select_end_coordinates.y():
-                select_end_coordinates.setY(select_end_coordinates.y() + round(self.grid_cell_size * self.scale_factor))
+            x = round(self.selection.x() * self.scale_factor * self.grid_cell_size)
+            y = round(self.selection.y() * self.scale_factor * self.grid_cell_size)
+            width = round(self.selection.width() * self.scale_factor * self.grid_cell_size)
+            height = round(self.selection.height() * self.scale_factor * self.grid_cell_size)
+            selection_rect = QRect(x, y, width, height)
             selection_pen = QPen(Qt.red)
             selection_pen.setWidth(6)
             painter.setPen(selection_pen)  # Red outline
-            painter.drawRect(
-                QRect(
-                    select_start_coordinates,
-                    select_end_coordinates
-                )
-            )
+            painter.drawRect(selection_rect)
 
     def resizeEvent(self, event):
         self.setMinimumHeight(round(self.width() / self.aspect_ratio))
@@ -120,55 +100,27 @@ class PixelPaletteGrid(QWidget):
             self.update()
 
     def calculate_selection(self, start_point, end_point):
+        x_start = start_point.x() // (self.grid_cell_size * self.scale_factor)
+        y_start = start_point.y() // (self.grid_cell_size * self.scale_factor)
+        x_end = end_point.x() // (self.grid_cell_size * self.scale_factor)
+        y_end = end_point.y() // (self.grid_cell_size * self.scale_factor)
+        x_max = (self.width() - self.grid_cell_size * self.scale_factor) // (self.grid_cell_size * self.scale_factor)
+        y_max = (self.height() - self.grid_cell_size * self.scale_factor) // (self.grid_cell_size * self.scale_factor)
+
+        if x_start > x_end:
+            x_start, x_end = x_end, x_start
+        if y_start > y_end:
+            y_start, y_end = y_end, y_start
+
         self.selection = QRect(
             QPoint(
-                round(
-                    max(
-                        0,
-                        min(
-                            start_point.x() // (self.grid_cell_size * self.scale_factor),
-                            (self.width() - self.grid_cell_size * self.scale_factor) // (self.grid_cell_size * self.scale_factor)
-                        )
-                    )
-                ),
-                round(
-                    max(
-                        0,
-                        min(
-                            start_point.y() // (self.grid_cell_size * self.scale_factor),
-                            (self.height() - self.grid_cell_size * self.scale_factor) // (self.grid_cell_size * self.scale_factor)
-                        )
-                    )
-                )
+                round(max(0, min(x_start, x_max))),
+                round(max(0, min(y_start, y_max)))
             ),
             QPoint(
-                round(
-                    max(
-                        0,
-                        min(
-                            end_point.x() // (self.grid_cell_size * self.scale_factor),
-                            (self.width() - self.grid_cell_size * self.scale_factor) // (self.grid_cell_size * self.scale_factor)
-                        )
-                    )
-                ),
-                round(
-                    max(
-                        0,
-                        min(
-                            end_point.y() // (self.grid_cell_size * self.scale_factor),
-                            (self.height() - self.grid_cell_size * self.scale_factor) // (self.grid_cell_size * self.scale_factor)
-                        )
-                    )
-                )
+                round(max(0, min(x_end, x_max))),
+                round(max(0, min(y_end, y_max)))
             )
         )
 
         self.elements_selected.emit(self.selection)
-
-    def calculate_grid_coords(self, mouse_pos):
-        return round(
-            (mouse_pos // (self.grid_cell_size * self.scale_factor)) * self.grid_cell_size * self.scale_factor
-        )
-
-    def constrain_coords(self, coords, upper_limit, lower_limit):
-        return max(lower_limit, min(coords, upper_limit - round(self.grid_cell_size * self.scale_factor)))
