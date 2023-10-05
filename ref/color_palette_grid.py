@@ -32,6 +32,7 @@ class ColorPaletteGrid(QWidget):
         self.setFixedSize(self.total_width, self.total_height)
         self.primary_cell = 0
         self.secondary_cell = 0
+        self.scale_factor = 0.0
         self.palette = [QColor(211, 211, 211)] * self.grid_width * self.grid_height
 
     def set_color(self, color, index):
