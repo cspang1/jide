@@ -123,7 +123,6 @@ class ColorPaletteGrid(QWidget):
         new_color = color
         if self.color_picker.exec():
             new_color = self.color_picker.get_color()
-
         else:
             self.set_preview_state(False)
         self.primary_color_changed.emit(new_color, index)

@@ -192,8 +192,14 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_color_data.color_updated.connect(
             lambda _, color, index:  self.sprite_color_palette.update_color(color, index)
         )
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index: self.sprite_pixel_palette.set_color(color, index)
+        )
         self.tile_color_data.color_updated.connect(
             lambda _, color, index:  self.tile_color_palette.update_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
         )
         self.sprite_color_palette.color_palette_added.connect(
             lambda name: self.sprite_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
