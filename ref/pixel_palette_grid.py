@@ -42,8 +42,12 @@ class PixelPaletteGrid(QWidget):
         self.setMouseTracking(True)  # Enable mouse tracking
 
     def set_pixel_palette(self, pixel_palette_data):
+        if pixel_palette_data.height() < self.palette.height():
+            self.selection = QRect(0, 0, 1, 1)
+            self.update_from_selection()
         self.palette = pixel_palette_data
         self.aspect_ratio = self.palette.width() / self.palette.height()
+        self.setMinimumHeight(round(self.width() / self.aspect_ratio))
         self.update()
 
     def set_color_table(self, color_table):
@@ -52,6 +56,7 @@ class PixelPaletteGrid(QWidget):
         self.update()
 
     def set_color(self, color, index):
+        print(f'Palette: {color.rgb()}')
         self.palette.setColor(index, color.rgb())
         self.update()
 
@@ -94,6 +99,7 @@ class PixelPaletteGrid(QWidget):
 
     def resizeEvent(self, event):
         self.setMinimumHeight(round(self.width() / self.aspect_ratio))
+        print(self.height())
 
     def mousePressEvent(self, event):
         if event.modifiers() == Qt.ControlModifier and event.buttons() == Qt.LeftButton:
@@ -132,4 +138,11 @@ class PixelPaletteGrid(QWidget):
             )
         )
 
+        self.update_from_selection()
+
+    def update_from_selection(self):
         self.elements_selected.emit(self.selection)
+
+    def set_selection(self, selection):
+        self.selection = selection
+        self.update_from_selection()

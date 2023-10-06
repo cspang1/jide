@@ -71,7 +71,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="TestView" name="sprite_editor_view"/>
+         <widget class="EditorView" name="sprite_editor_view"/>
         </item>
        </layout>
       </widget>
@@ -168,8 +168,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>56</width>
+     <height>38</height>
     </size>
    </property>
    <property name="autoFillBackground">
@@ -202,8 +202,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>56</width>
+     <height>38</height>
     </size>
    </property>
    <property name="features">
@@ -233,8 +233,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>56</width>
+     <height>38</height>
     </size>
    </property>
    <property name="features">
@@ -264,8 +264,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>56</width>
+     <height>38</height>
     </size>
    </property>
    <property name="features">
@@ -336,8 +336,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>56</width>
+     <height>38</height>
     </size>
    </property>
    <property name="features">
@@ -367,8 +367,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>0</width>
-     <height>0</height>
+     <width>56</width>
+     <height>38</height>
     </size>
    </property>
    <property name="features">
@@ -602,9 +602,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>TestView</class>
+   <class>EditorView</class>
    <extends>QGraphicsView</extends>
-   <header>test_view</header>
+   <header>editor_view</header>
   </customwidget>
  </customwidgets>
  <tabstops>

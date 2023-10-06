@@ -135,7 +135,6 @@ class ColorPaletteGrid(QWidget):
         else:
             self.preview_color(self.original_color, self.current_index)
 
-
     @pyqtSlot(QColor, int)
     def preview_color(self, color, index):
         self.set_color(color, index)

@@ -30,6 +30,7 @@ from color_data import (
 from color_data import upsample, downsample
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
+from editor_scene import EditorScene
 
 class Jide(QMainWindow, Ui_main_window):
     def __init__(self, parent=None):
@@ -76,6 +77,185 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_exit.triggered.connect(self.close)
         self.action_preferences.triggered.connect(self.open_preferences)
 
+    def load_project(self, file_name):
+        if not file_name:
+            return
+
+        project_data = None
+        try:
+            with open(file_name, "r") as data_file:
+                project_data =json.load(data_file)
+
+        except OSError:
+            self.show_error_dialog("Unable to open project file")
+            return
+        except KeyError:
+            self.show_error_dialog("Unable to load project due to malformed data")
+            return
+        
+        self.init_models()
+        self.init_ui()
+        self.setup_editor()
+        self.populate_models(project_data)
+
+    def populate_models(self, project_data):
+        for palette in parse_color_data(project_data["spriteColorPalettes"]):
+            self.sprite_color_data.add_color_palette(*palette)
+        for palette in parse_color_data(project_data["tileColorPalettes"]):
+            self.tile_color_data.add_color_palette(*palette)
+
+        sprite_data = parse_pixel_data(project_data["sprites"])
+        tile_data = parse_pixel_data(project_data["tiles"])
+        self.sprite_pixel_data.set_image(*sprite_data[:3])
+        self.sprite_pixel_data.set_names(sprite_data[-1])
+        self.tile_pixel_data.set_image(*tile_data[:3])
+        self.tile_pixel_data.set_names(tile_data[-1])
+
+        self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
+        self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
+
+        self.sprite_pixel_palette.set_selection(QRect(0, 0, 1, 1))
+        self.tile_pixel_palette.set_selection(QRect(0, 0, 1, 1))
+
+    def init_models(self):
+        self.sprite_color_data = ColorData()
+        self.tile_color_data = ColorData()
+        self.sprite_pixel_data = PixelData()
+        self.tile_pixel_data = PixelData()
+
+        self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
+        self.tile_color_data.error_thrown.connect(self.show_error_dialog)
+        self.sprite_pixel_data.error_thrown.connect(self.show_error_dialog)
+        self.tile_pixel_data.error_thrown.connect(self.show_error_dialog)
+
+    def init_ui(self):
+        self.tool_bar.setEnabled(True)
+        self.editor_tabs.setEnabled(True)
+        for menu in self.menu_bar.findChildren(QMenu):
+            for action in menu.actions():
+                action.setEnabled(True)
+        for palette in self.findChildren(ColorPalette):
+            palette.setEnabled(True)
+        for palette in self.findChildren(PixelPalette):
+            palette.setEnabled(True)
+
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_color_palette.change_palette(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_color_palette.change_palette(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_pixel_palette.set_color_table(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_pixel_palette.set_color_table(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+
+        self.sprite_color_palette.color_previewed.connect(self.sprite_pixel_palette.set_color)
+        self.tile_color_palette.color_previewed.connect(self.tile_pixel_palette.set_color)
+
+        self.sprite_color_data.color_palette_added.connect(self.sprite_color_palette.add_color_palette)
+        self.sprite_color_data.color_palette_removed.connect(self.sprite_color_palette.remove_color_palette)
+        self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
+        self.tile_color_data.color_palette_removed.connect(self.tile_color_palette.remove_color_palette)
+        self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
+
+        self.sprite_color_palette.color_changed.connect(
+            lambda color, index: self.sprite_color_data.update_color(
+                self.sprite_color_palette.color_palette_name_combo.currentText(),
+                color,
+                index
+            )
+        )
+        self.tile_color_palette.color_changed.connect(
+            lambda color, index: self.tile_color_data.update_color(
+                self.tile_color_palette.color_palette_name_combo.currentText(),
+                color,
+                index
+            )
+        )
+
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index:  self.sprite_color_palette.update_color(color, index)
+        )
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index: self.sprite_pixel_palette.set_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index:  self.tile_color_palette.update_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
+        )
+
+        self.sprite_color_palette.color_palette_added.connect(
+            lambda name: self.sprite_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
+        )
+        self.tile_color_palette.color_palette_added.connect(
+            lambda name: self.tile_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
+        )
+        self.sprite_color_palette.color_palette_renamed.connect(self.sprite_color_data.rename_color_palette)
+        self.sprite_color_palette.color_palette_removed.connect(self.sprite_color_data.remove_color_palette)
+        self.tile_color_palette.color_palette_renamed.connect(self.tile_color_data.rename_color_palette)
+        self.tile_color_palette.color_palette_removed.connect(self.tile_color_data.remove_color_palette)
+
+        self.sprite_pixel_palette.add_palette_line.connect(self.sprite_pixel_data.add_palette_line)
+        self.sprite_pixel_palette.remove_palette_line.connect(self.sprite_pixel_data.remove_palette_line)
+        self.tile_pixel_palette.add_palette_line.connect(self.tile_pixel_data.add_palette_line)
+        self.tile_pixel_palette.remove_palette_line.connect(self.tile_pixel_data.remove_palette_line)
+
+        self.sprite_pixel_data.data_updated.connect(
+            lambda: self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
+        )
+        self.tile_pixel_data.data_updated.connect(
+            lambda: self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
+        )
+
+    def setup_editor(self):
+        self.sprite_scene = EditorScene()
+        self.tile_scene = EditorScene()
+        self.sprite_editor_view.setScene(self.sprite_scene)
+        self.tile_editor_view.setScene(self.tile_scene)
+
+        self.sprite_pixel_data.data_updated.connect(
+            lambda: self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
+        )
+        self.tile_pixel_data.data_updated.connect(
+            lambda: self.tile_scene.set_scene_image(self.tile_pixel_data.get_image())
+        )
+
+        self.sprite_color_palette.color_previewed.connect(self.sprite_scene.set_color)
+        self.tile_color_palette.color_previewed.connect(self.tile_scene.set_color)
+        self.sprite_pixel_palette.elements_selected.connect(self.sprite_scene.select_cells)
+        self.tile_pixel_palette.elements_selected.connect(self.tile_scene.select_cells)
+
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index: self.sprite_scene.set_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index:  self.tile_scene.set_color(color, index)
+        )
+
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_scene.set_color_table(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_scene.set_color_table(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+
     def select_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
             self,
@@ -121,146 +301,15 @@ class Jide(QMainWindow, Ui_main_window):
         prefs.setValue("jcap_path", jcap_path)
         prefs.endGroup()
 
-    def load_project(self, file_name):
-        if not file_name:
-            return
-
-        try:
-            project_data = None
-            with open(file_name, "r") as data_file:
-                project_data =json.load(data_file)
-            self.setup_models(project_data)
-
-        except OSError:
-            self.show_error_dialog("Unable to open project file")
-            return
-        except KeyError:
-            self.show_error_dialog("Unable to load project due to malformed data")
-            return
-        
-        self.init_ui()
-
-    def setup_models(self, project_data):
-        self.sprite_color_data = ColorData()
-        self.tile_color_data = ColorData()
-
-        self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
-        self.tile_color_data.error_thrown.connect(self.show_error_dialog)
-
-        self.sprite_color_palette.color_palette_changed.connect(
-            lambda palette_name: self.sprite_color_palette.change_palette(
-                self.sprite_color_data.get_color_palette(palette_name)
-            )
-        )
-        self.tile_color_palette.color_palette_changed.connect(
-            lambda palette_name: self.tile_color_palette.change_palette(
-                self.tile_color_data.get_color_palette(palette_name)
-            )
-        )
-        self.sprite_color_palette.color_palette_changed.connect(
-            lambda palette_name: self.sprite_pixel_palette.set_color_table(
-                self.sprite_color_data.get_color_palette(palette_name)
-            )
-        )
-        self.tile_color_palette.color_palette_changed.connect(
-            lambda palette_name: self.tile_pixel_palette.set_color_table(
-                self.tile_color_data.get_color_palette(palette_name)
-            )
-        )
-
-        self.sprite_color_palette.color_previewed.connect(self.sprite_pixel_palette.set_color)
-
-        self.sprite_color_data.color_palette_added.connect(self.sprite_color_palette.add_color_palette)
-        self.sprite_color_data.color_palette_removed.connect(self.sprite_color_palette.remove_color_palette)
-        self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
-        self.tile_color_data.color_palette_removed.connect(self.tile_color_palette.remove_color_palette)
-        self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
-        self.sprite_color_palette.color_changed.connect(
-            lambda color, index: self.sprite_color_data.update_color(
-                self.sprite_color_palette.color_palette_name_combo.currentText(),
-                color,
-                index
-            )
-        )
-        self.tile_color_palette.color_changed.connect(
-            lambda color, index: self.tile_color_data.update_color(
-                self.tile_color_palette.color_palette_name_combo.currentText(),
-                color,
-                index
-            )
-        )
-        self.sprite_color_data.color_updated.connect(
-            lambda _, color, index:  self.sprite_color_palette.update_color(color, index)
-        )
-        self.sprite_color_data.color_updated.connect(
-            lambda _, color, index: self.sprite_pixel_palette.set_color(color, index)
-        )
-        self.tile_color_data.color_updated.connect(
-            lambda _, color, index:  self.tile_color_palette.update_color(color, index)
-        )
-        self.tile_color_data.color_updated.connect(
-            lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
-        )
-        self.sprite_color_palette.color_palette_added.connect(
-            lambda name: self.sprite_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
-        )
-        self.tile_color_palette.color_palette_added.connect(
-            lambda name: self.tile_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
-        )
-        self.sprite_color_palette.color_palette_renamed.connect(self.sprite_color_data.rename_color_palette)
-        self.sprite_color_palette.color_palette_removed.connect(self.sprite_color_data.remove_color_palette)
-        self.tile_color_palette.color_palette_removed.connect(self.tile_color_data.remove_color_palette)
-        for palette in parse_color_data(project_data["spriteColorPalettes"]):
-            self.sprite_color_data.add_color_palette(*palette)
-        for palette in parse_color_data(project_data["tileColorPalettes"]):
-            self.tile_color_data.add_color_palette(*palette)
-
-        self.sprite_pixel_data = PixelData(*parse_pixel_data(project_data["sprites"]))
-        self.tile_pixel_data = PixelData(*parse_pixel_data(project_data["tiles"]))
-        self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data)
-        self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data)
-
-    def init_ui(self):
-        self.tool_bar.setEnabled(True)
-        self.editor_tabs.setEnabled(True)
-        for menu in self.menu_bar.findChildren(QMenu):
-            for action in menu.actions():
-                action.setEnabled(True)
-        for palette in self.findChildren(ColorPalette):
-            palette.setEnabled(True)
-        for palette in self.findChildren(PixelPalette):
-            palette.setEnabled(True)
-
     def test_scene(self):
-        self.sprite_scene = QGraphicsScene()
-        self.tile_scene = QGraphicsScene()
-        self.sprite_pixel_palette.elements_selected.connect(self.test_func)
-        self.tile_pixel_data.setColorTable(
+        self.tile_pixel_data.set_color_table(
             [color.rgba() for color in self.tile_color_data.get_color_palette("tile_color_palette0")]
             )
-        self.sprite_pixel_data.setColorTable(
+        self.sprite_pixel_data.set_color_table(
             [color.rgba() for color in self.sprite_color_data.get_color_palette("sprite_color_palette0")]
             )
-        sprite_pixmap = QPixmap.fromImage(self.sprite_pixel_data) 
-        tile_pixmap = QPixmap.fromImage(self.tile_pixel_data) 
-        self.sprite_scene.addPixmap(sprite_pixmap)
-        self.tile_scene.addPixmap(tile_pixmap)
-        self.sprite_editor_view.setScene(self.sprite_scene)
-        self.tile_editor_view.setScene(self.tile_scene)
-
-    @pyqtSlot(QRect)
-    def test_func(self, crop_rect):
-        self.sprite_scene.clear()
-
-        scale_factor = 8
-        x = crop_rect.x() * scale_factor
-        y = crop_rect.y() * scale_factor
-        width = crop_rect.width() * scale_factor
-        height = crop_rect.height() * scale_factor
-        cropped_image = self.sprite_pixel_data.copy(QRect(x, y, width, height))
-
-        self.sprite_scene.addPixmap(QPixmap.fromImage(cropped_image))
-        self.sprite_scene.setSceneRect(self.sprite_scene.itemsBoundingRect())
+        self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
+        self.tile_scene.set_scene_image(self.tile_pixel_data.get_image())
 
     @pyqtSlot(str)
     def show_error_dialog(self, message):

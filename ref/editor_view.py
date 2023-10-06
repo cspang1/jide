@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt, QRectF, QEvent
 from PyQt5.QtGui import QPixmap, QPainter
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QWidget, QStyleOptionGraphicsItem
 
-class TestView(QGraphicsView):
+class EditorView(QGraphicsView):
     """QGraphicsView into sprite/tile canvas
 
     :param scene:   QGraphicsScene representing sprite/tile canvas
