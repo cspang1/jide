@@ -44,7 +44,6 @@ class Jide(QMainWindow, Ui_main_window):
         QApplication.processEvents()
 
         self.load_project("./data/demo.jrf")
-        self.test_scene()
 
     def setup_window(self):
         self.tile_color_palette_dock.hide()
@@ -97,25 +96,6 @@ class Jide(QMainWindow, Ui_main_window):
         self.init_ui()
         self.setup_editor()
         self.populate_models(project_data)
-
-    def populate_models(self, project_data):
-        for palette in parse_color_data(project_data["spriteColorPalettes"]):
-            self.sprite_color_data.add_color_palette(*palette)
-        for palette in parse_color_data(project_data["tileColorPalettes"]):
-            self.tile_color_data.add_color_palette(*palette)
-
-        sprite_data = parse_pixel_data(project_data["sprites"])
-        tile_data = parse_pixel_data(project_data["tiles"])
-        self.sprite_pixel_data.set_image(*sprite_data[:3])
-        self.sprite_pixel_data.set_names(sprite_data[-1])
-        self.tile_pixel_data.set_image(*tile_data[:3])
-        self.tile_pixel_data.set_names(tile_data[-1])
-
-        self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
-        self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
-
-        self.sprite_pixel_palette.set_selection(QRect(0, 0, 1, 1))
-        self.tile_pixel_palette.set_selection(QRect(0, 0, 1, 1))
 
     def init_models(self):
         self.sprite_color_data = ColorData()
@@ -256,6 +236,32 @@ class Jide(QMainWindow, Ui_main_window):
             )
         )
 
+    def populate_models(self, project_data):
+        for palette in parse_color_data(project_data["spriteColorPalettes"]):
+            self.sprite_color_data.add_color_palette(*palette)
+        for palette in parse_color_data(project_data["tileColorPalettes"]):
+            self.tile_color_data.add_color_palette(*palette)
+        
+        sprite_data = parse_pixel_data(project_data["sprites"])
+        tile_data = parse_pixel_data(project_data["tiles"])
+        self.sprite_pixel_data.set_image(*sprite_data[:3])
+        self.sprite_pixel_data.set_names(sprite_data[-1])
+        self.tile_pixel_data.set_image(*tile_data[:3])
+        self.tile_pixel_data.set_names(tile_data[-1])
+
+        self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
+        self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
+
+        self.sprite_pixel_palette.set_selection(QRect(0, 0, 1, 1))
+        self.tile_pixel_palette.set_selection(QRect(0, 0, 1, 1))
+
+        self.sprite_pixel_data.set_color_table(
+            [color.rgba() for color in self.sprite_color_data.get_color_palette(self.sprite_color_palette.get_current_palette_name())]
+        )
+        self.tile_pixel_data.set_color_table(
+            [color.rgba() for color in self.tile_color_data.get_color_palette(self.tile_color_palette.get_current_palette_name())]
+        )
+
     def select_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
             self,
@@ -300,16 +306,6 @@ class Jide(QMainWindow, Ui_main_window):
         prefs.beginGroup("paths")
         prefs.setValue("jcap_path", jcap_path)
         prefs.endGroup()
-
-    def test_scene(self):
-        self.tile_pixel_data.set_color_table(
-            [color.rgba() for color in self.tile_color_data.get_color_palette("tile_color_palette0")]
-            )
-        self.sprite_pixel_data.set_color_table(
-            [color.rgba() for color in self.sprite_color_data.get_color_palette("sprite_color_palette0")]
-            )
-        self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
-        self.tile_scene.set_scene_image(self.tile_pixel_data.get_image())
 
     @pyqtSlot(str)
     def show_error_dialog(self, message):

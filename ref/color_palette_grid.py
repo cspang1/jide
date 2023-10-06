@@ -33,7 +33,6 @@ class ColorPaletteGrid(QWidget):
         self.setFixedSize(self.total_width, self.total_height)
         self.primary_cell = 0
         self.secondary_cell = 0
-        self.scale_factor = 0.0
         self.original_color = QColor()
         self.current_index = 0
         self.palette = [QColor(211, 211, 211)] * self.grid_width * self.grid_height
@@ -110,6 +109,9 @@ class ColorPaletteGrid(QWidget):
                 self.select_primary_color(index)
             elif event.buttons() == Qt.RightButton:
                 self.select_secondary_color(index)
+
+    def resizeEvent(self, event):
+        self.setMinimumHeight(self.width())
 
     def open_color_picker(self, color, index):
         self.original_color = color

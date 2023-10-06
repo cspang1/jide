@@ -82,3 +82,6 @@ class ColorPalette(QWidget, Ui_color_palette):
         )
         if accepted:
             self.color_palette_renamed.emit(old_palette_name, new_palette_name)
+
+    def get_current_palette_name(self):
+        return self.color_palette_name_combo.currentText()

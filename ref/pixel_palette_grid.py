@@ -99,7 +99,6 @@ class PixelPaletteGrid(QWidget):
 
     def resizeEvent(self, event):
         self.setMinimumHeight(round(self.width() / self.aspect_ratio))
-        print(self.height())
 
     def mousePressEvent(self, event):
         if event.modifiers() == Qt.ControlModifier and event.buttons() == Qt.LeftButton:
