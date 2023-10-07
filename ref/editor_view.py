@@ -29,10 +29,7 @@ class EditorView(QGraphicsView):
         :return:        Whether to continue processing event downstream
         :rtype:         bool
         """
-        if (
-            event.type() == QEvent.GraphicsSceneWheel
-            and QApplication.keyboardModifiers() == Qt.ControlModifier
-        ):
+        if event.type() == QEvent.GraphicsSceneWheel:
             self.zoomCanvas(event)
             event.accept()
             return True

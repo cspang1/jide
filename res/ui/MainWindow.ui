@@ -99,7 +99,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QGraphicsView" name="tile_editor_view"/>
+         <widget class="EditorView" name="tile_editor_view"/>
         </item>
        </layout>
       </widget>
@@ -127,7 +127,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QGraphicsView" name="map_editor_view"/>
+         <widget class="EditorView" name="map_editor_view"/>
         </item>
        </layout>
       </widget>

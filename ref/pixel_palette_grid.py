@@ -33,7 +33,7 @@ class PixelPaletteGrid(QWidget):
 
         self.grid_cell_size = 8
         self.palette = QImage()
-        self.aspect_ratio = 0.0
+        self.aspect_ratio = 1.0
         self.scale_factor = 0.0
         self.select_start = QPoint()
         self.select_end = QPoint()
@@ -47,7 +47,7 @@ class PixelPaletteGrid(QWidget):
             self.update_from_selection()
         self.palette = pixel_palette_data
         self.aspect_ratio = self.palette.width() / self.palette.height()
-        self.setMinimumHeight(round(self.width() / self.aspect_ratio))
+        self.setFixedHeight(round(self.width() / self.aspect_ratio))
         self.update()
 
     def set_color_table(self, color_table):
@@ -56,18 +56,19 @@ class PixelPaletteGrid(QWidget):
         self.update()
 
     def set_color(self, color, index):
-        print(f'Palette: {color.rgb()}')
         self.palette.setColor(index, color.rgb())
         self.update()
 
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
-        
+        painter.setRenderHint(QPainter.Antialiasing, True)
+
         # Calculate the scale factor to fit the image into the widget
-        scale_factor_x = self.width() / self.palette.width()
-        scale_factor_y = self.height() / self.palette.height()
-        self.scale_factor = min(scale_factor_x, scale_factor_y)
+        if self.palette.width() != 0 and self.palette.height() != 0:
+            scale_factor_x = self.width() / self.palette.width()
+            scale_factor_y = self.height() / self.palette.height()
+            self.scale_factor = min(scale_factor_x, scale_factor_y)
 
         # Calculate the position to center the image
         palette_x = round((self.width() - self.scale_factor * self.palette.width()) / 2)
@@ -98,17 +99,17 @@ class PixelPaletteGrid(QWidget):
             painter.drawRect(selection_rect)
 
     def resizeEvent(self, event):
-        self.setMinimumHeight(round(self.width() / self.aspect_ratio))
+        self.setFixedHeight(int(self.width() / self.aspect_ratio))
 
     def mousePressEvent(self, event):
-        if event.modifiers() == Qt.ControlModifier and event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.LeftButton:
             self.select_start = event.pos()
             self.select_end = event.pos()
             self.calculate_selection(self.select_start, self.select_end)
             self.update()
 
     def mouseMoveEvent(self, event):
-        if event.modifiers() == Qt.ControlModifier and event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.LeftButton:
             self.select_end = event.pos()
             self.calculate_selection(self.select_start, self.select_end)
             self.update()

@@ -15,7 +15,7 @@ class Ui_pixel_palette(object):
     def setupUi(self, pixel_palette):
         pixel_palette.setObjectName("pixel_palette")
         pixel_palette.resize(383, 328)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(pixel_palette.sizePolicy().hasHeightForWidth())
@@ -44,7 +44,7 @@ class Ui_pixel_palette(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.pixel_palette_grid = PixelPaletteGrid(pixel_palette)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.pixel_palette_grid.sizePolicy().hasHeightForWidth())

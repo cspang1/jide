@@ -1,3 +1,4 @@
+from PyQt5 import QtGui
 from PyQt5.QtGui import QPixmap, QKeySequence, QColor, QImage
 from PyQt5.QtWidgets import (
     QWidget,
@@ -42,3 +43,4 @@ class PixelPalette(QWidget, Ui_pixel_palette):
     @pyqtSlot(QColor, int)
     def set_color(self, color, index):
         self.pixel_palette_grid.set_color(color, index)
+ 

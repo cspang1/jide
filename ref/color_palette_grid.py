@@ -44,6 +44,7 @@ class ColorPaletteGrid(QWidget):
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
 
         painter.fillRect(0, 0, self.total_width, self.total_height, QColor(0, 0, 0))
         select_pen = QPen(QColor(255, 0, 0))

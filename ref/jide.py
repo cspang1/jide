@@ -76,6 +76,31 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_exit.triggered.connect(self.close)
         self.action_preferences.triggered.connect(self.open_preferences)
 
+        self.editor_tabs.currentChanged.connect(self.select_tab)
+
+    def select_tab(self, index):
+        if index == 0:
+            self.sprite_color_palette_dock.show()
+            self.sprite_pixel_palette_dock.show()
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.map_color_palette_dock.hide()
+            self.map_pixel_palette_dock.hide()
+        elif index == 1:
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.show()
+            self.tile_pixel_palette_dock.show()
+            self.map_color_palette_dock.hide()
+            self.map_pixel_palette_dock.hide()
+        else:
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.map_color_palette_dock.show()
+            self.map_pixel_palette_dock.show()
+
     def load_project(self, file_name):
         if not file_name:
             return
