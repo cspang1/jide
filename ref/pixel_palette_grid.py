@@ -99,6 +99,7 @@ class PixelPaletteGrid(QWidget):
             painter.drawRect(selection_rect)
 
     def resizeEvent(self, event):
+        super().resizeEvent(event)
         self.setFixedHeight(int(self.width() / self.aspect_ratio))
 
     def mousePressEvent(self, event):
