@@ -30,6 +30,7 @@ class PixelPalette(QWidget, Ui_pixel_palette):
         self.pixel_palette_grid.elements_selected.connect(self.elements_selected)
         self.add_palette_line_btn.pressed.connect(self.add_palette_line)
         self.rem_palette_line_btn.pressed.connect(self.remove_palette_line)
+        self.vertical_layout.setAlignment(Qt.AlignTop)
 
     def set_pixel_palette(self, pixel_palette_data):
         self.pixel_palette_grid.set_pixel_palette(pixel_palette_data)
@@ -43,4 +44,3 @@ class PixelPalette(QWidget, Ui_pixel_palette):
     @pyqtSlot(QColor, int)
     def set_color(self, color, index):
         self.pixel_palette_grid.set_color(color, index)
- 
