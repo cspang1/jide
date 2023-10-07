@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_main_window(object):
     def setupUi(self, main_window):
         main_window.setObjectName("main_window")
-        main_window.resize(1280, 1020)
+        main_window.resize(1416, 1020)
         main_window.setMinimumSize(QtCore.QSize(1280, 1020))
         self.central_widget = QtWidgets.QWidget(main_window)
         self.central_widget.setObjectName("central_widget")
@@ -130,7 +130,7 @@ class Ui_main_window(object):
         self.tile_pixel_palette_dock.setWidget(self.tile_pixel_palette)
         main_window.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.tile_pixel_palette_dock)
         self.menu_bar = QtWidgets.QMenuBar(main_window)
-        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1280, 22))
+        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1416, 22))
         self.menu_bar.setDefaultUp(False)
         self.menu_bar.setObjectName("menu_bar")
         self.menu_file = QtWidgets.QMenu(self.menu_bar)
