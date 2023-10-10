@@ -168,8 +168,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>56</width>
-     <height>38</height>
+     <width>71</width>
+     <height>42</height>
     </size>
    </property>
    <property name="autoFillBackground">
@@ -202,8 +202,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>56</width>
-     <height>38</height>
+     <width>71</width>
+     <height>42</height>
     </size>
    </property>
    <property name="features">
@@ -233,8 +233,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>56</width>
-     <height>38</height>
+     <width>71</width>
+     <height>42</height>
     </size>
    </property>
    <property name="features">
@@ -264,8 +264,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>56</width>
-     <height>38</height>
+     <width>71</width>
+     <height>42</height>
     </size>
    </property>
    <property name="features">
@@ -289,7 +289,7 @@
      <x>0</x>
      <y>0</y>
      <width>1416</width>
-     <height>22</height>
+     <height>26</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -324,37 +324,6 @@
    <addaction name="menu_edit"/>
    <addaction name="menu_jcap"/>
   </widget>
-  <widget class="QDockWidget" name="map_pixel_palette_dock">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>56</width>
-     <height>38</height>
-    </size>
-   </property>
-   <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
-   </property>
-   <property name="windowTitle">
-    <string>Tile Palettes</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="PixelPalette" name="map_pixel_palette">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-   </widget>
-  </widget>
   <widget class="QDockWidget" name="map_color_palette_dock">
    <property name="enabled">
     <bool>true</bool>
@@ -367,8 +336,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>56</width>
-     <height>38</height>
+     <width>71</width>
+     <height>42</height>
     </size>
    </property>
    <property name="features">
@@ -385,6 +354,18 @@
      <bool>false</bool>
     </property>
    </widget>
+  </widget>
+  <widget class="QDockWidget" name="map_pixel_palette_dock">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Tile Palettes</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="PixelPalette" name="map_pixel_palette"/>
   </widget>
   <action name="action_open">
    <property name="text">
