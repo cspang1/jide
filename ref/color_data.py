@@ -1,19 +1,16 @@
 from collections import OrderedDict
-import json
-from math import ceil, floor
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QSize
-from PyQt5.QtGui import QColor, QImage
-# from colorpicker import upsample
-from PyQt5.QtWidgets import QUndoStack, QMessageBox
-# from history import (
-#     cmdAddColPal,
-#     cmdAddPixRow,
-#     cmdRemColPal,
-#     cmdRemPixRow,
-#     cmdSetCol,
-#     cmdSetColPalName,
-#     cmdSetPixBatch,
-# )
+from PyQt5.QtCore import (
+    QObject,
+    pyqtSignal,
+    pyqtSlot
+)
+from PyQt5.QtGui import QColor
+from history import(
+    cmdSetCol,
+    cmdRenameColPal,
+    cmdAddColPal,
+    cmdRemoveColPal
+)
 
 class ColorData(QObject):
 
@@ -30,25 +27,16 @@ class ColorData(QObject):
 
     @pyqtSlot(str, list)
     def add_color_palette(self, color_palette_name, color_palette_data):
-        if color_palette_name in self.color_data:
-            self.error_thrown.emit("A color palette with that name already exists")
-            return
         self.color_data[color_palette_name] = color_palette_data
         self.color_palette_added.emit(color_palette_name)
 
     @pyqtSlot(str)
     def remove_color_palette(self, color_palette_name):
-        if len(self.color_data) == 1:
-            self.error_thrown.emit("At least one color palette is required")
-            return
         del self.color_data[color_palette_name]
         self.color_palette_removed.emit(color_palette_name)
 
     @pyqtSlot(str, str)
     def rename_color_palette(self, old_color_palette_name, new_color_palette_name):
-        if new_color_palette_name in self.color_data and old_color_palette_name != new_color_palette_name:
-            self.error_thrown.emit("A color palette with that name already exists")
-            return
         color_palette_data = self.color_data[old_color_palette_name]
         del self.color_data[old_color_palette_name]
         self.color_data[new_color_palette_name] = color_palette_data
@@ -63,6 +51,62 @@ class ColorData(QObject):
         self.color_data[color_palette_name][index] = color
         self.color_updated.emit(color_palette_name, color, index)
 
+    def get_color_data(self):
+        return self.color_data
+
+def history_set_color(undo_stack, color_data, palette_name, new_color, change_index):
+    undo_stack.push(
+        cmdSetCol(
+            color_data,
+            palette_name,
+            new_color,
+            change_index,
+            "Set palette color"
+        )
+    )
+
+def history_rename_color_palette(undo_stack, color_data, old_palette_name, new_palette_name):
+    if new_palette_name in color_data.get_color_data() and old_palette_name != new_palette_name:
+        color_data.error_thrown.emit("A color palette with that name already exists")
+        return
+    if old_palette_name == new_palette_name:
+        return
+
+    undo_stack.push(
+        cmdRenameColPal(
+            color_data,
+            old_palette_name,
+            new_palette_name,
+            "Rename color palette"
+        )
+    )
+
+def history_add_color_palette(undo_stack, color_data, palette_name):
+    if palette_name in color_data.get_color_data():
+        color_data.error_thrown.emit("A color palette with that name already exists")
+        return
+
+    undo_stack.push(
+        cmdAddColPal(
+            color_data,
+            palette_name,
+            [QColor(255, 0, 255)] * 16,
+            "Add  color palette"
+        )
+    )
+
+def history_remove_color_palette(undo_stack, color_data, palette_name):
+    if len(color_data.get_color_data()) == 1:
+        color_data.error_thrown.emit("At least one color palette is required")
+        return
+
+    undo_stack.push(
+        cmdRemoveColPal(
+            color_data,
+            palette_name,
+            "Remove color palette"
+        )
+    )
 
 def upsample(red, green, blue):
     """Upsamples RGB from 8-bit to 24-bit

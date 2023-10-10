@@ -16,6 +16,7 @@ from color_picker_dialog import ColorPickerDialog
 
 class ColorPaletteGrid(QWidget):
 
+    color_set = pyqtSignal(QColor, int)
     primary_color_selected = pyqtSignal(QColor, int)
     secondary_color_selected = pyqtSignal(QColor, int)
     primary_color_changed = pyqtSignal(QColor, int)
@@ -35,6 +36,7 @@ class ColorPaletteGrid(QWidget):
         self.secondary_cell = 0
         self.original_color = QColor()
         self.current_index = 0
+        self.has_transparency = True
         self.palette = [QColor(211, 211, 211)] * self.grid_width * self.grid_height
 
     def set_color(self, color, index):
@@ -65,7 +67,7 @@ class ColorPaletteGrid(QWidget):
                 square_color = self.palette[cur_index]
                 painter.fillRect(x, y, self.square_size, self.square_size, square_color)
 
-                if cur_index == 0:
+                if cur_index == 0 and self.has_transparency:
                     painter.setPen(trans_pen)
                     painter.drawLine(x + 2, y + 2, self.square_size + 2, self.square_size + 2)
 
@@ -95,7 +97,7 @@ class ColorPaletteGrid(QWidget):
         col = (mouse_pos.x() - self.line_width) // (self.square_size + self.line_width)
         row = (mouse_pos.y() - self.line_width) // (self.square_size + self.line_width)
         index = max(0, min(row * self.grid_width + col, self.grid_width * self.grid_height - 1))
-        if index == 0:
+        if index == 0 and self.has_transparency:
             return
         self.open_color_picker(self.palette[index], index)
 
@@ -123,13 +125,16 @@ class ColorPaletteGrid(QWidget):
             lambda preview_color: self.preview_color(preview_color, index)
         )
         self.color_picker.color_previewing.connect(self.set_preview_state)
-        new_color = color
+        new_color = self.original_color
         if self.color_picker.exec():
             new_color = self.color_picker.get_color()
         else:
             self.set_preview_state(False)
-        self.primary_color_changed.emit(new_color, index)
-        del self.color_picker
+        
+        if new_color == self.original_color:
+            self.primary_color_changed.emit(new_color, index)
+        else:
+            self.color_set.emit(new_color, index)
 
     @pyqtSlot(bool)
     def set_preview_state(self, previewing):
@@ -151,6 +156,10 @@ class ColorPaletteGrid(QWidget):
     def select_secondary_color(self, index):
         self.secondary_cell = index
         self.secondary_color_selected.emit(self.palette[index], index)
+        self.update()
+
+    def set_transparency(self, has_transparency):
+        self.has_transparency = has_transparency
         self.update()
 
     @pyqtSlot()

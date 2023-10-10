@@ -26,6 +26,7 @@ class ColorPreview(QWidget, Ui_color_preview):
         self.secondary_color = QColor(211, 211, 211, 255)
         self.primary_index = 0
         self.secondary_index = 0
+        self.has_transparency = True
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -41,13 +42,13 @@ class ColorPreview(QWidget, Ui_color_preview):
         painter.setPen(rect_pen)
         painter.setBrush(sec_brush)
         painter.drawRect(27, 27, 61, 61)
-        if self.secondary_index == 0:
+        if self.secondary_index == 0 and self.has_transparency:
             painter.setPen(trans_pen)
             painter.drawLine(30, 30, 61 + 25, 61 + 25)
         painter.setPen(rect_pen)
         painter.setBrush(prim_brush)
         painter.drawRect(1, 1, 61, 61)
-        if self.primary_index == 0:
+        if self.primary_index == 0 and self.has_transparency:
             painter.setPen(trans_pen)
             painter.drawLine(4, 4, 61 - 1, 61 - 1)
 
@@ -67,3 +68,7 @@ class ColorPreview(QWidget, Ui_color_preview):
 
     def get_secondary_index(self):
         return self.secondary_index
+
+    def set_transparency(self, has_transparency):
+        self.has_transparency = has_transparency
+        self.update()

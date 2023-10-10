@@ -1,22 +1,24 @@
 import json
-from itertools import chain
-from math import ceil, floor
 from pathlib import Path
-import sys
-from PyQt5.QtCore import Qt, QSize, QSettings, QCoreApplication, pyqtSlot, QRect
-from PyQt5.QtGui import QPixmap, QKeySequence, QColor, QImage
+from PyQt5.QtCore import (
+    QSettings,
+    QCoreApplication,
+    pyqtSlot,
+    QRect
+)
+from PyQt5.QtGui import  (
+    QKeySequence,
+    QColor
+)
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
     QFileDialog,
-    QGraphicsScene,
     QMessageBox,
     QActionGroup,
     QUndoStack,
-    QMenu,
-    QDockWidget
+    QMenu
 )
-
 from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
 from pixel_data import (
@@ -25,9 +27,12 @@ from pixel_data import (
 )
 from color_data import (
     ColorData,
-    parse_color_data
+    parse_color_data,
+    history_set_color,
+    history_rename_color_palette,
+    history_add_color_palette,
+    history_remove_color_palette
 )
-from color_data import upsample, downsample
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
 from editor_scene import EditorScene
@@ -133,16 +138,93 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_pixel_data.error_thrown.connect(self.show_error_dialog)
         self.tile_pixel_data.error_thrown.connect(self.show_error_dialog)
 
+        self.sprite_color_palette.color_set.connect(
+            lambda new_color, change_index:
+            history_set_color(
+                self.undo_stack,
+                self.sprite_color_data,
+                self.sprite_color_palette.color_palette_name_combo.currentText(),
+                new_color,
+                change_index,
+            )
+        )
+        self.tile_color_palette.color_set.connect(
+            lambda new_color, change_index:
+            history_set_color(
+                self.undo_stack,
+                self.tile_color_data,
+                self.tile_color_palette.color_palette_name_combo.currentText(),
+                new_color,
+                change_index,
+            )
+        )
+
+        self.sprite_color_palette.color_palette_renamed.connect(
+            lambda old_palette_name, new_palette_name: 
+            history_rename_color_palette(
+                self.undo_stack,
+                self.sprite_color_data,
+                old_palette_name,
+                new_palette_name,
+            )
+        )
+        self.tile_color_palette.color_palette_renamed.connect(
+            lambda old_palette_name, new_palette_name: 
+            history_rename_color_palette(
+                self.undo_stack,
+                self.tile_color_data,
+                old_palette_name,
+                new_palette_name,
+            )
+        )
+
+        self.sprite_color_palette.color_palette_added.connect(
+            lambda palette_name: 
+            history_add_color_palette(
+                self.undo_stack,
+                self.sprite_color_data,
+                palette_name
+            )
+        )
+        self.tile_color_palette.color_palette_added.connect(
+            lambda palette_name: 
+            history_add_color_palette(
+                self.undo_stack,
+                self.tile_color_data,
+                palette_name
+            )
+        )
+
+        self.sprite_color_palette.color_palette_removed.connect(
+            lambda palette_name: 
+            history_remove_color_palette(
+                self.undo_stack,
+                self.sprite_color_data,
+                palette_name
+            )
+        )
+        self.tile_color_palette.color_palette_removed.connect(
+            lambda palette_name: 
+            history_remove_color_palette(
+                self.undo_stack,
+                self.tile_color_data,
+                palette_name
+            )
+        )
+
     def init_ui(self):
         self.tool_bar.setEnabled(True)
         self.editor_tabs.setEnabled(True)
-        for menu in self.menu_bar.findChildren(QMenu):
-            for action in menu.actions():
-                action.setEnabled(True)
+        self.action_save.setEnabled(True)
+        self.action_gen_dat_files.setEnabled(True)
+        self.action_load_jcap_system.setEnabled(True)
         for palette in self.findChildren(ColorPalette):
             palette.setEnabled(True)
         for palette in self.findChildren(PixelPalette):
             palette.setEnabled(True)
+
+        self.sprite_color_palette.set_transparency(True)
+        self.tile_color_palette.set_transparency(False)
 
         self.sprite_color_palette.color_palette_changed.connect(
             lambda palette_name: self.sprite_color_palette.change_palette(
@@ -173,45 +255,16 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
         self.tile_color_data.color_palette_removed.connect(self.tile_color_palette.remove_color_palette)
         self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
+        self.tile_color_data.color_palette_renamed.connect(self.tile_color_palette.rename_color_palette)
 
-        self.sprite_color_palette.color_changed.connect(
-            lambda color, index: self.sprite_color_data.update_color(
-                self.sprite_color_palette.color_palette_name_combo.currentText(),
-                color,
-                index
-            )
-        )
-        self.tile_color_palette.color_changed.connect(
-            lambda color, index: self.tile_color_data.update_color(
-                self.tile_color_palette.color_palette_name_combo.currentText(),
-                color,
-                index
-            )
-        )
-
-        self.sprite_color_data.color_updated.connect(
-            lambda _, color, index:  self.sprite_color_palette.update_color(color, index)
-        )
+        self.sprite_color_data.color_updated.connect(self.sprite_color_palette.update_color)
+        self.tile_color_data.color_updated.connect(self.tile_color_palette.update_color)
         self.sprite_color_data.color_updated.connect(
             lambda _, color, index: self.sprite_pixel_palette.set_color(color, index)
         )
         self.tile_color_data.color_updated.connect(
-            lambda _, color, index:  self.tile_color_palette.update_color(color, index)
-        )
-        self.tile_color_data.color_updated.connect(
             lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
         )
-
-        self.sprite_color_palette.color_palette_added.connect(
-            lambda name: self.sprite_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
-        )
-        self.tile_color_palette.color_palette_added.connect(
-            lambda name: self.tile_color_data.add_color_palette(name, [QColor(255, 0, 255)] * 16)
-        )
-        self.sprite_color_palette.color_palette_renamed.connect(self.sprite_color_data.rename_color_palette)
-        self.sprite_color_palette.color_palette_removed.connect(self.sprite_color_data.remove_color_palette)
-        self.tile_color_palette.color_palette_renamed.connect(self.tile_color_data.rename_color_palette)
-        self.tile_color_palette.color_palette_removed.connect(self.tile_color_data.remove_color_palette)
 
         self.sprite_pixel_palette.add_palette_line.connect(self.sprite_pixel_data.add_palette_line)
         self.sprite_pixel_palette.remove_palette_line.connect(self.sprite_pixel_data.remove_palette_line)
@@ -281,10 +334,21 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_pixel_palette.set_selection(QRect(0, 0, 1, 1))
 
         self.sprite_pixel_data.set_color_table(
-            [color.rgba() for color in self.sprite_color_data.get_color_palette(self.sprite_color_palette.get_current_palette_name())]
+            [color.rgba() for color in self.sprite_color_data.get_color_palette(
+                self.sprite_color_palette.get_current_palette_name()
+            )]
         )
         self.tile_pixel_data.set_color_table(
-            [color.rgba() for color in self.tile_color_data.get_color_palette(self.tile_color_palette.get_current_palette_name())]
+            [color.rgba() for color in self.tile_color_data.get_color_palette(
+                self.tile_color_palette.get_current_palette_name()
+            )]
+        )
+
+        self.sprite_color_palette.color_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(0)
+        )
+        self.tile_color_palette.color_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(1)
         )
 
     def select_file(self):
