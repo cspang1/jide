@@ -52,6 +52,8 @@ class ColorPalette(QWidget, Ui_color_palette):
         self.color_palette_name_combo.setCurrentIndex(
             self.color_palette_name_combo.findText(palette_name)
         )
+
+        # If the new palette has the same index as the current one, we need to manually emit a change
         self.color_palette_name_combo.currentTextChanged.emit(
             palette_name
         )
@@ -73,6 +75,11 @@ class ColorPalette(QWidget, Ui_color_palette):
         self.alphabetize_names()
         self.color_palette_name_combo.setCurrentIndex(
             self.color_palette_name_combo.findText(new_color_palette_name)
+        )
+
+        # If the renamed palette has the same index as the current one, we need to manually emit a change
+        self.color_palette_name_combo.currentTextChanged.emit(
+            new_color_palette_name
         )
         self.color_palette_engaged.emit()
 
