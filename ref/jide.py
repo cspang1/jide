@@ -23,7 +23,9 @@ from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
 from pixel_data import (
     PixelData,
-    parse_pixel_data
+    parse_pixel_data,
+    history_add_pixel_palette_row,
+    history_remove_pixel_palette_row
 )
 from color_data import (
     ColorData,
@@ -212,6 +214,36 @@ class Jide(QMainWindow, Ui_main_window):
             )
         )
 
+        self.sprite_pixel_palette.add_palette_row.connect(
+            lambda: 
+            history_add_pixel_palette_row(
+                self.undo_stack,
+                self.sprite_pixel_data,
+            )
+        )
+        self.tile_pixel_palette.add_palette_row.connect(
+            lambda: 
+            history_add_pixel_palette_row(
+                self.undo_stack,
+                self.tile_pixel_data
+            )
+        )
+
+        self.sprite_pixel_palette.remove_palette_row.connect(
+            lambda: 
+            history_remove_pixel_palette_row(
+                self.undo_stack,
+                self.sprite_pixel_data,
+            )
+        )
+        self.tile_pixel_palette.remove_palette_row.connect(
+            lambda: 
+            history_remove_pixel_palette_row(
+                self.undo_stack,
+                self.tile_pixel_data
+            )
+        )
+
     def init_ui(self):
         self.tool_bar.setEnabled(True)
         self.editor_tabs.setEnabled(True)
@@ -265,11 +297,6 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_color_data.color_updated.connect(
             lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
         )
-
-        self.sprite_pixel_palette.add_palette_line.connect(self.sprite_pixel_data.add_palette_line)
-        self.sprite_pixel_palette.remove_palette_line.connect(self.sprite_pixel_data.remove_palette_line)
-        self.tile_pixel_palette.add_palette_line.connect(self.tile_pixel_data.add_palette_line)
-        self.tile_pixel_palette.remove_palette_line.connect(self.tile_pixel_data.remove_palette_line)
 
         self.sprite_pixel_data.data_updated.connect(
             lambda: self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
@@ -348,6 +375,12 @@ class Jide(QMainWindow, Ui_main_window):
             lambda: self.editor_tabs.setCurrentIndex(0)
         )
         self.tile_color_palette.color_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(1)
+        )
+        self.sprite_pixel_palette.pixel_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(0)
+        )
+        self.tile_pixel_palette.pixel_palette_engaged.connect(
             lambda: self.editor_tabs.setCurrentIndex(1)
         )
 

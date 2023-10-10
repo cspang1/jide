@@ -5,15 +5,10 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QSize
 from PyQt5.QtGui import QColor, QImage
 # from colorpicker import upsample
 from PyQt5.QtWidgets import QUndoStack, QMessageBox
-# from history import (
-#     cmdAddColPal,
-#     cmdAddPixRow,
-#     cmdRemColPal,
-#     cmdRemPixRow,
-#     cmdSetCol,
-#     cmdSetColPalName,
-#     cmdSetPixBatch,
-# )
+from history import(
+    cmdAddPixelRow,
+    cmdRemovePixelRow
+)
 
 class PixelData(QObject):
 
@@ -41,14 +36,21 @@ class PixelData(QObject):
         self.data_updated.emit()
 
     @pyqtSlot()
-    def add_palette_line(self):
+    def add_palette_row(self, row_data = None):
         new_image = QImage(self.data.width(), self.data.height() + 8, QImage.Format_Indexed8)
         new_image.setColorTable(self.data.colorTable())
 
         for y in range(new_image.height()):
             for x in range(new_image.width()):
                 if y >= self.data.height():
-                    new_image.setPixel(x, y, 0)
+                    if row_data is None:
+                        new_image.setPixel(x, y, 0)
+                    else:
+                        new_image.setPixel(
+                            x,
+                            y,
+                            row_data.pixelIndex(x, y - (new_image.height() - 8))
+                        )
                 else:
                     new_image.setPixel(x, y, self.data.pixelIndex(x, y))
 
@@ -57,20 +59,43 @@ class PixelData(QObject):
         self.data_updated.emit()
 
     @pyqtSlot()
-    def remove_palette_line(self):
-        if self.data.height() - 8 <= 0:
-            self.error_thrown.emit("At least one row of elements is required")
-            return
+    def remove_palette_row(self):
         new_image = QImage(self.data.width(), self.data.height() - 8, QImage.Format_Indexed8)
         new_image.setColorTable(self.data.colorTable())
+        row_image = QImage(self.data.width(), 8, QImage.Format_Indexed8)
+        row_image.setColorTable(self.data.colorTable())
+
+        for y in range(new_image.height(), self.data.height()):
+            for x in range(self.data.width()):
+                row_image.setPixel(x, y - (self.data.height() - 8), self.data.pixelIndex(x, y))
 
         for y in range(new_image.height()):
             for x in range(new_image.width()):
                 new_image.setPixel(x, y, self.data.pixelIndex(x, y))
 
         self.data = new_image
-
         self.data_updated.emit()
+        return row_image
+
+def history_add_pixel_palette_row(undo_stack, pixel_data):
+    undo_stack.push(
+        cmdAddPixelRow(
+            pixel_data,
+            "Add palette row"
+        )
+    )
+
+def history_remove_pixel_palette_row(undo_stack, pixel_data):
+    if pixel_data.get_image().height() - 8 <= 0:
+        pixel_data.error_thrown.emit("At least one row of elements is required")
+        return
+
+    undo_stack.push(
+        cmdRemovePixelRow(
+            pixel_data,
+            "Remove palette row"
+        )
+    )
 
 def parse_pixel_data(data):
     pixels_per_element = 64

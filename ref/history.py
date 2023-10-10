@@ -133,94 +133,55 @@ class cmdRemoveColPal(QUndoCommand):
         """
         self.data_source.add_color_palette(self.palette_name, self.original_contents)
 
-# class cmdSetPixBatch(QUndoCommand):
-#     """Apply a pixel batch update
 
-#     :param palette: Target set of pixel palettes
-#     :type palette:  gamedata.PixelPalettes
-#     :param batch:   Set of pixel deltas represented by pixel indexes and new
-#                     values
-#     :type batch:    defaultdict
-#     :param desc:    Text description of action
-#     :type desc:     str
-#     :param parent:  Parent widget, defaults to None
-#     :type parent:   QWidget, optional
-#     """
+class cmdAddPixelRow(QUndoCommand):
+    """Add a row of sprite/tiles to a pixel palette
 
-#     def __init__(self, palette, batch, desc, parent=None):
-#         super().__init__(desc, parent)
-#         self.palette = palette
-#         self.batch = batch
-#         self.original_batch = defaultdict(list)
+    :param palette: Target set of pixel palettes
+    :type palette:  gamedata.PixelPalettes
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
+    """
 
-#     def redo(self):
-#         """Redo updating with a pixel batch
-#         """
-#         for index, updates in self.batch.items():
-#             for row, col, val in updates:
-#                 self.original_batch[index].append(
-#                     (row, col, self.palette[index][row][col])
-#                 )
-#                 self.palette[index, row, col] = val
-#         self.palette.batchUpdate()
+    def __init__(self, data_source, desc, parent=None):
+        super().__init__(desc, parent)
+        self.data_source = data_source
 
-#     def undo(self):
-#         """Undo updating with a pixel batch
-#         """
-#         for index, updates in self.original_batch.items():
-#             for row, col, val in updates:
-#                 self.palette[index, row, col] = val
-#         self.palette.batchUpdate()
+    def redo(self):
+        """Redo adding a row of sprites/tiles
+        """
+        self.data_source.add_palette_row()
+
+    def undo(self):
+        """Undo addign a row of sprites/tiles
+        """
+        self.data_source.remove_palette_row()
 
 
-# class cmdAddPixRow(QUndoCommand):
-#     """Add a row of sprite/tiles to a pixel palette
+class cmdRemovePixelRow(QUndoCommand):
+    """Add a row of sprite/tiles to a pixel palette
 
-#     :param palette: Target set of pixel palettes
-#     :type palette:  gamedata.PixelPalettes
-#     :param desc:    Text description of action
-#     :type desc:     str
-#     :param parent:  Parent widget, defaults to None
-#     :type parent:   QWidget, optional
-#     """
+    :param palette: Target set of pixel palettes
+    :type palette:  gamedata.PixelPalettes
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
+    """
 
-#     def __init__(self, palette, desc, parent=None):
-#         super().__init__(desc, parent)
-#         self.palette = palette
+    def __init__(self, data_source, desc, parent=None):
+        super().__init__(desc, parent)
+        self.data_source = data_source
+        self.removed_row = None
 
-#     def redo(self):
-#         """Redo adding a row of sprites/tiles
-#         """
-#         self.palette.addRow()
+    def redo(self):
+        """Redo adding a row of sprites/tiles
+        """
+        self.removed_row = self.data_source.remove_palette_row()
 
-#     def undo(self):
-#         """Undo addign a row of sprites/tiles
-#         """
-#         self.palette.remRow()
-
-
-# class cmdRemPixRow(QUndoCommand):
-#     """Remove a row of sprite/tiles from a pixel palette
-
-#     :param palette: Target set of pixel palettes
-#     :type palette:  gamedata.PixelPalettes
-#     :param desc:    Text description of action
-#     :type desc:     str
-#     :param parent:  Parent widget, defaults to None
-#     :type parent:   QWidget, optional
-#     """
-
-#     def __init__(self, palette, desc, parent=None):
-#         super().__init__(desc, parent)
-#         self.palette = palette
-#         self.row = []
-
-#     def redo(self):
-#         """Redo removing a row of sprites/tiles
-#         """
-#         self.row = self.palette.remRow()
-
-#     def undo(self):
-#         """Undo removing a row of sprites/tiles
-#         """
-#         self.palette.addRow(self.row)
+    def undo(self):
+        """Undo addign a row of sprites/tiles
+        """
+        self.data_source.add_palette_row(self.removed_row)

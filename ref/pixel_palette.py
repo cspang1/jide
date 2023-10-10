@@ -20,16 +20,19 @@ from ui.pixel_palette_ui import Ui_pixel_palette
 class PixelPalette(QWidget, Ui_pixel_palette):
 
     elements_selected = pyqtSignal(QRect)
-    add_palette_line = pyqtSignal()
-    remove_palette_line = pyqtSignal()
+    add_palette_row = pyqtSignal()
+    remove_palette_row = pyqtSignal()
+    pixel_palette_engaged = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
 
         self.pixel_palette_grid.elements_selected.connect(self.elements_selected)
-        self.add_palette_line_btn.pressed.connect(self.add_palette_line)
-        self.rem_palette_line_btn.pressed.connect(self.remove_palette_line)
+        self.add_palette_row_btn.pressed.connect(self.add_palette_row)
+        self.remove_palette_row_btn.pressed.connect(self.remove_palette_row)
+        self.add_palette_row.connect(self.pixel_palette_engaged)
+        self.remove_palette_row.connect(self.pixel_palette_engaged)
         self.vertical_layout.setAlignment(Qt.AlignTop)
 
     def set_pixel_palette(self, pixel_palette_data):
