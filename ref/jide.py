@@ -6,18 +6,14 @@ from PyQt5.QtCore import (
     pyqtSlot,
     QRect
 )
-from PyQt5.QtGui import  (
-    QKeySequence,
-    QColor
-)
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
     QFileDialog,
     QMessageBox,
     QActionGroup,
-    QUndoStack,
-    QMenu
+    QUndoStack
 )
 from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
@@ -84,29 +80,6 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_preferences.triggered.connect(self.open_preferences)
 
         self.editor_tabs.currentChanged.connect(self.select_tab)
-
-    def select_tab(self, index):
-        if index == 0:
-            self.sprite_color_palette_dock.show()
-            self.sprite_pixel_palette_dock.show()
-            self.tile_color_palette_dock.hide()
-            self.tile_pixel_palette_dock.hide()
-            self.map_color_palette_dock.hide()
-            self.map_pixel_palette_dock.hide()
-        elif index == 1:
-            self.sprite_color_palette_dock.hide()
-            self.sprite_pixel_palette_dock.hide()
-            self.tile_color_palette_dock.show()
-            self.tile_pixel_palette_dock.show()
-            self.map_color_palette_dock.hide()
-            self.map_pixel_palette_dock.hide()
-        else:
-            self.sprite_color_palette_dock.hide()
-            self.sprite_pixel_palette_dock.hide()
-            self.tile_color_palette_dock.hide()
-            self.tile_pixel_palette_dock.hide()
-            self.map_color_palette_dock.show()
-            self.map_pixel_palette_dock.show()
 
     def load_project(self, file_name):
         if not file_name:
@@ -383,6 +356,29 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_pixel_palette.pixel_palette_engaged.connect(
             lambda: self.editor_tabs.setCurrentIndex(1)
         )
+
+    def select_tab(self, index):
+        if index == 0:
+            self.sprite_color_palette_dock.show()
+            self.sprite_pixel_palette_dock.show()
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.map_color_palette_dock.hide()
+            self.map_pixel_palette_dock.hide()
+        elif index == 1:
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.show()
+            self.tile_pixel_palette_dock.show()
+            self.map_color_palette_dock.hide()
+            self.map_pixel_palette_dock.hide()
+        else:
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.map_color_palette_dock.show()
+            self.map_pixel_palette_dock.show()
 
     def select_file(self):
         file_name, _ = QFileDialog.getOpenFileName(

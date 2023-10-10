@@ -31,12 +31,11 @@ class PixelPalette(QWidget, Ui_pixel_palette):
         self.pixel_palette_grid.elements_selected.connect(self.elements_selected)
         self.add_palette_row_btn.pressed.connect(self.add_palette_row)
         self.remove_palette_row_btn.pressed.connect(self.remove_palette_row)
-        self.add_palette_row.connect(self.pixel_palette_engaged)
-        self.remove_palette_row.connect(self.pixel_palette_engaged)
         self.vertical_layout.setAlignment(Qt.AlignTop)
 
     def set_pixel_palette(self, pixel_palette_data):
         self.pixel_palette_grid.set_pixel_palette(pixel_palette_data)
+        self.pixel_palette_engaged.emit()
 
     def set_color_table(self, color_table):
         self.pixel_palette_grid.set_color_table(color_table)
