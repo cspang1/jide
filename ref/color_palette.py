@@ -48,9 +48,12 @@ class ColorPalette(QWidget, Ui_color_palette):
     @pyqtSlot(str)
     def add_color_palette(self, palette_name):
         self.color_palette_name_combo.addItem(palette_name)
-        # TODO: alphabetical order here
+        self.alphabetize_names()
         self.color_palette_name_combo.setCurrentIndex(
             self.color_palette_name_combo.findText(palette_name)
+        )
+        self.color_palette_name_combo.currentTextChanged.emit(
+            palette_name
         )
         self.color_palette_engaged.emit()
 
@@ -62,10 +65,15 @@ class ColorPalette(QWidget, Ui_color_palette):
 
     @pyqtSlot(str, str)
     def rename_color_palette(self, old_color_palette_name, new_color_palette_name):
-        # TODO: alphabetical order here
-        # TODO: Switch to the renamed palette here
         index = self.color_palette_name_combo.findText(old_color_palette_name)
-        self.color_palette_name_combo.setItemText(index, new_color_palette_name)
+        self.color_palette_name_combo.setItemText(
+            self.color_palette_name_combo.findText(old_color_palette_name),
+            new_color_palette_name
+        )
+        self.alphabetize_names()
+        self.color_palette_name_combo.setCurrentIndex(
+            self.color_palette_name_combo.findText(new_color_palette_name)
+        )
         self.color_palette_engaged.emit()
 
     @pyqtSlot(list)
@@ -106,3 +114,15 @@ class ColorPalette(QWidget, Ui_color_palette):
     def set_transparency(self, has_transparency):
         self.color_preview.set_transparency(has_transparency)
         self.color_palette_grid.set_transparency(has_transparency)
+
+    def alphabetize_names(self):
+        items = [
+            self.color_palette_name_combo.itemText(i) for i in range(
+                self.color_palette_name_combo.count()
+            )
+        ]
+        items.sort()
+        self.color_palette_name_combo.currentTextChanged.disconnect()
+        self.color_palette_name_combo.clear()
+        self.color_palette_name_combo.addItems(items)
+        self.color_palette_name_combo.currentTextChanged.connect(self.color_palette_changed)
