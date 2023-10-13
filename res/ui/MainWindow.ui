@@ -302,6 +302,7 @@
     <addaction name="action_new"/>
     <addaction name="action_open"/>
     <addaction name="action_save"/>
+    <addaction name="action_close"/>
     <addaction name="separator"/>
     <addaction name="action_preferences"/>
     <addaction name="action_exit"/>
@@ -566,6 +567,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_close">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Close Project</string>
    </property>
   </action>
  </widget>

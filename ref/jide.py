@@ -4,6 +4,7 @@ from PyQt5.QtCore import (
     QSettings,
     QCoreApplication,
     pyqtSlot,
+    pyqtSignal,
     QRect
 )
 from PyQt5.QtGui import QKeySequence
@@ -36,10 +37,14 @@ from color_palette import ColorPalette
 from editor_scene import EditorScene
 
 class Jide(QMainWindow, Ui_main_window):
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.setup_window()
+        self.init_models()
+        self.init_ui()
+        self.setup_editor()
         self.prefs = QSettings()
         QCoreApplication.setOrganizationName("Connor Spangler")
         QCoreApplication.setOrganizationDomain("https://github.com/cspang1")
@@ -76,31 +81,11 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_gen_dat_files.triggered.connect(lambda temp: print("this will generate .DAT files"))
         self.action_load_jcap_system.triggered.connect(lambda temp: print("this will load the JCAP system"))
         self.action_open.triggered.connect(self.select_file)
-        self.action_exit.triggered.connect(self.close)
+        self.action_close.triggered.connect(self.close_project)
+        self.action_exit.triggered.connect(self.quit_application)
         self.action_preferences.triggered.connect(self.open_preferences)
 
         self.editor_tabs.currentChanged.connect(self.select_tab)
-
-    def load_project(self, file_name):
-        if not file_name:
-            return
-
-        project_data = None
-        try:
-            with open(file_name, "r") as data_file:
-                project_data =json.load(data_file)
-
-        except OSError:
-            self.show_error_dialog("Unable to open project file")
-            return
-        except KeyError:
-            self.show_error_dialog("Unable to load project due to malformed data")
-            return
-        
-        self.init_models()
-        self.init_ui()
-        self.setup_editor()
-        self.populate_models(project_data)
 
     def init_models(self):
         self.sprite_color_data = ColorData()
@@ -218,16 +203,6 @@ class Jide(QMainWindow, Ui_main_window):
         )
 
     def init_ui(self):
-        self.tool_bar.setEnabled(True)
-        self.editor_tabs.setEnabled(True)
-        self.action_save.setEnabled(True)
-        self.action_gen_dat_files.setEnabled(True)
-        self.action_load_jcap_system.setEnabled(True)
-        for palette in self.findChildren(ColorPalette):
-            palette.setEnabled(True)
-        for palette in self.findChildren(PixelPalette):
-            palette.setEnabled(True)
-
         self.sprite_color_palette.set_transparency(True)
         self.tile_color_palette.set_transparency(False)
 
@@ -314,10 +289,29 @@ class Jide(QMainWindow, Ui_main_window):
             )
         )
 
+    def load_project(self, file_name):
+        if not file_name:
+            return
+
+        project_data = None
+        try:
+            with open(file_name, "r") as data_file:
+                project_data = json.load(data_file)
+
+        except OSError:
+            self.show_error_dialog("Unable to open project file")
+            return
+        except KeyError:
+            self.show_error_dialog("Unable to load project due to malformed data")
+            return
+
+        self.populate_models(project_data)
+        self.enable_ui()
+
     def populate_models(self, project_data):
-        for palette in parse_color_data(project_data["spriteColorPalettes"]):
+        for palette in parse_color_data(project_data["sprite_color_palettes"]):
             self.sprite_color_data.add_color_palette(*palette)
-        for palette in parse_color_data(project_data["tileColorPalettes"]):
+        for palette in parse_color_data(project_data["tile_color_palettes"]):
             self.tile_color_data.add_color_palette(*palette)
         
         sprite_data = parse_pixel_data(project_data["sprites"])
@@ -356,6 +350,18 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_pixel_palette.pixel_palette_engaged.connect(
             lambda: self.editor_tabs.setCurrentIndex(1)
         )
+
+    def enable_ui(self):
+        self.tool_bar.setEnabled(True)
+        self.editor_tabs.setEnabled(True)
+        self.action_save.setEnabled(True)
+        self.action_close.setEnabled(True)
+        self.action_gen_dat_files.setEnabled(True)
+        self.action_load_jcap_system.setEnabled(True)
+        for palette in self.findChildren(ColorPalette):
+            palette.setEnabled(True)
+        for palette in self.findChildren(PixelPalette):
+            palette.setEnabled(True)
 
     def select_tab(self, index):
         if index == 0:
@@ -432,3 +438,67 @@ class Jide(QMainWindow, Ui_main_window):
         msg_box.setText(message)
         msg_box.setWindowTitle("Error")
         msg_box.exec_()
+
+    @pyqtSlot()
+    def new_project(self):
+        self.check_unsaved_changes()
+
+    @pyqtSlot()
+    def save_project(self):
+        pass
+
+    @pyqtSlot()
+    def close_project(self):
+        self.check_unsaved_changes()
+
+        self.tool_bar.setEnabled(False)
+        self.action_save.setEnabled(False)
+        self.action_close.setEnabled(False)
+        self.action_gen_dat_files.setEnabled(False)
+        self.action_load_jcap_system.setEnabled(False)
+        self.editor_tabs.setCurrentIndex(0)
+        self.editor_tabs.setEnabled(False)
+
+        self.sprite_color_palette = ColorPalette()
+        self.sprite_color_palette_dock.setWidget(self.sprite_color_palette)
+        self.tile_color_palette = ColorPalette()
+        self.tile_color_palette_dock.setWidget(self.tile_color_palette)
+        self.sprite_pixel_palette = PixelPalette()
+        self.sprite_pixel_palette_dock.setWidget(self.sprite_pixel_palette)
+        self.tile_pixel_palette = PixelPalette()
+        self.tile_pixel_palette_dock.setWidget(self.tile_pixel_palette)
+
+        for palette in self.findChildren(ColorPalette):
+            palette.setEnabled(False)
+        for palette in self.findChildren(PixelPalette):
+            palette.setEnabled(False)
+
+        self.undo_stack.clear()
+
+        self.init_models()
+        self.init_ui()
+        self.setup_editor()
+
+    def check_unsaved_changes(self):
+        if self.undo_stack.isClean():
+            return
+
+        save_prompt = QMessageBox()
+        save_prompt.setIcon(QMessageBox.Question)
+        save_prompt.setText("You have unsaved changes. Would you like to save them before closing the current project?")
+        save_prompt.setWindowTitle("Save Changes?")
+        save_prompt.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+
+        # Show the QMessageBox and wait for the user's response
+        response = save_prompt.exec()
+
+        # Check the user's response
+        if response == QMessageBox.Yes:
+            print("User clicked Yes")
+        else:
+            print("User clicked No")
+
+    @pyqtSlot()
+    def quit_application(self):
+        self.check_unsaved_changes()
+        self.close()

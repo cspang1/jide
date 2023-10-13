@@ -32,7 +32,7 @@ class PixelPaletteGrid(QWidget):
         super().__init__(parent)
 
         self.grid_cell_size = 8
-        self.palette = QImage()
+        self.palette = QImage(0, 0, QImage.Format_Indexed8)
         self.aspect_ratio = 1.0
         self.scale_factor = 0.0
         self.select_start = QPoint()
@@ -75,8 +75,9 @@ class PixelPaletteGrid(QWidget):
         palette_y = 0
 
         # Scale and draw the image
-        scaled_image = self.palette.scaled(self.width(), self.height(), Qt.KeepAspectRatio)
-        painter.drawImage(palette_x, palette_y, scaled_image)
+        if not self.palette.isNull():
+            scaled_image = self.palette.scaled(self.width(), self.height(), Qt.KeepAspectRatio)
+            painter.drawImage(palette_x, palette_y, scaled_image)
 
         for row in range(0, self.palette.height(), self.grid_cell_size):
             y_grid = round(palette_y + row * self.scale_factor)

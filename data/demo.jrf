@@ -1,5 +1,4 @@
 {
-    "gameName": "JCAP Demo",
     "sprites": [
         {
             "name": "sprite0",
@@ -17684,7 +17683,7 @@
             ]
         }
     ],
-    "spriteColorPalettes": [
+    "sprite_color_palettes": [
         {
             "name": "sprite_color_palette0",
             "contents": [
@@ -17749,7 +17748,7 @@
             ]
         }
     ],
-    "tileColorPalettes": [
+    "tile_color_palettes": [
         {
             "name": "tile_color_palette0",
             "contents": [
@@ -17793,7 +17792,7 @@
             ]
         }
     ],
-    "tileMaps": [
+    "tile_maps": [
         {
             "name": "tile_map0",
             "contents": [

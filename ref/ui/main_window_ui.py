@@ -227,6 +227,9 @@ class Ui_main_window(object):
         self.action_save = QtWidgets.QAction(main_window)
         self.action_save.setEnabled(False)
         self.action_save.setObjectName("action_save")
+        self.action_close = QtWidgets.QAction(main_window)
+        self.action_close.setEnabled(False)
+        self.action_close.setObjectName("action_close")
         self.tool_bar.addAction(self.action_select_tool)
         self.tool_bar.addAction(self.action_pen_tool)
         self.tool_bar.addAction(self.action_fill_tool)
@@ -236,6 +239,7 @@ class Ui_main_window(object):
         self.menu_file.addAction(self.action_new)
         self.menu_file.addAction(self.action_open)
         self.menu_file.addAction(self.action_save)
+        self.menu_file.addAction(self.action_close)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_preferences)
         self.menu_file.addAction(self.action_exit)
@@ -299,6 +303,7 @@ class Ui_main_window(object):
         self.action_save.setText(_translate("main_window", "Save Project"))
         self.action_save.setToolTip(_translate("main_window", "Save Project"))
         self.action_save.setShortcut(_translate("main_window", "Ctrl+S"))
+        self.action_close.setText(_translate("main_window", "Close Project"))
 from color_palette import ColorPalette
 from editor_view import EditorView
 from pixel_palette import PixelPalette
