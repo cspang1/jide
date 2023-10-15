@@ -54,6 +54,25 @@ class ColorData(QObject):
     def get_color_data(self):
         return self.color_data
 
+    def to_json(self):
+        color_data = []
+
+        for color_palette_name, color_palette in self.color_data.items():
+            colors = []
+            for color in color_palette:
+                r, g, b = downsample(color.red(), color.green(), color.blue())
+                color = (r << 5) | (g << 2) | b
+                colors.append(color)
+
+            palette = {
+                "name": color_palette_name,
+                "contents": colors
+            }
+            
+            color_data.append(palette)
+
+        return color_data
+
 def history_set_color(undo_stack, color_data, palette_name, new_color, change_index):
     undo_stack.push(
         cmdSetCol(

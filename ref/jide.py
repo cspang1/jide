@@ -75,7 +75,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.menu_edit.addActions([action_undo, action_redo])
 
         self.action_new.triggered.connect(lambda temp: print("this will create a new project"))
-        self.action_save.triggered.connect(lambda temp: print("this will save the current project"))
+        self.action_save.triggered.connect(self.save_project)
         self.action_copy.triggered.connect(lambda temp: print("this will copy the current selection"))
         self.action_paste.triggered.connect(lambda temp: print("this will paste the current selection"))
         self.action_gen_dat_files.triggered.connect(lambda temp: print("this will generate .DAT files"))
@@ -293,10 +293,11 @@ class Jide(QMainWindow, Ui_main_window):
         if not file_name:
             return
 
+        self.project_file = file_name
         project_data = None
         try:
-            with open(file_name, "r") as data_file:
-                project_data = json.load(data_file)
+            with open(self.project_file, "r") as project_file:
+                project_data = json.load(project_file)
 
         except OSError:
             self.show_error_dialog("Unable to open project file")
@@ -316,6 +317,9 @@ class Jide(QMainWindow, Ui_main_window):
         
         sprite_data = parse_pixel_data(project_data["sprites"])
         tile_data = parse_pixel_data(project_data["tiles"])
+
+        self.tile_map_data = project_data["tile_maps"]
+
         self.sprite_pixel_data.set_image(*sprite_data[:3])
         self.sprite_pixel_data.set_names(sprite_data[-1])
         self.tile_pixel_data.set_image(*tile_data[:3])
@@ -445,7 +449,22 @@ class Jide(QMainWindow, Ui_main_window):
 
     @pyqtSlot()
     def save_project(self):
-        pass
+        sprites = self.sprite_pixel_data.to_json()
+        tiles = self.tile_pixel_data.to_json()
+        sprite_color_palettes = self.sprite_color_data.to_json()
+        tile_color_palettes = self.tile_color_data.to_json()
+        tile_maps = self.tile_map_data
+
+        project_data = {
+            "sprites": sprites,
+            "tiles": tiles,
+            "sprite_color_palettes": sprite_color_palettes,
+            "tile_color_palettes": tile_color_palettes,
+            "tile_maps": tile_maps
+        }
+
+        with open(self.project_file, "w") as project_file:
+            json.dump(project_data, project_file, indent=4)
 
     @pyqtSlot()
     def close_project(self):
@@ -479,6 +498,11 @@ class Jide(QMainWindow, Ui_main_window):
         self.init_ui()
         self.setup_editor()
 
+    @pyqtSlot()
+    def quit_application(self):
+        self.check_unsaved_changes()
+        self.close()
+
     def check_unsaved_changes(self):
         if self.undo_stack.isClean():
             return
@@ -494,11 +518,4 @@ class Jide(QMainWindow, Ui_main_window):
 
         # Check the user's response
         if response == QMessageBox.Yes:
-            print("User clicked Yes")
-        else:
-            print("User clicked No")
-
-    @pyqtSlot()
-    def quit_application(self):
-        self.check_unsaved_changes()
-        self.close()
+            self.save_project()

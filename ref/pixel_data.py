@@ -15,6 +15,11 @@ class PixelData(QObject):
     data_updated = pyqtSignal()
     error_thrown = pyqtSignal(str)
 
+    pixels_per_element = 64
+    element_width = 8
+    element_height = 8
+    elements_per_line = 16
+
     def __init__(self):
         super().__init__()
         self.data = QImage()
@@ -76,6 +81,35 @@ class PixelData(QObject):
         self.data = new_image
         self.data_updated.emit()
         return row_image
+    
+    def to_json(self):
+        image_data = []
+        name_index = 0
+
+        # Iterate through the image, dividing it into tiles
+        for y in range(0, self.data.height(), PixelData.element_height):
+            for x in range(0, self.data.width(), PixelData.element_width):
+                tile_data = []
+
+                # Extract pixel data for the current tile
+                for row in range(PixelData.element_height):
+                    row_data = []
+                    for col in range(PixelData.element_width):
+                        # Append the RGB color tuple to the row data
+                        row_data.append(self.data.pixelIndex(x + col, y + row))
+                    # Append the row data to the tile data
+                    tile_data.append(row_data)
+
+                # Create a JSON representation of the tile and add it to the list
+                element = {
+                    "name": self.names[name_index],
+                    "contents": tile_data
+                }
+                image_data.append(element)
+                name_index += 1
+
+        return image_data
+
 
 def history_add_pixel_palette_row(undo_stack, pixel_data):
     undo_stack.push(
@@ -98,22 +132,18 @@ def history_remove_pixel_palette_row(undo_stack, pixel_data):
     )
 
 def parse_pixel_data(data):
-    pixels_per_element = 64
-    element_width = 8
-    element_height = 8
-    elements_per_line = 16
-    pixel_data = bytearray([0] * len(data) * pixels_per_element)
+    pixel_data = bytearray([0] * len(data) * PixelData.pixels_per_element)
     names = []
 
     for index, palette in enumerate(data):
         names.append(palette["name"])
-        col_index = floor(index / elements_per_line) * element_width * elements_per_line * element_height
-        col_offset = (index % elements_per_line) * element_width
+        col_index = floor(index / PixelData.elements_per_line) * PixelData.element_width * PixelData.elements_per_line * PixelData.element_height
+        col_offset = (index % PixelData.elements_per_line) * PixelData.element_width
         for pixel_row, pixel_row_data in enumerate(palette["contents"]):
-            row_offset = pixel_row * elements_per_line * element_width
+            row_offset = pixel_row * PixelData.elements_per_line * PixelData.element_width
             pixel_data_index = col_index + row_offset + col_offset
-            pixel_data[pixel_data_index:pixel_data_index+8] = pixel_row_data
+            pixel_data[pixel_data_index:pixel_data_index + 8] = pixel_row_data
 
-    width = element_width * elements_per_line
+    width = PixelData.element_width * PixelData.elements_per_line
     height = ceil(len(pixel_data) / width)
     return (pixel_data, width, height, names)
