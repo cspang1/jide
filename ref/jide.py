@@ -506,9 +506,19 @@ class Jide(QMainWindow, Ui_main_window):
             "tile_maps": tile_maps
         }
 
-        if not project_file:
-            # Save file prompt here
-            pass
+        if not self.project_file:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            options |= QFileDialog.HideNameFilterDetails
+
+            file_dialog = QFileDialog(self)
+            file_dialog.setOptions(options)
+            file_dialog.setNameFilter("JCAP Resource File (*.jrf)")
+
+            self.project_file, _ = file_dialog.getSaveFileName(self, 'Save File', '', 'JCAP Resource File (*.jrf)', options=options)
+
+            if not self.project_file:
+                return
 
         try:
             with open(self.project_file, "w") as project_file:
