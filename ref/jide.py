@@ -1,10 +1,10 @@
+import copy
 import json
 from pathlib import Path
 from PyQt5.QtCore import (
     QSettings,
     QCoreApplication,
     pyqtSlot,
-    pyqtSignal,
     QRect
 )
 from PyQt5.QtGui import QKeySequence
@@ -74,16 +74,16 @@ class Jide(QMainWindow, Ui_main_window):
         action_redo.setShortcut(QKeySequence.Redo)
         self.menu_edit.addActions([action_undo, action_redo])
 
-        self.action_new.triggered.connect(lambda temp: print("this will create a new project"))
+        self.action_new.triggered.connect(self.new_project)
         self.action_save.triggered.connect(self.save_project)
         self.action_copy.triggered.connect(lambda temp: print("this will copy the current selection"))
         self.action_paste.triggered.connect(lambda temp: print("this will paste the current selection"))
-        self.action_gen_dat_files.triggered.connect(lambda temp: print("this will generate .DAT files"))
-        self.action_load_jcap_system.triggered.connect(lambda temp: print("this will load the JCAP system"))
         self.action_open.triggered.connect(self.select_file)
         self.action_close.triggered.connect(self.close_project)
         self.action_exit.triggered.connect(self.quit_application)
         self.action_preferences.triggered.connect(self.open_preferences)
+        self.action_gen_dat_files.triggered.connect(lambda temp: print("this will generate .DAT files"))
+        self.action_load_jcap_system.triggered.connect(lambda temp: print("this will load the JCAP system"))
 
         self.editor_tabs.currentChanged.connect(self.select_tab)
 
@@ -309,6 +309,8 @@ class Jide(QMainWindow, Ui_main_window):
         self.populate_models(project_data)
         self.enable_ui()
 
+        self.editor_tabs.setCurrentIndex(0)
+
     def populate_models(self, project_data):
         for palette in parse_color_data(project_data["sprite_color_palettes"]):
             self.sprite_color_data.add_color_palette(*palette)
@@ -391,6 +393,7 @@ class Jide(QMainWindow, Ui_main_window):
             self.map_pixel_palette_dock.show()
 
     def select_file(self):
+        self.check_unsaved_changes()
         file_name, _ = QFileDialog.getOpenFileName(
             self,
             "Open file",
@@ -445,7 +448,47 @@ class Jide(QMainWindow, Ui_main_window):
 
     @pyqtSlot()
     def new_project(self):
-        self.check_unsaved_changes()
+        self.close_project()
+
+        sprites = []
+        tiles = []
+        sprite_color_palettes = []
+        tile_color_palettes = []
+        tile_maps = []
+
+        blank_element = [[0 for _ in range(8)] for _ in range(8)]
+        sprite_names = ["sprite_" + str(i) for i in range(16)]
+        tile_names = ["tile_" + str(i) for i in range(16)]
+        blank_color_palette = [227 for _ in range(16)]
+        blank_tile_map = [[0, 0] for _ in range(30 * 40)]
+
+        sprites = [{"name": name, "contents": copy.deepcopy(blank_element)} for name in sprite_names]
+        tiles = [{"name": name, "contents": copy.deepcopy(blank_element)} for name in tile_names]
+        sprite_color_palettes = [{
+            "name": "sprite_color_palette_0",
+            "contents": blank_color_palette.copy()
+        }]
+        tile_color_palettes = [{
+            "name": "tile_color_palette_0",
+            "contents": blank_color_palette.copy()
+        }]
+        tile_maps = [{
+            "name": "tile_map_0",
+            "contents": copy.deepcopy(blank_tile_map)
+        }]
+
+        project_data = {
+            "sprites": sprites,
+            "tiles": tiles,
+            "sprite_color_palettes": sprite_color_palettes,
+            "tile_color_palettes": tile_color_palettes,
+            "tile_maps": tile_maps
+        }
+
+        self.populate_models(project_data)
+        self.enable_ui()
+
+        self.editor_tabs.setFocus()
 
     @pyqtSlot()
     def save_project(self):
@@ -463,8 +506,16 @@ class Jide(QMainWindow, Ui_main_window):
             "tile_maps": tile_maps
         }
 
-        with open(self.project_file, "w") as project_file:
-            json.dump(project_data, project_file, indent=4)
+        if not project_file:
+            # Save file prompt here
+            pass
+
+        try:
+            with open(self.project_file, "w") as project_file:
+                json.dump(project_data, project_file)
+            self.undo_stack.setClean()
+        except (IOError, PermissionError, OSError) as e:
+            self.show_error_dialog(f"Error while saving the project file: {e}")
 
     @pyqtSlot()
     def close_project(self):
@@ -493,6 +544,7 @@ class Jide(QMainWindow, Ui_main_window):
             palette.setEnabled(False)
 
         self.undo_stack.clear()
+        self.project_file = None
 
         self.init_models()
         self.init_ui()
