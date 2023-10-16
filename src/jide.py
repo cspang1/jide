@@ -393,7 +393,9 @@ class Jide(QMainWindow, Ui_main_window):
             self.map_pixel_palette_dock.show()
 
     def select_file(self):
-        self.check_unsaved_changes()
+        if not self.check_unsaved_changes():
+            return
+
         file_name, _ = QFileDialog.getOpenFileName(
             self,
             "Open file",
@@ -507,15 +509,13 @@ class Jide(QMainWindow, Ui_main_window):
         }
 
         if not self.project_file:
-            options = QFileDialog.Options()
-            options |= QFileDialog.ReadOnly
-            options |= QFileDialog.HideNameFilterDetails
-
-            file_dialog = QFileDialog(self)
-            file_dialog.setOptions(options)
-            file_dialog.setNameFilter("JCAP Resource File (*.jrf)")
-
-            self.project_file, _ = file_dialog.getSaveFileName(self, 'Save File', '', 'JCAP Resource File (*.jrf)', options=options)
+            self.project_file, _ = QFileDialog(self).getSaveFileName(
+                self, 
+                'Save File',
+                '',
+                'JCAP Resource File (*.jrf)',
+                options = QFileDialog.Options() | QFileDialog.ReadOnly | QFileDialog.HideNameFilterDetails
+            )
 
             if not self.project_file:
                 return
@@ -529,7 +529,8 @@ class Jide(QMainWindow, Ui_main_window):
 
     @pyqtSlot()
     def close_project(self):
-        self.check_unsaved_changes()
+        if not self.check_unsaved_changes():
+            return
 
         self.tool_bar.setEnabled(False)
         self.action_save.setEnabled(False)
@@ -562,22 +563,29 @@ class Jide(QMainWindow, Ui_main_window):
 
     @pyqtSlot()
     def quit_application(self):
-        self.check_unsaved_changes()
+        if not self.check_unsaved_changes():
+            return
+        
         self.close()
 
     def check_unsaved_changes(self):
         if self.undo_stack.isClean():
-            return
+            return True
 
         save_prompt = QMessageBox()
         save_prompt.setIcon(QMessageBox.Question)
         save_prompt.setText("You have unsaved changes. Would you like to save them before closing the current project?")
         save_prompt.setWindowTitle("Save Changes?")
-        save_prompt.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        save_prompt.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
         # Show the QMessageBox and wait for the user's response
         response = save_prompt.exec()
 
+        if response == QMessageBox.Cancel:
+            return False
+
         # Check the user's response
         if response == QMessageBox.Yes:
             self.save_project()
+        
+        return True
