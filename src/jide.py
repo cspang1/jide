@@ -509,7 +509,7 @@ class Jide(QMainWindow, Ui_main_window):
         }
 
         if not self.project_file:
-            self.project_file, _ = QFileDialog(self).getSaveFileName(
+            self.project_file, _ = QFileDialog.getSaveFileName(
                 self, 
                 'Save File',
                 '',
