@@ -1,557 +1,583 @@
-import os
+import copy
+import json
 from pathlib import Path
-import shutil
-import subprocess
-from PyQt5.QtCore import Qt, pyqtSlot, QSettings, QCoreApplication
-from PyQt5.QtGui import QKeySequence, QIcon
-from PyQt5.QtWidgets import (
-    QGraphicsView,
-    QMainWindow,
-    QAction,
-    QActionGroup,
-    qApp,
-    QUndoStack,
-    QMessageBox,
-    QTabWidget,
-    QToolBar,
-    QFileDialog,
+from PyQt5.QtCore import (
+    QSettings,
+    QCoreApplication,
+    pyqtSlot,
+    QRect
 )
-from canvas import GraphicsScene, GraphicsView
-from canvastools import Tools
-from colorpalette import ColorPaletteDock
-from colorpicker import downsample
-from gamedata import GameData
-from pixelpalette import PixelPaletteDock
-from source import Source
-from preferences import Preferences
+from PyQt5.QtGui import QKeySequence
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QFileDialog,
+    QMessageBox,
+    QActionGroup,
+    QUndoStack
+)
+from ui.main_window_ui import Ui_main_window
+from preferences_dialog import PreferencesDialog
+from pixel_data import (
+    PixelData,
+    parse_pixel_data,
+    history_add_pixel_palette_row,
+    history_remove_pixel_palette_row
+)
+from color_data import (
+    ColorData,
+    parse_color_data,
+    history_set_color,
+    history_rename_color_palette,
+    history_add_color_palette,
+    history_remove_color_palette
+)
+from pixel_palette import PixelPalette
+from color_palette import ColorPalette
+from editor_scene import EditorScene
 
+class Jide(QMainWindow, Ui_main_window):
 
-class jide(QMainWindow):
-    """This is the primary class which serves as the glue for JIDE.
-
-    This class interfaces between the various canvases, pixel and color
-    palettes, centralized data source, and data output routines.
-    """
-
-    def __init__(self):
-        """jide constructor
-        """
-        super().__init__()
-        self.setupWindow()
-        self.setupTabs()
-        self.setupDocks()
-        self.setupToolbar()
-        self.setupActions()
-        self.setupStatusBar()
-        self.setupPrefs()
-
-        QCoreApplication.processEvents()
-
-        self.loadProject("./data/demo.jrf")
-
-    def setupWindow(self):
-        """Entry point to set up primary window attributes
-        """
-        self.setWindowTitle("JIDE")
-        self.sprite_view = QGraphicsView()
-        self.tile_view = QGraphicsView()
-        self.sprite_view.setStyleSheet("background-color: #494949;")
-        self.tile_view.setStyleSheet("background-color: #494949;")
-
-    def setupDocks(self):
-        """Set up pixel palette, color palette, and tile map docks
-        """
-        self.sprite_color_palette_dock = ColorPaletteDock(Source.SPRITE, self)
-        self.sprite_pixel_palette_dock = PixelPaletteDock(Source.SPRITE, self)
-        self.tile_color_palette_dock = ColorPaletteDock(Source.TILE, self)
-        self.tile_pixel_palette_dock = PixelPaletteDock(Source.TILE, self)
-        self.addDockWidget(
-            Qt.RightDockWidgetArea, self.sprite_color_palette_dock
-        )
-        self.addDockWidget(
-            Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock
-        )
-        self.removeDockWidget(self.tile_color_palette_dock)
-        self.removeDockWidget(self.tile_pixel_palette_dock)
-
-    def setupToolbar(self):
-        """Set up graphics tools toolbar
-        """
-        self.canvas_toolbar = QToolBar()
-        self.addToolBar(Qt.LeftToolBarArea, self.canvas_toolbar)
-
-        self.tool_actions = QActionGroup(self)
-        self.select_tool = QAction(
-            QIcon(":/icons/select_tool.png"), "&Select tool", self.tool_actions
-        )
-        self.select_tool.setShortcut("S")
-        self.pen_tool = QAction(
-            QIcon(":/icons/pencil_tool.png"), "&Pen tool", self.tool_actions
-        )
-        self.pen_tool.setShortcut("P")
-        self.fill_tool = QAction(
-            QIcon(":/icons/fill_tool.png"), "&Fill tool", self.tool_actions
-        )
-        self.fill_tool.setShortcut("G")
-        self.line_tool = QAction(
-            QIcon(":/icons/line_tool.png"), "&Line tool", self.tool_actions
-        )
-        self.line_tool.setShortcut("L")
-        self.rect_tool = QAction(
-            QIcon(":/icons/rect_tool.png"),
-            "&Rectangle tool",
-            self.tool_actions,
-        )
-        self.rect_tool.setShortcut("R")
-        self.ellipse_tool = QAction(
-            QIcon(":/icons/ellipse_tool.png"),
-            "&Ellipse tool",
-            self.tool_actions,
-        )
-        self.ellipse_tool.setShortcut("E")
-        self.tools = [
-            self.select_tool,
-            self.pen_tool,
-            self.fill_tool,
-            self.line_tool,
-            self.rect_tool,
-            self.ellipse_tool,
-        ]
-        for tool in self.tools:
-            tool.setCheckable(True)
-            tool.setEnabled(False)
-            self.canvas_toolbar.addAction(tool)
-
-    def setupTabs(self):
-        """Set up main window sprite/tile/tile map tabs
-        """
-        self.canvas_tabs = QTabWidget()
-        self.canvas_tabs.addTab(self.sprite_view, "Sprites")
-        self.canvas_tabs.addTab(self.tile_view, "Tiles")
-        self.canvas_tabs.setTabEnabled(0, False)
-        self.canvas_tabs.setTabEnabled(1, False)
-        self.setCentralWidget(self.canvas_tabs)
-
-    def setupActions(self):
-        """Set up main menu actions
-        """
-        # Exit
-        exit_act = QAction("&Exit", self)
-        exit_act.setShortcut("Ctrl+Q")
-        exit_act.setStatusTip("Exit application")
-        exit_act.triggered.connect(qApp.quit)
-
-        # Open file
-        open_file = QAction("&Open", self)
-        open_file.setShortcut("Ctrl+O")
-        open_file.setStatusTip("Open file")
-        open_file.triggered.connect(self.selectFile)
-
-        # Open preferences
-        open_prefs = QAction("&Preferences", self)
-        open_prefs.setStatusTip("Edit preferences")
-        open_prefs.triggered.connect(self.openPrefs)
-
-        # Undo/redo
-        self.undo_stack = QUndoStack(self)
-        undo_act = self.undo_stack.createUndoAction(self, "&Undo")
-        undo_act.setShortcut(QKeySequence.Undo)
-        redo_act = self.undo_stack.createRedoAction(self, "&Redo")
-        redo_act.setShortcut(QKeySequence.Redo)
-
-        # Copy/paste
-        self.copy_act = QAction("&Copy", self)
-        self.copy_act.setShortcut("Ctrl+C")
-        self.copy_act.setStatusTip("Copy")
-        self.copy_act.setEnabled(False)
-        self.paste_act = QAction("&Paste", self)
-        self.paste_act.setShortcut("Ctrl+V")
-        self.paste_act.setStatusTip("Paste")
-        self.paste_act.setEnabled(False)
-
-        # JCAP compile/load
-        self.gendat_act = QAction("&Generate DAT Files", self)
-        self.gendat_act.setShortcut("Ctrl+D")
-        self.gendat_act.setStatusTip("Generate DAT Files")
-        self.gendat_act.triggered.connect(self.genDATFiles)
-        self.gendat_act.setEnabled(False)
-        self.load_jcap = QAction("&Load JCAP System", self)
-        self.load_jcap.setShortcut("Ctrl+L")
-        self.load_jcap.setStatusTip("Load JCAP System")
-        self.load_jcap.setEnabled(False)
-        self.load_jcap.triggered.connect(self.loadJCAP)
-
-        # Build menu bar
-        menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu("&File")
-        file_menu.addAction(open_file)
-        file_menu.addSeparator()
-        file_menu.addAction(open_prefs)
-        file_menu.addAction(exit_act)
-        edit_menu = menu_bar.addMenu("&Edit")
-        edit_menu.addAction(undo_act)
-        edit_menu.addAction(redo_act)
-        edit_menu.addAction(self.copy_act)
-        edit_menu.addAction(self.paste_act)
-        jcap_menu = menu_bar.addMenu("&JCAP")
-        jcap_menu.addAction(self.gendat_act)
-        jcap_menu.addAction(self.load_jcap)
-
-    def setupStatusBar(self):
-        """Set up bottom status bar
-        """
-        self.statusBar = self.statusBar()
-
-    def setupPrefs(self):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.setup_window()
+        self.init_models()
+        self.init_ui()
+        self.setup_editor()
+        self.prefs = QSettings()
         QCoreApplication.setOrganizationName("Connor Spangler")
         QCoreApplication.setOrganizationDomain("https://github.com/cspang1")
         QCoreApplication.setApplicationName("JIDE")
-        self.prefs = QSettings()
-        self.prefs.setValue("test", 69)
+        QApplication.processEvents()
 
-    @pyqtSlot(bool)
-    def setCopyActive(self, active):
-        """Set whether the copy action is available
+        self.load_project("./data/demo.jrf")
 
-        :param active:  Variable representing whether copy action should be set
-                        to available or unavailable
-        :type active:   bool
-        """
-        self.copy_act.isEnabled(active)
+    def setup_window(self):
+        self.tile_color_palette_dock.hide()
+        self.tile_pixel_palette_dock.hide()
+        self.map_color_palette_dock.hide()
+        self.map_pixel_palette_dock.hide()
 
-    @pyqtSlot(bool)
-    def setPasteActive(self, active):
-        """Set whether the paste action is available
+        self.tool_actions = QActionGroup(self)
+        self.tool_actions.addAction(self.action_select_tool)
+        self.tool_actions.addAction(self.action_pen_tool)
+        self.tool_actions.addAction(self.action_fill_tool)
+        self.tool_actions.addAction(self.action_line_tool)
+        self.tool_actions.addAction(self.action_rectangle_tool)
+        self.tool_actions.addAction(self.action_ellipse_tool)
 
-        :param active:  Variable representing whether paste action should be
-                        set to available or unavailable
-        :type active:   bool
-        """
-        self.paste_act.isEnabled(active)
+        self.undo_stack = QUndoStack(self)
+        action_undo = self.undo_stack.createUndoAction(self, "&Undo")
+        action_undo.setShortcut(QKeySequence.Undo)
+        action_redo = self.undo_stack.createRedoAction(self, "&Redo")
+        action_redo.setShortcut(QKeySequence.Redo)
+        self.menu_edit.addActions([action_undo, action_redo])
 
-    def selectFile(self):
-        """Open file action to hand file handle to GameData
-        """
+        self.action_new.triggered.connect(self.new_project)
+        self.action_save.triggered.connect(self.save_project)
+        self.action_copy.triggered.connect(lambda temp: print("this will copy the current selection"))
+        self.action_paste.triggered.connect(lambda temp: print("this will paste the current selection"))
+        self.action_open.triggered.connect(self.select_file)
+        self.action_close.triggered.connect(self.close_project)
+        self.action_exit.triggered.connect(self.quit_application)
+        self.action_preferences.triggered.connect(self.open_preferences)
+        self.action_gen_dat_files.triggered.connect(lambda temp: print("this will generate .DAT files"))
+        self.action_load_jcap_system.triggered.connect(lambda temp: print("this will load the JCAP system"))
+
+        self.editor_tabs.currentChanged.connect(self.select_tab)
+
+    def init_models(self):
+        self.sprite_color_data = ColorData()
+        self.tile_color_data = ColorData()
+        self.sprite_pixel_data = PixelData()
+        self.tile_pixel_data = PixelData()
+
+        self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
+        self.tile_color_data.error_thrown.connect(self.show_error_dialog)
+        self.sprite_pixel_data.error_thrown.connect(self.show_error_dialog)
+        self.tile_pixel_data.error_thrown.connect(self.show_error_dialog)
+
+        self.sprite_color_palette.color_set.connect(
+            lambda new_color, change_index:
+            history_set_color(
+                self.undo_stack,
+                self.sprite_color_data,
+                self.sprite_color_palette.color_palette_name_combo.currentText(),
+                new_color,
+                change_index,
+            )
+        )
+        self.tile_color_palette.color_set.connect(
+            lambda new_color, change_index:
+            history_set_color(
+                self.undo_stack,
+                self.tile_color_data,
+                self.tile_color_palette.color_palette_name_combo.currentText(),
+                new_color,
+                change_index,
+            )
+        )
+
+        self.sprite_color_palette.color_palette_renamed.connect(
+            lambda old_palette_name, new_palette_name: 
+            history_rename_color_palette(
+                self.undo_stack,
+                self.sprite_color_data,
+                old_palette_name,
+                new_palette_name,
+            )
+        )
+        self.tile_color_palette.color_palette_renamed.connect(
+            lambda old_palette_name, new_palette_name: 
+            history_rename_color_palette(
+                self.undo_stack,
+                self.tile_color_data,
+                old_palette_name,
+                new_palette_name,
+            )
+        )
+
+        self.sprite_color_palette.color_palette_added.connect(
+            lambda palette_name: 
+            history_add_color_palette(
+                self.undo_stack,
+                self.sprite_color_data,
+                palette_name
+            )
+        )
+        self.tile_color_palette.color_palette_added.connect(
+            lambda palette_name: 
+            history_add_color_palette(
+                self.undo_stack,
+                self.tile_color_data,
+                palette_name
+            )
+        )
+
+        self.sprite_color_palette.color_palette_removed.connect(
+            lambda palette_name: 
+            history_remove_color_palette(
+                self.undo_stack,
+                self.sprite_color_data,
+                palette_name
+            )
+        )
+        self.tile_color_palette.color_palette_removed.connect(
+            lambda palette_name: 
+            history_remove_color_palette(
+                self.undo_stack,
+                self.tile_color_data,
+                palette_name
+            )
+        )
+
+        self.sprite_pixel_palette.add_palette_row.connect(
+            lambda: 
+            history_add_pixel_palette_row(
+                self.undo_stack,
+                self.sprite_pixel_data,
+            )
+        )
+        self.tile_pixel_palette.add_palette_row.connect(
+            lambda: 
+            history_add_pixel_palette_row(
+                self.undo_stack,
+                self.tile_pixel_data
+            )
+        )
+
+        self.sprite_pixel_palette.remove_palette_row.connect(
+            lambda: 
+            history_remove_pixel_palette_row(
+                self.undo_stack,
+                self.sprite_pixel_data,
+            )
+        )
+        self.tile_pixel_palette.remove_palette_row.connect(
+            lambda: 
+            history_remove_pixel_palette_row(
+                self.undo_stack,
+                self.tile_pixel_data
+            )
+        )
+
+    def init_ui(self):
+        self.sprite_color_palette.set_transparency(True)
+        self.tile_color_palette.set_transparency(False)
+
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_color_palette.change_palette(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_color_palette.change_palette(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_pixel_palette.set_color_table(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_pixel_palette.set_color_table(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+
+        self.sprite_color_palette.color_previewed.connect(self.sprite_pixel_palette.set_color)
+        self.tile_color_palette.color_previewed.connect(self.tile_pixel_palette.set_color)
+
+        self.sprite_color_data.color_palette_added.connect(self.sprite_color_palette.add_color_palette)
+        self.sprite_color_data.color_palette_removed.connect(self.sprite_color_palette.remove_color_palette)
+        self.tile_color_data.color_palette_added.connect(self.tile_color_palette.add_color_palette)
+        self.tile_color_data.color_palette_removed.connect(self.tile_color_palette.remove_color_palette)
+        self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
+        self.tile_color_data.color_palette_renamed.connect(self.tile_color_palette.rename_color_palette)
+
+        self.sprite_color_data.color_updated.connect(self.sprite_color_palette.update_color)
+        self.tile_color_data.color_updated.connect(self.tile_color_palette.update_color)
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index: self.sprite_pixel_palette.set_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
+        )
+
+        self.sprite_pixel_data.data_updated.connect(
+            lambda: self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
+        )
+        self.tile_pixel_data.data_updated.connect(
+            lambda: self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
+        )
+
+    def setup_editor(self):
+        self.sprite_scene = EditorScene()
+        self.tile_scene = EditorScene()
+        self.sprite_editor_view.setScene(self.sprite_scene)
+        self.tile_editor_view.setScene(self.tile_scene)
+
+        self.sprite_pixel_data.data_updated.connect(
+            lambda: self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
+        )
+        self.tile_pixel_data.data_updated.connect(
+            lambda: self.tile_scene.set_scene_image(self.tile_pixel_data.get_image())
+        )
+
+        self.sprite_color_palette.color_previewed.connect(self.sprite_scene.set_color)
+        self.tile_color_palette.color_previewed.connect(self.tile_scene.set_color)
+        self.sprite_pixel_palette.elements_selected.connect(self.sprite_scene.select_cells)
+        self.tile_pixel_palette.elements_selected.connect(self.tile_scene.select_cells)
+
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index: self.sprite_scene.set_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index:  self.tile_scene.set_color(color, index)
+        )
+
+        self.sprite_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.sprite_scene.set_color_table(
+                self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_scene.set_color_table(
+                self.tile_color_data.get_color_palette(palette_name)
+            )
+        )
+
+    def load_project(self, file_name):
+        if not file_name:
+            return
+
+        self.project_file = file_name
+        project_data = None
+        try:
+            with open(self.project_file, "r") as project_file:
+                project_data = json.load(project_file)
+
+        except OSError:
+            self.show_error_dialog("Unable to open project file")
+            return
+        except KeyError:
+            self.show_error_dialog("Unable to load project due to malformed data")
+            return
+
+        self.populate_models(project_data)
+        self.enable_ui()
+
+        self.editor_tabs.setCurrentIndex(0)
+
+    def populate_models(self, project_data):
+        for palette in parse_color_data(project_data["sprite_color_palettes"]):
+            self.sprite_color_data.add_color_palette(*palette)
+        for palette in parse_color_data(project_data["tile_color_palettes"]):
+            self.tile_color_data.add_color_palette(*palette)
+        
+        sprite_data = parse_pixel_data(project_data["sprites"])
+        tile_data = parse_pixel_data(project_data["tiles"])
+
+        self.tile_map_data = project_data["tile_maps"]
+
+        self.sprite_pixel_data.set_image(*sprite_data[:3])
+        self.sprite_pixel_data.set_names(sprite_data[-1])
+        self.tile_pixel_data.set_image(*tile_data[:3])
+        self.tile_pixel_data.set_names(tile_data[-1])
+
+        self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
+        self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
+
+        self.sprite_pixel_palette.set_selection(QRect(0, 0, 1, 1))
+        self.tile_pixel_palette.set_selection(QRect(0, 0, 1, 1))
+
+        self.sprite_pixel_data.set_color_table(
+            [color.rgba() for color in self.sprite_color_data.get_color_palette(
+                self.sprite_color_palette.get_current_palette_name()
+            )]
+        )
+        self.tile_pixel_data.set_color_table(
+            [color.rgba() for color in self.tile_color_data.get_color_palette(
+                self.tile_color_palette.get_current_palette_name()
+            )]
+        )
+
+        self.sprite_color_palette.color_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(0)
+        )
+        self.tile_color_palette.color_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(1)
+        )
+        self.sprite_pixel_palette.pixel_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(0)
+        )
+        self.tile_pixel_palette.pixel_palette_engaged.connect(
+            lambda: self.editor_tabs.setCurrentIndex(1)
+        )
+
+    def enable_ui(self):
+        self.tool_bar.setEnabled(True)
+        self.editor_tabs.setEnabled(True)
+        self.action_save.setEnabled(True)
+        self.action_close.setEnabled(True)
+        self.action_gen_dat_files.setEnabled(True)
+        self.action_load_jcap_system.setEnabled(True)
+        for palette in self.findChildren(ColorPalette):
+            palette.setEnabled(True)
+        for palette in self.findChildren(PixelPalette):
+            palette.setEnabled(True)
+
+    def select_tab(self, index):
+        if index == 0:
+            self.sprite_color_palette_dock.show()
+            self.sprite_pixel_palette_dock.show()
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.map_color_palette_dock.hide()
+            self.map_pixel_palette_dock.hide()
+        elif index == 1:
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.show()
+            self.tile_pixel_palette_dock.show()
+            self.map_color_palette_dock.hide()
+            self.map_pixel_palette_dock.hide()
+        else:
+            self.sprite_color_palette_dock.hide()
+            self.sprite_pixel_palette_dock.hide()
+            self.tile_color_palette_dock.hide()
+            self.tile_pixel_palette_dock.hide()
+            self.map_color_palette_dock.show()
+            self.map_pixel_palette_dock.show()
+
+    def select_file(self):
+        self.check_unsaved_changes()
         file_name, _ = QFileDialog.getOpenFileName(
             self,
             "Open file",
             str(Path(__file__)),
             "JCAP Resource File (*.jrf)",
         )
-        self.loadProject(file_name)
+        self.load_project(file_name)
 
-    def loadProject(self, file_name):
-        """Load project file data and populate UI elements/set up signals and slots
-        """
-        if file_name:
-            try:
-                self.data = GameData.fromFilename(file_name, self)
-            except KeyError:
-                QMessageBox(
-                    QMessageBox.Critical,
-                    "Error",
-                    "Unable to load project due to malformed data",
-                ).exec()
+    def open_preferences(self):
+        prefs = QSettings()
+        cpu_port = None
+        gpu_port = None
+        jcap_path = None
+        prefs.beginGroup("ports")
+        if prefs.contains("cpu_port"):
+            cpu_port = prefs.value("cpu_port")
+        if prefs.contains("gpu_port"):
+            gpu_port = prefs.value("gpu_port")
+        prefs.endGroup()
+        prefs.beginGroup("paths")
+        if prefs.contains("jcap_path"):
+            jcap_path = prefs.value("jcap_path")
+        prefs.endGroup()
+
+        prefs_dialog = PreferencesDialog(cpu_port, gpu_port, jcap_path)
+        valid_prefs = False
+        while not valid_prefs:
+            if prefs_dialog.exec():
+                cpu_port = prefs_dialog.get_cpu_port()
+                gpu_port = prefs_dialog.get_gpu_port()
+                jcap_path = prefs_dialog.get_jcap_path()
+            if cpu_port and gpu_port and cpu_port == gpu_port:
+                self.show_error_dialog("CPU and GPU COM ports must be different")
+            else:
+                valid_prefs = True
+
+        prefs.beginGroup("ports")
+        prefs.setValue("cpu_port", cpu_port)
+        prefs.setValue("gpu_port", gpu_port)
+        prefs.endGroup()
+        prefs.beginGroup("paths")
+        prefs.setValue("jcap_path", jcap_path)
+        prefs.endGroup()
+
+    @pyqtSlot(str)
+    def show_error_dialog(self, message):
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setText(message)
+        msg_box.setWindowTitle("Error")
+        msg_box.exec_()
+
+    @pyqtSlot()
+    def new_project(self):
+        self.close_project()
+
+        sprites = []
+        tiles = []
+        sprite_color_palettes = []
+        tile_color_palettes = []
+        tile_maps = []
+
+        blank_element = [[0 for _ in range(8)] for _ in range(8)]
+        sprite_names = ["sprite_" + str(i) for i in range(16)]
+        tile_names = ["tile_" + str(i) for i in range(16)]
+        blank_color_palette = [227 for _ in range(16)]
+        blank_tile_map = [[0, 0] for _ in range(30 * 40)]
+
+        sprites = [{"name": name, "contents": copy.deepcopy(blank_element)} for name in sprite_names]
+        tiles = [{"name": name, "contents": copy.deepcopy(blank_element)} for name in tile_names]
+        sprite_color_palettes = [{
+            "name": "sprite_color_palette_0",
+            "contents": blank_color_palette.copy()
+        }]
+        tile_color_palettes = [{
+            "name": "tile_color_palette_0",
+            "contents": blank_color_palette.copy()
+        }]
+        tile_maps = [{
+            "name": "tile_map_0",
+            "contents": copy.deepcopy(blank_tile_map)
+        }]
+
+        project_data = {
+            "sprites": sprites,
+            "tiles": tiles,
+            "sprite_color_palettes": sprite_color_palettes,
+            "tile_color_palettes": tile_color_palettes,
+            "tile_maps": tile_maps
+        }
+
+        self.populate_models(project_data)
+        self.enable_ui()
+
+        self.editor_tabs.setFocus()
+
+    @pyqtSlot()
+    def save_project(self):
+        sprites = self.sprite_pixel_data.to_json()
+        tiles = self.tile_pixel_data.to_json()
+        sprite_color_palettes = self.sprite_color_data.to_json()
+        tile_color_palettes = self.tile_color_data.to_json()
+        tile_maps = self.tile_map_data
+
+        project_data = {
+            "sprites": sprites,
+            "tiles": tiles,
+            "sprite_color_palettes": sprite_color_palettes,
+            "tile_color_palettes": tile_color_palettes,
+            "tile_maps": tile_maps
+        }
+
+        if not self.project_file:
+            options = QFileDialog.Options()
+            options |= QFileDialog.ReadOnly
+            options |= QFileDialog.HideNameFilterDetails
+
+            file_dialog = QFileDialog(self)
+            file_dialog.setOptions(options)
+            file_dialog.setNameFilter("JCAP Resource File (*.jrf)")
+
+            self.project_file, _ = file_dialog.getSaveFileName(self, 'Save File', '', 'JCAP Resource File (*.jrf)', options=options)
+
+            if not self.project_file:
                 return
-            except OSError:
-                QMessageBox(
-                    QMessageBox.Critical,
-                    "Error",
-                    "Unable to open project file",
-                ).exec()
-                return
-        else:
+
+        try:
+            with open(self.project_file, "w") as project_file:
+                json.dump(project_data, project_file)
+            self.undo_stack.setClean()
+        except (IOError, PermissionError, OSError) as e:
+            self.show_error_dialog(f"Error while saving the project file: {e}")
+
+    @pyqtSlot()
+    def close_project(self):
+        self.check_unsaved_changes()
+
+        self.tool_bar.setEnabled(False)
+        self.action_save.setEnabled(False)
+        self.action_close.setEnabled(False)
+        self.action_gen_dat_files.setEnabled(False)
+        self.action_load_jcap_system.setEnabled(False)
+        self.editor_tabs.setCurrentIndex(0)
+        self.editor_tabs.setEnabled(False)
+
+        self.sprite_color_palette = ColorPalette()
+        self.sprite_color_palette_dock.setWidget(self.sprite_color_palette)
+        self.tile_color_palette = ColorPalette()
+        self.tile_color_palette_dock.setWidget(self.tile_color_palette)
+        self.sprite_pixel_palette = PixelPalette()
+        self.sprite_pixel_palette_dock.setWidget(self.sprite_pixel_palette)
+        self.tile_pixel_palette = PixelPalette()
+        self.tile_pixel_palette_dock.setWidget(self.tile_pixel_palette)
+
+        for palette in self.findChildren(ColorPalette):
+            palette.setEnabled(False)
+        for palette in self.findChildren(PixelPalette):
+            palette.setEnabled(False)
+
+        self.undo_stack.clear()
+        self.project_file = None
+
+        self.init_models()
+        self.init_ui()
+        self.setup_editor()
+
+    @pyqtSlot()
+    def quit_application(self):
+        self.check_unsaved_changes()
+        self.close()
+
+    def check_unsaved_changes(self):
+        if self.undo_stack.isClean():
             return
 
-        self.setWindowTitle("JIDE - " + self.data.getGameName())
-        self.gendat_act.setEnabled(True)
-        self.load_jcap.setEnabled(True)
-        self.data.setUndoStack(self.undo_stack)
-        self.sprite_scene = GraphicsScene(self.data, Source.SPRITE, self)
-        self.tile_scene = GraphicsScene(self.data, Source.TILE, self)
-        self.sprite_view = GraphicsView(self.sprite_scene, self)
-        self.tile_view = GraphicsView(self.tile_scene, self)
-        self.sprite_view.setStyleSheet("background-color: #494949;")
-        self.tile_view.setStyleSheet("background-color: #494949;")
+        save_prompt = QMessageBox()
+        save_prompt.setIcon(QMessageBox.Question)
+        save_prompt.setText("You have unsaved changes. Would you like to save them before closing the current project?")
+        save_prompt.setWindowTitle("Save Changes?")
+        save_prompt.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
 
-        sprite_pixel_palette = self.sprite_pixel_palette_dock.pixel_palette
-        tile_pixel_palette = self.tile_pixel_palette_dock.pixel_palette
-        sprite_color_palette = self.sprite_color_palette_dock.color_palette
-        tile_color_palette = self.tile_color_palette_dock.color_palette
+        # Show the QMessageBox and wait for the user's response
+        response = save_prompt.exec()
 
-        sprite_pixel_palette.subject_selected.connect(
-            self.sprite_scene.setSubject
-        )
-        self.sprite_scene.set_color_switch_enabled.connect(
-            sprite_color_palette.color_preview.setColorSwitchEnabled
-        )
-        self.sprite_color_palette_dock.palette_updated.connect(
-            self.sprite_scene.setColorPalette
-        )
-        self.sprite_color_palette_dock.palette_updated.connect(
-            self.sprite_pixel_palette_dock.palette_updated
-        )
-        sprite_color_palette.color_selected.connect(
-            self.sprite_scene.setPrimaryColor
-        )
-        tile_pixel_palette.subject_selected.connect(self.tile_scene.setSubject)
-        self.tile_scene.set_color_switch_enabled.connect(
-            tile_color_palette.color_preview.setColorSwitchEnabled
-        )
-        self.tile_color_palette_dock.palette_updated.connect(
-            self.tile_scene.setColorPalette
-        )
-        self.tile_color_palette_dock.palette_updated.connect(
-            self.tile_pixel_palette_dock.palette_updated
-        )
-        tile_color_palette.color_selected.connect(
-            self.tile_scene.setPrimaryColor
-        )
-
-        self.sprite_color_palette_dock.setup(self.data)
-        self.tile_color_palette_dock.setup(self.data)
-        self.sprite_pixel_palette_dock.setup(self.data)
-        self.tile_pixel_palette_dock.setup(self.data)
-        self.canvas_tabs = QTabWidget()
-        self.canvas_tabs.addTab(self.sprite_view, "Sprites")
-        self.canvas_tabs.addTab(self.tile_view, "Tiles")
-        self.canvas_tabs.setTabEnabled(0, True)
-        self.canvas_tabs.setTabEnabled(1, True)
-        self.setCentralWidget(self.canvas_tabs)
-        self.canvas_tabs.currentChanged.connect(self.setCanvas)
-        self.setCanvas(0)
-
-        self.data.col_pal_updated.connect(
-            lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source))
-        )
-        self.data.col_pal_renamed.connect(
-            lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source))
-        )
-        self.data.col_pal_added.connect(
-            lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source))
-        )
-        self.data.col_pal_removed.connect(
-            lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source))
-        )
-        self.data.pix_batch_updated.connect(
-            lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source))
-        )
-        self.data.row_count_updated.connect(
-            lambda source, *_: self.canvas_tabs.setCurrentIndex(int(source))
-        )
-
-        self.select_tool.triggered.connect(
-            lambda checked, tool=Tools.SELECT: self.sprite_scene.setTool(tool)
-        )
-        self.select_tool.triggered.connect(
-            lambda checked, tool=Tools.SELECT: self.tile_scene.setTool(tool)
-        )
-        self.pen_tool.triggered.connect(
-            lambda checked, tool=Tools.PEN: self.sprite_scene.setTool(tool)
-        )
-        self.pen_tool.triggered.connect(
-            lambda checked, tool=Tools.PEN: self.tile_scene.setTool(tool)
-        )
-        self.fill_tool.triggered.connect(
-            lambda checked, tool=Tools.FLOODFILL: self.sprite_scene.setTool(
-                tool
-            )
-        )
-        self.fill_tool.triggered.connect(
-            lambda checked, tool=Tools.FLOODFILL: self.tile_scene.setTool(tool)
-        )
-        self.line_tool.triggered.connect(
-            lambda checked, tool=Tools.LINE: self.sprite_scene.setTool(tool)
-        )
-        self.line_tool.triggered.connect(
-            lambda checked, tool=Tools.LINE: self.tile_scene.setTool(tool)
-        )
-        self.rect_tool.triggered.connect(
-            lambda checked, tool=Tools.RECTANGLE: self.sprite_scene.setTool(
-                tool
-            )
-        )
-        self.rect_tool.triggered.connect(
-            lambda checked, tool=Tools.RECTANGLE: self.tile_scene.setTool(tool)
-        )
-        self.ellipse_tool.triggered.connect(
-            lambda checked, tool=Tools.ELLIPSE: self.sprite_scene.setTool(tool)
-        )
-        self.ellipse_tool.triggered.connect(
-            lambda checked, tool=Tools.ELLIPSE: self.tile_scene.setTool(tool)
-        )
-
-        for tool in self.tools:
-            tool.setEnabled(True)
-
-        self.pen_tool.setChecked(True)
-        self.pen_tool.triggered.emit(True)
-
-    def setCanvas(self, index):
-        """Set the dock and signal/slot layout to switch between sprite/tile/
-        tile map tabs
-
-        :param index: Index of canvas tab
-        :type index: int
-        """
-        self.paste_act.triggered.disconnect()
-        self.copy_act.triggered.disconnect()
-
-        if index == 0:
-            self.copy_act.triggered.connect(self.sprite_scene.copy)
-            self.paste_act.triggered.connect(self.sprite_scene.startPasting)
-            self.tile_color_palette_dock.hide()
-            self.tile_pixel_palette_dock.hide()
-            self.sprite_color_palette_dock.show()
-            self.sprite_pixel_palette_dock.show()
-            self.removeDockWidget(self.tile_color_palette_dock)
-            self.removeDockWidget(self.tile_pixel_palette_dock)
-            self.addDockWidget(
-                Qt.RightDockWidgetArea, self.sprite_color_palette_dock
-            )
-            self.addDockWidget(
-                Qt.RightDockWidgetArea, self.sprite_pixel_palette_dock
-            )
-            self.copy_act.triggered.connect(self.sprite_scene.copy)
-            self.paste_act.triggered.connect(self.sprite_scene.startPasting)
-            self.sprite_scene.region_copied.connect(self.paste_act.setEnabled)
-            self.sprite_scene.region_selected.connect(self.copy_act.setEnabled)
-        elif index == 1:
-            self.copy_act.triggered.connect(self.tile_scene.copy)
-            self.paste_act.triggered.connect(self.tile_scene.startPasting)
-            self.sprite_color_palette_dock.hide()
-            self.sprite_pixel_palette_dock.hide()
-            self.tile_color_palette_dock.show()
-            self.tile_pixel_palette_dock.show()
-            self.removeDockWidget(self.sprite_color_palette_dock)
-            self.removeDockWidget(self.sprite_pixel_palette_dock)
-            self.addDockWidget(
-                Qt.RightDockWidgetArea, self.tile_color_palette_dock
-            )
-            self.addDockWidget(
-                Qt.RightDockWidgetArea, self.tile_pixel_palette_dock
-            )
-            self.copy_act.triggered.connect(self.tile_scene.copy)
-            self.paste_act.triggered.connect(self.tile_scene.startPasting)
-            self.tile_scene.region_copied.connect(self.paste_act.setEnabled)
-            self.tile_scene.region_selected.connect(self.copy_act.setEnabled)
-
-    def openPrefs(self):
-        prefs = Preferences()
-        prefs.exec()
-
-    def genDATFiles(self):
-        """Generate .dat files from project for use by JCAP
-        """
-        dat_path = Path(__file__).parents[1] / "data" / "DAT Files"
-        dat_path.mkdir(exist_ok=True)
-        tcp_path = dat_path / "tile_color_palettes.dat"
-        tpp_path = dat_path / "tiles.dat"
-        scp_path = dat_path / "sprite_color_palettes.dat"
-        spp_path = dat_path / "sprites.dat"
-
-        tile_pixel_data = self.data.getPixelPalettes(Source.TILE)
-        tile_color_data = self.data.getColPals(Source.TILE)
-        sprite_pixel_data = self.data.getPixelPalettes(Source.SPRITE)
-        sprite_color_data = self.data.getColPals(Source.SPRITE)
-
-        self.genPixelDATFile(tile_pixel_data, tpp_path)
-        self.genColorDATFile(tile_color_data, tcp_path)
-        self.genPixelDATFile(sprite_pixel_data, spp_path)
-        self.genColorDATFile(sprite_color_data, scp_path)
-
-    def genPixelDATFile(self, source, path):
-        """Generate sprite/tile pixel palette .dat file
-
-        :param source: List containing sprite/tile pixel data
-        :type source: list
-        :param path: File path to .dat
-        :type path: str
-        """
-        with path.open("wb") as dat_file:
-            for element in source:
-                for line in element:
-                    total = 0
-                    for pixel in line:
-                        total = (total << 4) + pixel
-                    dat_file.write(total.to_bytes(4, byteorder="big")[::-1])
-
-    def genColorDATFile(self, source, path):
-        """Generate sprite/tile color palette .dat file
-
-        :param source: List containing sprite/tile color data
-        :type source: list
-        :param path: File path to .dat
-        :type path: str
-        """
-        with path.open("wb") as dat_file:
-            for palette in source:
-                for color in palette:
-                    r, g, b = downsample(
-                        color.red(), color.green(), color.blue()
-                    )
-                    rgb = (r << 5) | (g << 2) | (b)
-                    dat_file.write(bytes([rgb]))
-
-    def loadJCAP(self):
-        """Generate .dat files and execute command-line serial loading of JCAP
-        """
-        self.statusBar.showMessage("Loading JCAP...")
-        self.genDATFiles()
-
-        self.prefs.beginGroup("paths")
-        dat_path = Path(__file__).parents[1] / "data" / "DAT Files"
-        if not self.prefs.contains("jcap_path"):
-            QMessageBox(
-                QMessageBox.Critical, "Error", "Path to JCAP not set."
-            ).exec()
-            self.openPrefs()
-            return
-        jcap_path = self.prefs.value("jcap_path")
-        if not os.path.exists(jcap_path):
-            QMessageBox(
-                QMessageBox.Critical, "Error", "Invalid JCAP path."
-            ).exec()
-            self.openPrefs()
-            return
-        # jcap_path = Path(__file__).parents[2] / "jcap" / "dev" / "software"
-        self.prefs.endGroup()
-
-        sysload_path = Path(jcap_path) / "sysload.sh"
-
-        if not os.path.exists(sysload_path):
-            QMessageBox(
-                QMessageBox.Critical,
-                "Error",
-                (
-                    "sysload.sh not found in JCAP path; Verify that the path "
-                    "is correct, or try re-downloading the JCAP files"
-                ),
-            ).exec()
-            self.openPrefs()
-            return
-
-        for dat_file in dat_path.glob("**/*"):
-            shutil.copy(str(dat_file), jcap_path)
-
-        self.prefs.beginGroup("ports")
-        if not self.prefs.contains("cpu_port") or not self.prefs.contains(
-            "gpu_port"
-        ):
-            QMessageBox(
-                QMessageBox.Critical,
-                "Error",
-                "CPU and/or GPU COM ports not set.",
-            ).exec()
-            self.openPrefs()
-            return
-        cpu_port = self.prefs.value("cpu_port")
-        gpu_port = self.prefs.value("gpu_port")
-        self.prefs.endGroup()
-
-        result = subprocess.run(
-            ["bash.exe", str(sysload_path), "-c", cpu_port, "-g", gpu_port],
-            capture_output=True,
-        )
-        print(result.stderr)
-        self.statusBar.showMessage("JCAP Loaded!", 5000)
+        # Check the user's response
+        if response == QMessageBox.Yes:
+            self.save_project()

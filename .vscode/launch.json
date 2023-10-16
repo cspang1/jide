@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "./ref/main.py",
+            "program": "./src/main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             // "preLaunchTask": "gen_resources"
