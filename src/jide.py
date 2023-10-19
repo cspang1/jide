@@ -32,6 +32,10 @@ from color_data import (
     history_add_color_palette,
     history_remove_color_palette
 )
+from tile_map_data import (
+    TileMapData,
+    history_add_tile_map
+)
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
 from editor_scene import EditorScene
@@ -92,6 +96,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_color_data = ColorData()
         self.sprite_pixel_data = PixelData()
         self.tile_pixel_data = PixelData()
+        self.tile_map_data = TileMapData()
 
         self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
         self.tile_color_data.error_thrown.connect(self.show_error_dialog)
@@ -245,6 +250,18 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_color_data.color_updated.connect(
             lambda _, color, index: self.tile_pixel_palette.set_color(color, index)
         )
+        self.sprite_color_data.color_updated.connect(
+            lambda _, color, index: self.sprite_color_palette.color_preview.set_primary_color(color, index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, color, index: self.stile_color_palette.color_preview.set_primary_color(color, index)
+        )
+        self.sprite_color_data.color_updated.connect(
+            lambda _, _color, index: self.sprite_color_palette.color_palette_grid.select_primary_color(index)
+        )
+        self.tile_color_data.color_updated.connect(
+            lambda _, _color, index: self.stile_color_palette.color_palette_grid.select_primary_color(index)
+        )
 
         self.sprite_pixel_data.data_updated.connect(
             lambda: self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
@@ -312,6 +329,16 @@ class Jide(QMainWindow, Ui_main_window):
         self.editor_tabs.setCurrentIndex(0)
 
     def populate_models(self, project_data):
+        for tile_map in project_data["tile_maps"]:
+            self.tile_map_data.add_tile_map(
+                tile_map["name"],
+                tile_map["width"],
+                tile_map["height"],
+                tile_map["contents"]
+            )
+
+        self.temp_tile_map_data = project_data["tile_maps"]
+
         for palette in parse_color_data(project_data["sprite_color_palettes"]):
             self.sprite_color_data.add_color_palette(*palette)
         for palette in parse_color_data(project_data["tile_color_palettes"]):
@@ -319,8 +346,6 @@ class Jide(QMainWindow, Ui_main_window):
         
         sprite_data = parse_pixel_data(project_data["sprites"])
         tile_data = parse_pixel_data(project_data["tiles"])
-
-        self.tile_map_data = project_data["tile_maps"]
 
         self.sprite_pixel_data.set_image(*sprite_data[:3])
         self.sprite_pixel_data.set_names(sprite_data[-1])
@@ -494,11 +519,15 @@ class Jide(QMainWindow, Ui_main_window):
 
     @pyqtSlot()
     def save_project(self):
+        if self.undo_stack.isClean():
+            return
+
         sprites = self.sprite_pixel_data.to_json()
         tiles = self.tile_pixel_data.to_json()
         sprite_color_palettes = self.sprite_color_data.to_json()
         tile_color_palettes = self.tile_color_data.to_json()
-        tile_maps = self.tile_map_data
+        tile_maps = self.temp_tile_map_data
+        # tile_maps = self.tile_map_data
 
         project_data = {
             "sprites": sprites,

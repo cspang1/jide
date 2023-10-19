@@ -1,10 +1,10 @@
-from collections import OrderedDict, namedtuple
-import json
-from math import ceil, floor
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QSize
-from PyQt5.QtGui import QColor, QImage
-# from colorpicker import upsample
-from PyQt5.QtWidgets import QUndoStack, QMessageBox
+import math
+from PyQt5.QtCore import (
+    QObject,
+    pyqtSignal,
+    pyqtSlot
+)
+from PyQt5.QtGui import QImage
 from history import(
     cmdAddPixelRow,
     cmdRemovePixelRow
@@ -137,7 +137,7 @@ def parse_pixel_data(data):
 
     for index, palette in enumerate(data):
         names.append(palette["name"])
-        col_index = floor(index / PixelData.elements_per_line) * PixelData.element_width * PixelData.elements_per_line * PixelData.element_height
+        col_index = math.floor(index / PixelData.elements_per_line) * PixelData.element_width * PixelData.elements_per_line * PixelData.element_height
         col_offset = (index % PixelData.elements_per_line) * PixelData.element_width
         for pixel_row, pixel_row_data in enumerate(palette["contents"]):
             row_offset = pixel_row * PixelData.elements_per_line * PixelData.element_width
@@ -145,5 +145,5 @@ def parse_pixel_data(data):
             pixel_data[pixel_data_index:pixel_data_index + 8] = pixel_row_data
 
     width = PixelData.element_width * PixelData.elements_per_line
-    height = ceil(len(pixel_data) / width)
+    height = math.ceil(len(pixel_data) / width)
     return (pixel_data, width, height, names)

@@ -185,3 +185,34 @@ class cmdRemovePixelRow(QUndoCommand):
         """Undo addign a row of sprites/tiles
         """
         self.data_source.add_palette_row(self.removed_row)
+
+class cmdAddTileMap(QUndoCommand):
+    """Add a new sprite/tile color palette
+
+    :param palette:     Target set of color palettes
+    :type palette:      gamedata.ColorPalettes
+    :param name:        Name of target color palette
+    :type name:         str
+    :param contents:    Contents of new color palette
+    :type contents:     list
+    :param desc:        Text description of action
+    :type desc:         str
+    :param parent:      Parent widget, defaults to None
+    :type parent:       QWidget, optional
+    """
+
+    def __init__(self, data_source, tile_map_name, tile_map_contents, desc, parent=None):
+        super().__init__(desc, parent)
+        self.data_source = data_source
+        self.tile_map_name = tile_map_name
+        self.tile_map_contents = tile_map_contents
+
+    def redo(self):
+        """Redo adding a tile map
+        """
+        self.data_source.add_tile_map(self.tile_map_name, self.tile_map_contents)
+
+    def undo(self):
+        """Undo adding a tile map
+        """
+        self.data_source.remove_color_palette(self.palette_name)
