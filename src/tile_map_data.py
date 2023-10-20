@@ -7,10 +7,9 @@ from PyQt5.QtGui import QImage
 from history import(
     cmdAddTileMap
 )
-from collections import OrderedDict
 from collections import namedtuple
 
-Tile = namedtuple('Tile', ['color_palette_index', 'visual_tile_index'])
+Tile = namedtuple('Tile', ['color_palette_index', 'tile_palette_index'])
 
 class TileMapData(QObject):
 
@@ -41,9 +40,7 @@ class TileMapData(QObject):
         return self.tile_maps
 
     def to_json(self):
-        tile_map_data = []
-
-        return tile_map_data
+        return [tile_map.to_json() for tile_map in self.tile_maps]
 
 class TileMap:
     def __init__(self, name, width, height):
@@ -57,6 +54,16 @@ class TileMap:
 
     def set_tile(self, x, y, color_palette_index, tile_palette_index):
             self.contents[y][x] = Tile(color_palette_index, tile_palette_index)
+
+    def to_json(self):
+         return {
+              "name": self.name,
+              "width": self.width,
+              "height": self.height,
+              "contents": [
+                   [tile.color_palette_index, tile.tile_palette_index] for row in self.contents for tile in row
+                ]
+         }
 
 def history_add_tile_map(undo_stack, tile_map_data, tile_map_name):
     if tile_map_name in tile_map_data.get_tile_maps():

@@ -337,8 +337,6 @@ class Jide(QMainWindow, Ui_main_window):
                 tile_map["contents"]
             )
 
-        self.temp_tile_map_data = project_data["tile_maps"]
-
         for palette in parse_color_data(project_data["sprite_color_palettes"]):
             self.sprite_color_data.add_color_palette(*palette)
         for palette in parse_color_data(project_data["tile_color_palettes"]):
@@ -526,8 +524,7 @@ class Jide(QMainWindow, Ui_main_window):
         tiles = self.tile_pixel_data.to_json()
         sprite_color_palettes = self.sprite_color_data.to_json()
         tile_color_palettes = self.tile_color_data.to_json()
-        tile_maps = self.temp_tile_map_data
-        # tile_maps = self.tile_map_data
+        tile_maps = self.tile_map_data.to_json()
 
         project_data = {
             "sprites": sprites,
