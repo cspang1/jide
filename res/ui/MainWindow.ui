@@ -325,49 +325,6 @@
    <addaction name="menu_edit"/>
    <addaction name="menu_jcap"/>
   </widget>
-  <widget class="QDockWidget" name="map_color_palette_dock">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
-   <property name="minimumSize">
-    <size>
-     <width>71</width>
-     <height>42</height>
-    </size>
-   </property>
-   <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
-   </property>
-   <property name="windowTitle">
-    <string>Color Palettes</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="ColorPalette" name="map_color_palette">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="map_pixel_palette_dock">
-   <property name="features">
-    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
-   </property>
-   <property name="windowTitle">
-    <string>Tile Palettes</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="PixelPalette" name="map_pixel_palette"/>
-  </widget>
   <action name="action_open">
    <property name="text">
     <string>Open Project</string>

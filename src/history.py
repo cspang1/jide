@@ -1,4 +1,3 @@
-from collections import defaultdict
 from PyQt5.QtWidgets import QUndoCommand
 
 
@@ -185,6 +184,35 @@ class cmdRemovePixelRow(QUndoCommand):
         """Undo addign a row of sprites/tiles
         """
         self.data_source.add_palette_row(self.removed_row)
+
+class cmdSetAssetName(QUndoCommand):
+    """Add a row of sprite/tiles to a pixel palette
+
+    :param palette: Target set of pixel palettes
+    :type palette:  gamedata.PixelPalettes
+    :param desc:    Text description of action
+    :type desc:     str
+    :param parent:  Parent widget, defaults to None
+    :type parent:   QWidget, optional
+    """
+
+    def __init__(self, data_source, asset_index, new_asset_name, desc, parent=None):
+        super().__init__(desc, parent)
+        self.data_source = data_source
+        self.asset_index = asset_index
+        self.new_asset_name = new_asset_name
+        self.original_asset_name = None
+
+    def redo(self):
+        """Redo adding a row of sprites/tiles
+        """
+        self.original_asset_name = self.data_source.get_name(self.asset_index)
+        self.data_source.set_asset_name(self.asset_index, self.new_asset_name)
+
+    def undo(self):
+        """Undo addign a row of sprites/tiles
+        """
+        self.data_source.set_asset_name(self.asset_index, self.original_asset_name)
 
 class cmdAddTileMap(QUndoCommand):
     """Add a new sprite/tile color palette

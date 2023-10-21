@@ -22,7 +22,8 @@ from pixel_data import (
     PixelData,
     parse_pixel_data,
     history_add_pixel_palette_row,
-    history_remove_pixel_palette_row
+    history_remove_pixel_palette_row,
+    history_set_asset_name
 )
 from color_data import (
     ColorData,
@@ -60,8 +61,6 @@ class Jide(QMainWindow, Ui_main_window):
     def setup_window(self):
         self.tile_color_palette_dock.hide()
         self.tile_pixel_palette_dock.hide()
-        self.map_color_palette_dock.hide()
-        self.map_pixel_palette_dock.hide()
 
         self.tool_actions = QActionGroup(self)
         self.tool_actions.addAction(self.action_select_tool)
@@ -207,6 +206,25 @@ class Jide(QMainWindow, Ui_main_window):
             )
         )
 
+        self.sprite_pixel_palette.asset_renamed.connect(
+            lambda asset_index, new_asset_name:
+            history_set_asset_name(
+                self.undo_stack,
+                self.sprite_pixel_data,
+                asset_index,
+                new_asset_name
+            )
+        )
+        self.tile_pixel_palette.asset_renamed.connect(
+            lambda asset_index, new_asset_name:
+            history_set_asset_name(
+                self.undo_stack,
+                self.tile_pixel_data,
+                asset_index,
+                new_asset_name
+            )
+        )
+
     def init_ui(self):
         self.sprite_color_palette.set_transparency(True)
         self.tile_color_palette.set_transparency(False)
@@ -273,8 +291,10 @@ class Jide(QMainWindow, Ui_main_window):
     def setup_editor(self):
         self.sprite_scene = EditorScene()
         self.tile_scene = EditorScene()
+        self.tile_map_scene = EditorScene()
         self.sprite_editor_view.setScene(self.sprite_scene)
         self.tile_editor_view.setScene(self.tile_scene)
+        self.map_editor_view.setScene(self.tile_map_scene)
 
         self.sprite_pixel_data.data_updated.connect(
             lambda: self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
@@ -285,8 +305,8 @@ class Jide(QMainWindow, Ui_main_window):
 
         self.sprite_color_palette.color_previewed.connect(self.sprite_scene.set_color)
         self.tile_color_palette.color_previewed.connect(self.tile_scene.set_color)
-        self.sprite_pixel_palette.elements_selected.connect(self.sprite_scene.select_cells)
-        self.tile_pixel_palette.elements_selected.connect(self.tile_scene.select_cells)
+        self.sprite_pixel_palette.assets_selected.connect(self.sprite_scene.select_cells)
+        self.tile_pixel_palette.assets_selected.connect(self.tile_scene.select_cells)
 
         self.sprite_color_data.color_updated.connect(
             lambda _, color, index: self.sprite_scene.set_color(color, index)
@@ -346,9 +366,12 @@ class Jide(QMainWindow, Ui_main_window):
         tile_data = parse_pixel_data(project_data["tiles"])
 
         self.sprite_pixel_data.set_image(*sprite_data[:3])
-        self.sprite_pixel_data.set_names(sprite_data[-1])
+        self.sprite_pixel_data.set_asset_names(sprite_data[-1])
         self.tile_pixel_data.set_image(*tile_data[:3])
-        self.tile_pixel_data.set_names(tile_data[-1])
+        self.tile_pixel_data.set_asset_names(tile_data[-1])
+
+        self.sprite_pixel_palette.pixel_palette_grid.set_asset_names(self.sprite_pixel_data.get_names())
+        self.tile_pixel_palette.pixel_palette_grid.set_asset_names(self.tile_pixel_data.get_names())
 
         self.sprite_pixel_palette.set_pixel_palette(self.sprite_pixel_data.get_image())
         self.tile_pixel_palette.set_pixel_palette(self.tile_pixel_data.get_image())
@@ -380,6 +403,13 @@ class Jide(QMainWindow, Ui_main_window):
             lambda: self.editor_tabs.setCurrentIndex(1)
         )
 
+        self.sprite_pixel_data.name_updated.connect(
+            self.sprite_pixel_palette.set_asset_name
+        )
+        self.tile_pixel_data.name_updated.connect(
+            self.tile_pixel_palette.set_asset_name
+        )
+
     def enable_ui(self):
         self.tool_bar.setEnabled(True)
         self.editor_tabs.setEnabled(True)
@@ -398,22 +428,11 @@ class Jide(QMainWindow, Ui_main_window):
             self.sprite_pixel_palette_dock.show()
             self.tile_color_palette_dock.hide()
             self.tile_pixel_palette_dock.hide()
-            self.map_color_palette_dock.hide()
-            self.map_pixel_palette_dock.hide()
-        elif index == 1:
+        else:
             self.sprite_color_palette_dock.hide()
             self.sprite_pixel_palette_dock.hide()
             self.tile_color_palette_dock.show()
             self.tile_pixel_palette_dock.show()
-            self.map_color_palette_dock.hide()
-            self.map_pixel_palette_dock.hide()
-        else:
-            self.sprite_color_palette_dock.hide()
-            self.sprite_pixel_palette_dock.hide()
-            self.tile_color_palette_dock.hide()
-            self.tile_pixel_palette_dock.hide()
-            self.map_color_palette_dock.show()
-            self.map_pixel_palette_dock.show()
 
     def select_file(self):
         if not self.check_unsaved_changes():
@@ -481,14 +500,14 @@ class Jide(QMainWindow, Ui_main_window):
         tile_color_palettes = []
         tile_maps = []
 
-        blank_element = [[0 for _ in range(8)] for _ in range(8)]
+        blank_asset = [[0 for _ in range(8)] for _ in range(8)]
         sprite_names = ["sprite_" + str(i) for i in range(16)]
         tile_names = ["tile_" + str(i) for i in range(16)]
         blank_color_palette = [227 for _ in range(16)]
         blank_tile_map = [[0, 0] for _ in range(30 * 40)]
 
-        sprites = [{"name": name, "contents": copy.deepcopy(blank_element)} for name in sprite_names]
-        tiles = [{"name": name, "contents": copy.deepcopy(blank_element)} for name in tile_names]
+        sprites = [{"name": name, "contents": copy.deepcopy(blank_asset)} for name in sprite_names]
+        tiles = [{"name": name, "contents": copy.deepcopy(blank_asset)} for name in tile_names]
         sprite_color_palettes = [{
             "name": "sprite_color_palette_0",
             "contents": blank_color_palette.copy()
@@ -499,6 +518,8 @@ class Jide(QMainWindow, Ui_main_window):
         }]
         tile_maps = [{
             "name": "tile_map_0",
+            "width": 40,
+            "height": 30,
             "contents": copy.deepcopy(blank_tile_map)
         }]
 

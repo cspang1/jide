@@ -7,18 +7,20 @@ from PyQt5.QtCore import (
 from PyQt5.QtGui import QImage
 from history import(
     cmdAddPixelRow,
-    cmdRemovePixelRow
+    cmdRemovePixelRow,
+    cmdSetAssetName
 )
 
 class PixelData(QObject):
 
     data_updated = pyqtSignal()
+    name_updated = pyqtSignal(int, str)
     error_thrown = pyqtSignal(str)
 
-    pixels_per_element = 64
-    element_width = 8
-    element_height = 8
-    elements_per_line = 16
+    pixels_per_asset = 64
+    asset_width = 8
+    asset_height = 8
+    assets_per_line = 16
 
     def __init__(self):
         super().__init__()
@@ -33,8 +35,18 @@ class PixelData(QObject):
     def get_image(self):
         return self.data
 
-    def set_names(self, names):
+    def set_asset_names(self, names):
         self.names = names
+
+    def set_asset_name(self, asset_index, asset_name):
+        self.names[asset_index] = asset_name
+        self.name_updated.emit(asset_index, asset_name)
+
+    def get_names(self):
+        return self.names
+
+    def get_name(self, asset_index):
+        return self.names[asset_index]
 
     def set_color_table(self, color_table):
         self.data.setColorTable(color_table)
@@ -87,25 +99,25 @@ class PixelData(QObject):
         name_index = 0
 
         # Iterate through the image, dividing it into tiles
-        for y in range(0, self.data.height(), PixelData.element_height):
-            for x in range(0, self.data.width(), PixelData.element_width):
+        for y in range(0, self.data.height(), PixelData.asset_height):
+            for x in range(0, self.data.width(), PixelData.asset_width):
                 tile_data = []
 
                 # Extract pixel data for the current tile
-                for row in range(PixelData.element_height):
+                for row in range(PixelData.asset_height):
                     row_data = []
-                    for col in range(PixelData.element_width):
+                    for col in range(PixelData.asset_width):
                         # Append the RGB color tuple to the row data
                         row_data.append(self.data.pixelIndex(x + col, y + row))
                     # Append the row data to the tile data
                     tile_data.append(row_data)
 
                 # Create a JSON representation of the tile and add it to the list
-                element = {
+                asset = {
                     "name": self.names[name_index],
                     "contents": tile_data
                 }
-                image_data.append(element)
+                image_data.append(asset)
                 name_index += 1
 
         return image_data
@@ -121,7 +133,7 @@ def history_add_pixel_palette_row(undo_stack, pixel_data):
 
 def history_remove_pixel_palette_row(undo_stack, pixel_data):
     if pixel_data.get_image().height() - 8 <= 0:
-        pixel_data.error_thrown.emit("At least one row of elements is required")
+        pixel_data.error_thrown.emit("At least one row of assets is required")
         return
 
     undo_stack.push(
@@ -131,19 +143,39 @@ def history_remove_pixel_palette_row(undo_stack, pixel_data):
         )
     )
 
+def history_set_asset_name(undo_stack, pixel_data, asset_index, new_asset_name):
+    if not new_asset_name:
+        pixel_data.error_thrown.emit("Name cannot be blank")
+        return
+    if new_asset_name in pixel_data.get_names():
+        for index, name in enumerate(pixel_data.get_names()):
+            if name == new_asset_name:
+                print(index)
+        pixel_data.error_thrown.emit("An asset with this name already exists")
+        return
+
+    undo_stack.push(
+        cmdSetAssetName(
+            pixel_data,
+            asset_index,
+            new_asset_name,
+            "Rename asset"
+        )
+    )
+
 def parse_pixel_data(data):
-    pixel_data = bytearray([0] * len(data) * PixelData.pixels_per_element)
+    pixel_data = bytearray([0] * len(data) * PixelData.pixels_per_asset)
     names = []
 
     for index, palette in enumerate(data):
         names.append(palette["name"])
-        col_index = math.floor(index / PixelData.elements_per_line) * PixelData.element_width * PixelData.elements_per_line * PixelData.element_height
-        col_offset = (index % PixelData.elements_per_line) * PixelData.element_width
+        col_index = math.floor(index / PixelData.assets_per_line) * PixelData.asset_width * PixelData.assets_per_line * PixelData.asset_height
+        col_offset = (index % PixelData.assets_per_line) * PixelData.asset_width
         for pixel_row, pixel_row_data in enumerate(palette["contents"]):
-            row_offset = pixel_row * PixelData.elements_per_line * PixelData.element_width
+            row_offset = pixel_row * PixelData.assets_per_line * PixelData.asset_width
             pixel_data_index = col_index + row_offset + col_offset
             pixel_data[pixel_data_index:pixel_data_index + 8] = pixel_row_data
 
-    width = PixelData.element_width * PixelData.elements_per_line
+    width = PixelData.asset_width * PixelData.assets_per_line
     height = math.ceil(len(pixel_data) / width)
     return (pixel_data, width, height, names)

@@ -1,32 +1,27 @@
-from PyQt5 import QtGui
 from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
-    pyqtSlot, 
-    QRegExp,
-    QEvent, 
+    pyqtSlot,
     QRect,
-    QPoint,
-    QSize
+    QPoint
 ) 
 from PyQt5.QtWidgets import (
     QWidget,
-    QSizePolicy
+    QToolTip,
+    QInputDialog,
+    QLineEdit
 )
 from PyQt5.QtGui import (
-    QColor,
-    QValidator,
-    QPixmap,
-    QFont,
-    QRegExpValidator,
     QPainter,
     QPen,
-    QImage
+    QImage,
+    QColor
 )
 
 class PixelPaletteGrid(QWidget):
 
-    elements_selected = pyqtSignal(QRect)
+    assets_selected = pyqtSignal(QRect)
+    asset_renamed = pyqtSignal(int, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -38,6 +33,8 @@ class PixelPaletteGrid(QWidget):
         self.select_start = QPoint()
         self.select_end = QPoint()
         self.selection = QRect()
+
+        self.names = []
 
         self.setMouseTracking(True)  # Enable mouse tracking
 
@@ -55,9 +52,17 @@ class PixelPaletteGrid(QWidget):
             self.palette.setColor(index, color.rgb())
         self.update()
 
+    @pyqtSlot(QColor, int)
     def set_color(self, color, index):
         self.palette.setColor(index, color.rgb())
         self.update()
+
+    def set_asset_names(self, names):
+        self.names = names
+
+    @pyqtSlot(int, str)
+    def set_asset_name(self, asset_index, new_asset_name):
+        self.names[asset_index] = new_asset_name
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -116,6 +121,24 @@ class PixelPaletteGrid(QWidget):
             self.calculate_selection(self.select_start, self.select_end)
             self.update()
 
+        cell_x = event.x() // (self.grid_cell_size * self.scale_factor)
+        cell_y = event.y() // (self.grid_cell_size * self.scale_factor)
+        asset_index = round(cell_x + cell_y * 16)
+        hex_address = "0x{:02X}".format(asset_index)
+        QToolTip.showText(event.globalPos(), f'{hex_address}\n{self.names[asset_index]}', self)
+
+    def mouseDoubleClickEvent(self, event):
+        cell_x = event.x() // (self.grid_cell_size * self.scale_factor)
+        cell_y = event.y() // (self.grid_cell_size * self.scale_factor)
+        asset_index = round(cell_x + cell_y * 16)
+        old_asset_name = self.names[asset_index]
+
+        new_asset_name, accepted = QInputDialog.getText(
+            self, "Rename Asset", "Asset name:", QLineEdit.Normal, old_asset_name
+        )
+        if accepted:
+            self.asset_renamed.emit(asset_index, new_asset_name)
+
     def calculate_selection(self, start_point, end_point):
         x_start = start_point.x() // (self.grid_cell_size * self.scale_factor)
         y_start = start_point.y() // (self.grid_cell_size * self.scale_factor)
@@ -143,7 +166,7 @@ class PixelPaletteGrid(QWidget):
         self.update_from_selection()
 
     def update_from_selection(self):
-        self.elements_selected.emit(self.selection)
+        self.assets_selected.emit(self.selection)
 
     def set_selection(self, selection):
         self.selection = selection
