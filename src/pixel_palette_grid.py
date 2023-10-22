@@ -120,6 +120,7 @@ class PixelPaletteGrid(QWidget):
             self.select_end = event.pos()
             self.calculate_selection(self.select_start, self.select_end)
             self.update()
+            return
 
         cell_x = event.x() // (self.grid_cell_size * self.scale_factor)
         cell_y = event.y() // (self.grid_cell_size * self.scale_factor)

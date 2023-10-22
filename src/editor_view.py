@@ -49,7 +49,7 @@ class EditorView(QGraphicsView):
         )
         if detail < 100 and event.delta() > 0:
             self.scale(zoomFactor, zoomFactor)
-        if detail > 10 and event.delta() < 0:
+        if detail > 5 and event.delta() < 0:
             self.scale((1 / zoomFactor), (1 / zoomFactor))
 
         newPos = event.scenePos()
