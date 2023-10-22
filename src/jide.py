@@ -39,7 +39,8 @@ from tile_map_data import (
 )
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
-from editor_scene import EditorScene
+from asset_editor_scene import AssetEditorScene
+from map_editor_scene import MapEditorScene
 
 class Jide(QMainWindow, Ui_main_window):
 
@@ -289,9 +290,9 @@ class Jide(QMainWindow, Ui_main_window):
         )
 
     def setup_editor(self):
-        self.sprite_scene = EditorScene()
-        self.tile_scene = EditorScene()
-        self.tile_map_scene = EditorScene()
+        self.sprite_scene = AssetEditorScene()
+        self.tile_scene = AssetEditorScene()
+        self.tile_map_scene = MapEditorScene()
         self.sprite_editor_view.setScene(self.sprite_scene)
         self.tile_editor_view.setScene(self.tile_scene)
         self.map_editor_view.setScene(self.tile_map_scene)
@@ -410,6 +411,10 @@ class Jide(QMainWindow, Ui_main_window):
             self.tile_pixel_palette.set_asset_name
         )
 
+        self.tile_map_scene.set_tile_map(
+            self.render_tile_map(0)
+        )
+
     def enable_ui(self):
         self.tool_bar.setEnabled(True)
         self.editor_tabs.setEnabled(True)
@@ -421,6 +426,25 @@ class Jide(QMainWindow, Ui_main_window):
             palette.setEnabled(True)
         for palette in self.findChildren(PixelPalette):
             palette.setEnabled(True)
+
+    def render_tile_map(self, tile_map_index):
+        tile_map = self.tile_map_data.get_tile_maps()[tile_map_index]
+        map_height = tile_map.get_height()
+        map_width = tile_map.get_width()
+        tile_map_data = [[None for _ in range(map_width)] for _ in range(map_height)]
+        for row in range(map_height):
+            for col in range(map_width):
+                tile = tile_map.get_tile(col, row)
+                color_palette_index = tile.color_palette_index
+                tile_palette_index = tile.tile_palette_index
+                rendered_tile = self.tile_pixel_data.get_asset(tile_palette_index)
+                color_palette = self.tile_color_data.get_color_palette(
+                    self.tile_color_data.get_color_palette_name(color_palette_index)
+                )
+                rendered_tile.setColorTable([color.rgb() for color in color_palette])
+                tile_map_data[row][col] = rendered_tile
+
+        return tile_map_data
 
     def select_tab(self, index):
         if index == 0:

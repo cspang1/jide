@@ -4,14 +4,7 @@ from PyQt5.QtCore import Qt, QRect, QRectF, QEvent, pyqtSlot
 from PyQt5.QtGui import QPixmap, QPainter, QImage, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QWidget, QStyleOptionGraphicsItem, QGraphicsPixmapItem
 
-class EditorScene(QGraphicsScene):
-    """QGraphicsView into sprite/tile canvas
-
-    :param scene:   QGraphicsScene representing sprite/tile canvas
-    :type scene:    QGraphicsScene, defaults to None
-    :param parent:  Parent widget, defaults to None
-    :type parent:   QWidget
-    """
+class AssetEditorScene(QGraphicsScene):
 
     def __init__(self, parent=None):
         super().__init__(parent)

@@ -55,6 +55,12 @@ class TileMap:
     def set_tile(self, x, y, color_palette_index, tile_palette_index):
             self.contents[y][x] = Tile(color_palette_index, tile_palette_index)
 
+    def get_width(self):
+         return self.width
+
+    def get_height(self):
+         return self.height
+
     def to_json(self):
          return {
               "name": self.name,

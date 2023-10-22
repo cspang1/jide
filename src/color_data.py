@@ -46,6 +46,9 @@ class ColorData(QObject):
     def get_color_palette(self, color_palette_name):
         return self.color_data[color_palette_name]
 
+    def get_color_palette_name(self, color_palette_index):
+        return list(self.color_data.keys())[color_palette_index]
+
     @pyqtSlot(str, QColor, int)
     def update_color(self, color_palette_name, color, index):
         self.color_data[color_palette_name][index] = color

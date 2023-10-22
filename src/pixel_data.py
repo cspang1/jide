@@ -21,6 +21,7 @@ class PixelData(QObject):
     asset_width = 8
     asset_height = 8
     assets_per_line = 16
+    color_table_depth = 16
 
     def __init__(self):
         super().__init__()
@@ -34,6 +35,25 @@ class PixelData(QObject):
 
     def get_image(self):
         return self.data
+
+    def get_asset(self, asset_index):
+        tiles_per_row = self.data.width() // PixelData.asset_width
+
+        # Calculate the starting pixel coordinates of the specified tile
+        start_x = (asset_index % tiles_per_row) * PixelData.asset_width
+        start_y = (asset_index // tiles_per_row) * PixelData.asset_height
+
+        # Create a new QImage for the tile
+        asset = QImage(PixelData.asset_width, PixelData.asset_height, QImage.Format_Indexed8)
+        asset.setColorCount(PixelData.color_table_depth)
+        
+        # Copy the pixel data from the original image to the tile image
+        for y in range(PixelData.asset_height):
+            for x in range(PixelData.asset_width):
+                pixel_color = self.data.pixelIndex(start_x + x, start_y + y)
+                asset.setPixel(x, y, pixel_color)
+
+        return asset
 
     def set_asset_names(self, names):
         self.names = names
@@ -148,9 +168,6 @@ def history_set_asset_name(undo_stack, pixel_data, asset_index, new_asset_name):
         pixel_data.error_thrown.emit("Name cannot be blank")
         return
     if new_asset_name in pixel_data.get_names():
-        for index, name in enumerate(pixel_data.get_names()):
-            if name == new_asset_name:
-                print(index)
         pixel_data.error_thrown.emit("An asset with this name already exists")
         return
 
