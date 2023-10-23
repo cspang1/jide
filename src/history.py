@@ -168,14 +168,29 @@ class cmd_set_asset_name(QUndoCommand):
 
 class cmd_add_tile_map(QUndoCommand):
 
-    def __init__(self, data_source, tile_map_name, tile_map_contents=[0, 0] * 40 * 30, parent=None):
+    def __init__(
+            self,
+            data_source,
+            tile_map_name,
+            tile_map_width=40,
+            tile_map_height=30,
+            tile_map_data=[[0, 0] for _ in range(40 * 30)],
+            parent=None
+        ):
         super().__init__("add tile map", parent)
         self.data_source = data_source
         self.tile_map_name = tile_map_name
-        self.tile_map_contents = tile_map_contents
+        self.tile_map_width = tile_map_width
+        self.tile_map_height = tile_map_height
+        self.tile_map_data = tile_map_data
 
     def redo(self):
-        self.data_source.add_tile_map(self.tile_map_name, self.tile_map_contents)
+        self.data_source.add_tile_map(
+            self.tile_map_name,
+            self.tile_map_width,
+            self.tile_map_height,
+            self.tile_map_data
+        )
 
     def undo(self):
         self.data_source.remove_tile_map(self.tile_map_name)
@@ -183,7 +198,32 @@ class cmd_add_tile_map(QUndoCommand):
     def validate(self):
         if not self.tile_map_name:
             return Validator(False, "Tile map name cannot be blank")
-        if self.tile_map_name in self.data_source.get_tile_maps():
-            return Validator(False, "A tile map with that name already exists")
+        for tile in self.data_source.get_tile_maps():
+            if self.tile_map_name == tile.get_name():
+                return Validator(False, "A tile map with that name already exists")
 
+        return Validator(True, "")
+
+class cmd_remove_tile_map(QUndoCommand):
+
+    def __init__(self, data_source, tile_map_name, parent=None):
+        super().__init__("remove tile map", parent)
+        self.data_source = data_source
+        self.tile_map_name = tile_map_name
+        self.removed_tile_map = None
+
+    def redo(self):
+        self.removed_tile_map = self.data_source.remove_tile_map(self.tile_map_name)
+
+    def undo(self):
+        self.data_source.add_tile_map(
+            self.removed_tile_map.get_name(),
+            self.removed_tile_map.get_width(),
+            self.removed_tile_map.get_height(),
+            self.removed_tile_map.get_data()
+        )
+    def validate(self):
+        if len(self.data_source.get_tile_maps()) == 1:
+            return Validator(False, "At least one tile map is required")
+        
         return Validator(True, "")

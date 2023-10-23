@@ -33,8 +33,16 @@ class TileMapData(QObject):
         self.tile_map_added.emit(tile_map_name)
 
     def remove_tile_map(self, tile_map_name):
-        del self.tile_maps[tile_map_name]
+        removed_tile_map = None
+
+        for tile_map in self.tile_maps:
+            if tile_map.name == tile_map_name:
+                removed_tile_map = tile_map
+                self.tile_maps.remove(tile_map)
+
         self.tile_map_removed.emit(tile_map_name)
+
+        return removed_tile_map
 
     def get_tile_maps(self):
         return self.tile_maps
@@ -52,26 +60,32 @@ class TileMap:
         self.name = name
         self.width = width
         self.height = height
-        self.contents = [[Tile(0, 0) for _ in range(width)] for _ in range(height)]
+        self.data = [[Tile(0, 0) for _ in range(width)] for _ in range(height)]
 
     def get_tile(self, x, y):
-            return self.contents[y][x]
+        return self.data[y][x]
 
     def set_tile(self, x, y, color_palette_index, tile_palette_index):
-            self.contents[y][x] = Tile(color_palette_index, tile_palette_index)
+        self.data[y][x] = Tile(color_palette_index, tile_palette_index)
+
+    def get_name(self):
+        return self.name
 
     def get_width(self):
-         return self.width
+        return self.width
 
     def get_height(self):
-         return self.height
+        return self.height
+
+    def get_data(self):
+        return [tile for row in self.data for tile in row]
 
     def to_json(self):
-         return {
-              "name": self.name,
-              "width": self.width,
-              "height": self.height,
-              "contents": [
-                   [tile.color_palette_index, tile.tile_palette_index] for row in self.contents for tile in row
-                ]
-         }
+        return {
+            "name": self.name,
+            "width": self.width,
+            "height": self.height,
+            "contents": [
+                [tile.color_palette_index, tile.tile_palette_index] for row in self.data for tile in row
+            ]
+        }
