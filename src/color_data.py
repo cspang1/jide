@@ -5,12 +5,6 @@ from PyQt5.QtCore import (
     pyqtSlot
 )
 from PyQt5.QtGui import QColor
-from history import(
-    cmdSetCol,
-    cmdRenameColPal,
-    cmdAddColPal,
-    cmdRemoveColPal
-)
 
 class ColorData(QObject):
 
@@ -18,7 +12,6 @@ class ColorData(QObject):
     color_palette_removed = pyqtSignal(str)
     color_palette_renamed = pyqtSignal(str, str)
     color_updated = pyqtSignal(str, QColor, int)
-    error_thrown = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -75,60 +68,6 @@ class ColorData(QObject):
             color_data.append(palette)
 
         return color_data
-
-def history_set_color(undo_stack, color_data, palette_name, new_color, change_index):
-    undo_stack.push(
-        cmdSetCol(
-            color_data,
-            palette_name,
-            new_color,
-            change_index,
-            "Set palette color"
-        )
-    )
-
-def history_rename_color_palette(undo_stack, color_data, old_palette_name, new_palette_name):
-    if new_palette_name in color_data.get_color_data() and old_palette_name != new_palette_name:
-        color_data.error_thrown.emit("A color palette with that name already exists")
-        return
-    if old_palette_name == new_palette_name:
-        return
-
-    undo_stack.push(
-        cmdRenameColPal(
-            color_data,
-            old_palette_name,
-            new_palette_name,
-            "Rename color palette"
-        )
-    )
-
-def history_add_color_palette(undo_stack, color_data, palette_name):
-    if palette_name in color_data.get_color_data():
-        color_data.error_thrown.emit("A color palette with that name already exists")
-        return
-
-    undo_stack.push(
-        cmdAddColPal(
-            color_data,
-            palette_name,
-            [QColor(255, 0, 255)] * 16,
-            "Add  color palette"
-        )
-    )
-
-def history_remove_color_palette(undo_stack, color_data, palette_name):
-    if len(color_data.get_color_data()) == 1:
-        color_data.error_thrown.emit("At least one color palette is required")
-        return
-
-    undo_stack.push(
-        cmdRemoveColPal(
-            color_data,
-            palette_name,
-            "Remove color palette"
-        )
-    )
 
 def upsample(red, green, blue):
     """Upsamples RGB from 8-bit to 24-bit

@@ -13,34 +13,34 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QFileDialog,
     QMessageBox,
-    QActionGroup,
-    QUndoStack
+    QActionGroup
 )
 from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
 from pixel_data import (
     PixelData,
-    parse_pixel_data,
-    history_add_pixel_palette_row,
-    history_remove_pixel_palette_row,
-    history_set_asset_name
+    parse_pixel_data
 )
 from color_data import (
     ColorData,
-    parse_color_data,
-    history_set_color,
-    history_rename_color_palette,
-    history_add_color_palette,
-    history_remove_color_palette
+    parse_color_data
 )
-from tile_map_data import (
-    TileMapData,
-    history_add_tile_map
-)
+from tile_map_data import TileMapData
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
 from asset_editor_scene import AssetEditorScene
 from map_editor_scene import MapEditorScene
+from history import (
+    UndoStack,
+    cmd_add_color_palette,
+    cmd_add_pixel_palette_row,
+    cmd_add_tile_map,
+    cmd_remove_color_palette,
+    cmd_remove_pixel_palette_row,
+    cmd_rename_color_palette,
+    cmd_set_asset_name,
+    cmd_set_color
+)
 
 class Jide(QMainWindow, Ui_main_window):
 
@@ -60,6 +60,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.load_project("./data/demo.jrf")
 
     def setup_window(self):
+        self.tile_map_picker_dock.hide()
         self.tile_color_palette_dock.hide()
         self.tile_pixel_palette_dock.hide()
 
@@ -71,7 +72,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.tool_actions.addAction(self.action_rectangle_tool)
         self.tool_actions.addAction(self.action_ellipse_tool)
 
-        self.undo_stack = QUndoStack(self)
+        self.undo_stack = UndoStack(self)
         action_undo = self.undo_stack.createUndoAction(self, "&Undo")
         action_undo.setShortcut(QKeySequence.Undo)
         action_redo = self.undo_stack.createRedoAction(self, "&Redo")
@@ -98,131 +99,142 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_pixel_data = PixelData()
         self.tile_map_data = TileMapData()
 
-        self.sprite_color_data.error_thrown.connect(self.show_error_dialog)
-        self.tile_color_data.error_thrown.connect(self.show_error_dialog)
-        self.sprite_pixel_data.error_thrown.connect(self.show_error_dialog)
-        self.tile_pixel_data.error_thrown.connect(self.show_error_dialog)
+        self.undo_stack.error_thrown.connect(self.show_error_dialog)
 
         self.sprite_color_palette.color_set.connect(
-            lambda new_color, change_index:
-            history_set_color(
-                self.undo_stack,
-                self.sprite_color_data,
-                self.sprite_color_palette.color_palette_name_combo.currentText(),
-                new_color,
-                change_index,
+            lambda update_color, update_index:
+            self.undo_stack.push(
+                cmd_set_color(
+                    self.sprite_color_data,
+                    self.sprite_color_palette.color_palette_name_combo.currentText(),
+                    update_color,
+                    update_index
+                )
             )
         )
         self.tile_color_palette.color_set.connect(
-            lambda new_color, change_index:
-            history_set_color(
-                self.undo_stack,
-                self.tile_color_data,
-                self.tile_color_palette.color_palette_name_combo.currentText(),
-                new_color,
-                change_index,
+            lambda update_color, update_index:
+            self.undo_stack.push(
+                cmd_set_color(
+                    self.tile_color_data,
+                    self.tile_color_palette.color_palette_name_combo.currentText(),
+                    update_color,
+                    update_index
+                )
             )
         )
 
         self.sprite_color_palette.color_palette_renamed.connect(
-            lambda old_palette_name, new_palette_name: 
-            history_rename_color_palette(
-                self.undo_stack,
-                self.sprite_color_data,
-                old_palette_name,
-                new_palette_name,
+            lambda old_palette_name, new_palette_name:
+            self.undo_stack.push(
+                cmd_rename_color_palette(
+                    self.sprite_color_data,
+                    old_palette_name,
+                    new_palette_name
+                )
             )
         )
         self.tile_color_palette.color_palette_renamed.connect(
-            lambda old_palette_name, new_palette_name: 
-            history_rename_color_palette(
-                self.undo_stack,
-                self.tile_color_data,
-                old_palette_name,
-                new_palette_name,
+            lambda old_palette_name, new_palette_name:
+            self.undo_stack.push(
+                cmd_rename_color_palette(
+                    self.tile_color_data,
+                    old_palette_name,
+                    new_palette_name
+                )
             )
         )
 
         self.sprite_color_palette.color_palette_added.connect(
             lambda palette_name: 
-            history_add_color_palette(
-                self.undo_stack,
-                self.sprite_color_data,
-                palette_name
+            self.undo_stack.push(
+                cmd_add_color_palette(
+                    self.sprite_color_data,
+                    palette_name
+                )
             )
         )
         self.tile_color_palette.color_palette_added.connect(
             lambda palette_name: 
-            history_add_color_palette(
-                self.undo_stack,
-                self.tile_color_data,
-                palette_name
+            self.undo_stack.push(
+                cmd_add_color_palette(
+                    self.tile_color_data,
+                    palette_name
+                )
             )
         )
 
         self.sprite_color_palette.color_palette_removed.connect(
             lambda palette_name: 
-            history_remove_color_palette(
-                self.undo_stack,
-                self.sprite_color_data,
-                palette_name
+            self.undo_stack.push(
+                cmd_remove_color_palette(
+                    self.sprite_color_data,
+                    palette_name
+                )
             )
         )
         self.tile_color_palette.color_palette_removed.connect(
             lambda palette_name: 
-            history_remove_color_palette(
-                self.undo_stack,
-                self.tile_color_data,
-                palette_name
+            self.undo_stack.push(
+                cmd_remove_color_palette(
+                    self.tile_color_data,
+                    palette_name
+                )
             )
         )
 
         self.sprite_pixel_palette.add_palette_row.connect(
             lambda: 
-            history_add_pixel_palette_row(
-                self.undo_stack,
-                self.sprite_pixel_data,
+            self.undo_stack.push(
+                cmd_add_pixel_palette_row(
+                    self.sprite_pixel_data
+                )
             )
         )
         self.tile_pixel_palette.add_palette_row.connect(
             lambda: 
-            history_add_pixel_palette_row(
-                self.undo_stack,
-                self.tile_pixel_data
+            self.undo_stack.push(
+                cmd_add_pixel_palette_row(
+                    self.tile_pixel_data
+                )
             )
         )
 
         self.sprite_pixel_palette.remove_palette_row.connect(
             lambda: 
-            history_remove_pixel_palette_row(
-                self.undo_stack,
-                self.sprite_pixel_data,
+            self.undo_stack.push(
+                cmd_remove_pixel_palette_row(
+                    self.sprite_pixel_data
+                )
             )
         )
         self.tile_pixel_palette.remove_palette_row.connect(
             lambda: 
-            history_remove_pixel_palette_row(
-                self.undo_stack,
-                self.tile_pixel_data
+            self.undo_stack.push(
+                cmd_remove_pixel_palette_row(
+                    self.tile_pixel_data
+                )
             )
         )
 
         self.sprite_pixel_palette.asset_renamed.connect(
             lambda asset_index, new_asset_name:
-            history_set_asset_name(
-                self.undo_stack,
-                self.sprite_pixel_data,
-                asset_index,
-                new_asset_name
+            self.undo_stack.push(
+                cmd_set_asset_name(
+                    self.sprite_pixel_data,
+                    asset_index,
+                    new_asset_name
+                )
             )
         )
         self.tile_pixel_palette.asset_renamed.connect(
             lambda asset_index, new_asset_name:
-            history_set_asset_name(
-                self.undo_stack,
-                self.tile_pixel_data,
-                asset_index,
-                new_asset_name
+            self.undo_stack.push(
+                cmd_set_asset_name(
+                    self.tile_pixel_data,
+                    asset_index,
+                    new_asset_name
+                )
             )
         )
 
@@ -327,6 +339,12 @@ class Jide(QMainWindow, Ui_main_window):
             )
         )
 
+        self.tile_map_picker.tile_map_changed.connect(
+            lambda tile_map_name: self.tile_map_scene.set_tile_map(
+                self.render_tile_map(tile_map_name)
+            )
+        )
+
     def load_project(self, file_name):
         if not file_name:
             return
@@ -412,7 +430,7 @@ class Jide(QMainWindow, Ui_main_window):
         )
 
         self.tile_map_scene.set_tile_map(
-            self.render_tile_map(0)
+            self.render_tile_map("tile_map0")
         )
 
     def enable_ui(self):
@@ -422,13 +440,14 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_close.setEnabled(True)
         self.action_gen_dat_files.setEnabled(True)
         self.action_load_jcap_system.setEnabled(True)
-        for palette in self.findChildren(ColorPalette):
-            palette.setEnabled(True)
-        for palette in self.findChildren(PixelPalette):
-            palette.setEnabled(True)
+        self.sprite_color_palette.setEnabled(True)
+        self.tile_color_palette.setEnabled(True)
+        self.sprite_pixel_palette.setEnabled(True)
+        self.tile_pixel_palette.setEnabled(True)
+        self.tile_map_picker.setEnabled(True)
 
-    def render_tile_map(self, tile_map_index):
-        tile_map = self.tile_map_data.get_tile_maps()[tile_map_index]
+    def render_tile_map(self, tile_map_name):
+        tile_map = self.tile_map_data.get_tile_map(tile_map_name)
         map_height = tile_map.get_height()
         map_width = tile_map.get_width()
         tile_map_data = [[None for _ in range(map_width)] for _ in range(map_height)]
@@ -447,16 +466,17 @@ class Jide(QMainWindow, Ui_main_window):
         return tile_map_data
 
     def select_tab(self, index):
-        if index == 0:
-            self.sprite_color_palette_dock.show()
-            self.sprite_pixel_palette_dock.show()
-            self.tile_color_palette_dock.hide()
-            self.tile_pixel_palette_dock.hide()
-        else:
-            self.sprite_color_palette_dock.hide()
-            self.sprite_pixel_palette_dock.hide()
-            self.tile_color_palette_dock.show()
-            self.tile_pixel_palette_dock.show()
+        dock_visibility = {
+            0: (True, True, False, False, False),
+            1: (False, False, False, True, True),
+            2: (False, False, True, True, True)
+        }
+
+        self.sprite_color_palette_dock.setVisible(dock_visibility[index][0])
+        self.sprite_pixel_palette_dock.setVisible(dock_visibility[index][1])
+        self.tile_map_picker_dock.setVisible(dock_visibility[index][2])
+        self.tile_color_palette_dock.setVisible(dock_visibility[index][3])
+        self.tile_pixel_palette_dock.setVisible(dock_visibility[index][4])
 
     def select_file(self):
         if not self.check_unsaved_changes():
@@ -620,10 +640,11 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_pixel_palette = PixelPalette()
         self.tile_pixel_palette_dock.setWidget(self.tile_pixel_palette)
 
-        for palette in self.findChildren(ColorPalette):
-            palette.setEnabled(False)
-        for palette in self.findChildren(PixelPalette):
-            palette.setEnabled(False)
+        self.sprite_color_palette.setEnabled(False)
+        self.tile_color_palette.setEnabled(False)
+        self.sprite_pixel_palette.setEnabled(False)
+        self.tile_pixel_palette.setEnabled(False)
+        self.tile_map_picker.setEnabled(False)
 
         self.undo_stack.clear()
         self.project_file = None

@@ -5,7 +5,7 @@ from PyQt5.QtCore import (
 )
 from PyQt5.QtGui import QImage
 from history import(
-    cmdAddTileMap
+    cmd_add_tile_map
 )
 from collections import namedtuple
 
@@ -15,7 +15,6 @@ class TileMapData(QObject):
 
     tile_map_added = pyqtSignal(str)
     tile_map_removed = pyqtSignal(str)
-    error_thrown = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -38,6 +37,11 @@ class TileMapData(QObject):
 
     def get_tile_maps(self):
         return self.tile_maps
+
+    def get_tile_map(self, tile_map_name):
+        for tile in self.tile_maps:
+            if tile.name == tile_map_name:
+                return tile
 
     def to_json(self):
         return [tile_map.to_json() for tile_map in self.tile_maps]
@@ -70,17 +74,3 @@ class TileMap:
                    [tile.color_palette_index, tile.tile_palette_index] for row in self.contents for tile in row
                 ]
          }
-
-def history_add_tile_map(undo_stack, tile_map_data, tile_map_name):
-    if tile_map_name in tile_map_data.get_tile_maps():
-        tile_map_data.error_thrown.emit("A tile map with that name already exists")
-        return
-
-    undo_stack.push(
-        cmdAddTileMap(
-            tile_map_data,
-            tile_map_name,
-            [0, 0] * 40 * 30,
-            "Add  tile map"
-        )
-    )

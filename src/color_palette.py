@@ -100,7 +100,7 @@ class ColorPalette(QWidget, Ui_color_palette):
         self.color_palette_engaged.emit()
 
     @pyqtSlot()
-    def add_color_palette_dialog(self, event=None):
+    def add_color_palette_dialog(self):
         name, accepted = QInputDialog.getText(
             self, "Add Palette", "Palette name:", QLineEdit.Normal, "new_palette"
         )
@@ -108,7 +108,7 @@ class ColorPalette(QWidget, Ui_color_palette):
             self.color_palette_added.emit(name)
 
     @pyqtSlot(str)
-    def rename_color_palette_dialog(self, old_palette_name, event=None):
+    def rename_color_palette_dialog(self, old_palette_name):
         new_palette_name, accepted = QInputDialog.getText(
             self, "Rename Palette", "Palette name:", QLineEdit.Normal, old_palette_name
         )

@@ -221,6 +221,37 @@
     </property>
    </widget>
   </widget>
+  <widget class="QDockWidget" name="tile_map_picker_dock">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>71</width>
+     <height>42</height>
+    </size>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Tile Maps</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="TileMapPicker" name="tile_map_picker">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+   </widget>
+  </widget>
   <widget class="QDockWidget" name="tile_color_palette_dock">
    <property name="enabled">
     <bool>true</bool>
@@ -552,6 +583,12 @@
    <class>EditorView</class>
    <extends>QGraphicsView</extends>
    <header>editor_view</header>
+  </customwidget>
+  <customwidget>
+   <class>TileMapPicker</class>
+   <extends>QWidget</extends>
+   <header>tile_map_picker</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>

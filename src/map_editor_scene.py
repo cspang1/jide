@@ -32,14 +32,6 @@ class MapEditorScene(QGraphicsScene):
             x = 0  # Reset x for the next row
             y += pixmap.height()  # Adjust as needed for spacing
 
-    @pyqtSlot(QColor, int)
-    def set_color(self, color, index):
-        self.subject.setColor(index, color.rgb())
-
-    def set_color_table(self, color_table):
-        for index, color in enumerate(color_table):
-            self.subject.setColor(index, color.rgb())
-
     def drawForeground(self, painter, rect):
         super().drawBackground(painter, rect)
         painter.setRenderHint(QPainter.Antialiasing, True)
@@ -76,11 +68,3 @@ class MapEditorScene(QGraphicsScene):
             painter.setPen(grid_pen)
             painter.drawLine(left, y, right, y)
             y += grid_size
-
-class Tile(QGraphicsPixmapItem):
-
-    retrieve_tile = pyqtSignal(int)
-    retrieve_color_palette = pyqtSignal(int)
-
-    def __init__(self, pixmap=None, parent=None):
-        super().__init__(pixmap, parent)

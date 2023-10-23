@@ -5,17 +5,11 @@ from PyQt5.QtCore import (
     pyqtSlot
 )
 from PyQt5.QtGui import QImage
-from history import(
-    cmdAddPixelRow,
-    cmdRemovePixelRow,
-    cmdSetAssetName
-)
 
 class PixelData(QObject):
 
     data_updated = pyqtSignal()
     name_updated = pyqtSignal(int, str)
-    error_thrown = pyqtSignal(str)
 
     pixels_per_asset = 64
     asset_width = 8
@@ -141,44 +135,6 @@ class PixelData(QObject):
                 name_index += 1
 
         return image_data
-
-
-def history_add_pixel_palette_row(undo_stack, pixel_data):
-    undo_stack.push(
-        cmdAddPixelRow(
-            pixel_data,
-            "Add palette row"
-        )
-    )
-
-def history_remove_pixel_palette_row(undo_stack, pixel_data):
-    if pixel_data.get_image().height() - 8 <= 0:
-        pixel_data.error_thrown.emit("At least one row of assets is required")
-        return
-
-    undo_stack.push(
-        cmdRemovePixelRow(
-            pixel_data,
-            "Remove palette row"
-        )
-    )
-
-def history_set_asset_name(undo_stack, pixel_data, asset_index, new_asset_name):
-    if not new_asset_name:
-        pixel_data.error_thrown.emit("Name cannot be blank")
-        return
-    if new_asset_name in pixel_data.get_names():
-        pixel_data.error_thrown.emit("An asset with this name already exists")
-        return
-
-    undo_stack.push(
-        cmdSetAssetName(
-            pixel_data,
-            asset_index,
-            new_asset_name,
-            "Rename asset"
-        )
-    )
 
 def parse_pixel_data(data):
     pixel_data = bytearray([0] * len(data) * PixelData.pixels_per_asset)

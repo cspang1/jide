@@ -99,6 +99,21 @@ class Ui_main_window(object):
         self.sprite_pixel_palette.setObjectName("sprite_pixel_palette")
         self.sprite_pixel_palette_dock.setWidget(self.sprite_pixel_palette)
         main_window.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.sprite_pixel_palette_dock)
+        self.tile_map_picker_dock = QtWidgets.QDockWidget(main_window)
+        self.tile_map_picker_dock.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tile_map_picker_dock.sizePolicy().hasHeightForWidth())
+        self.tile_map_picker_dock.setSizePolicy(sizePolicy)
+        self.tile_map_picker_dock.setMinimumSize(QtCore.QSize(71, 42))
+        self.tile_map_picker_dock.setFeatures(QtWidgets.QDockWidget.DockWidgetFloatable|QtWidgets.QDockWidget.DockWidgetMovable)
+        self.tile_map_picker_dock.setObjectName("tile_map_picker_dock")
+        self.tile_map_picker = TileMapPicker()
+        self.tile_map_picker.setEnabled(False)
+        self.tile_map_picker.setObjectName("tile_map_picker")
+        self.tile_map_picker_dock.setWidget(self.tile_map_picker)
+        main_window.addDockWidget(QtCore.Qt.DockWidgetArea(2), self.tile_map_picker_dock)
         self.tile_color_palette_dock = QtWidgets.QDockWidget(main_window)
         self.tile_color_palette_dock.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
@@ -242,6 +257,7 @@ class Ui_main_window(object):
         self.tool_bar.setWindowTitle(_translate("main_window", "toolBar"))
         self.sprite_color_palette_dock.setWindowTitle(_translate("main_window", "Color Palettes"))
         self.sprite_pixel_palette_dock.setWindowTitle(_translate("main_window", "Sprite Palettes"))
+        self.tile_map_picker_dock.setWindowTitle(_translate("main_window", "Tile Maps"))
         self.tile_color_palette_dock.setWindowTitle(_translate("main_window", "Color Palettes"))
         self.tile_pixel_palette_dock.setWindowTitle(_translate("main_window", "Tile Palettes"))
         self.menu_file.setTitle(_translate("main_window", "File"))
@@ -283,4 +299,5 @@ class Ui_main_window(object):
 from color_palette import ColorPalette
 from editor_view import EditorView
 from pixel_palette import PixelPalette
+from tile_map_picker import TileMapPicker
 import resources_rc

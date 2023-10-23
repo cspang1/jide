@@ -5,3 +5,4 @@ pyuic5 -o src/ui/color_palette_ui.py ./res/ui/ColorPalette.ui
 pyuic5 -o src/ui/preferences_dialog_ui.py ./res/ui/PreferencesDialog.ui
 pyuic5 -o src/ui/color_preview_ui.py ./res/ui/ColorPreview.ui
 pyuic5 -o src/ui/color_picker_dialog_ui.py ./res/ui/ColorPickerDialog.ui
+pyuic5 -o src/ui/tile_map_picker.py ./res/ui/TileMapPicker.ui
