@@ -43,7 +43,8 @@ from history import (
     cmd_rename_color_palette,
     cmd_set_asset_name,
     cmd_set_color,
-    cmd_remove_tile_map
+    cmd_remove_tile_map,
+    cmd_rename_tile_map
 )
 
 class Jide(QMainWindow, Ui_main_window):
@@ -260,6 +261,16 @@ class Jide(QMainWindow, Ui_main_window):
                 )
             )
         )
+        self.tile_map_picker.tile_map_renamed.connect(
+            lambda old_tile_map_name, new_tile_map_name:
+            self.undo_stack.push(
+                cmd_rename_tile_map(
+                    self.tile_map_data,
+                    old_tile_map_name,
+                    new_tile_map_name
+                )
+            )
+        )
 
     def init_ui(self):
         self.sprite_color_palette.set_transparency(True)
@@ -296,9 +307,9 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
         self.tile_color_data.color_palette_renamed.connect(self.tile_color_palette.rename_color_palette)
 
-        # remove, rename, etc. tile map connections here
         self.tile_map_data.tile_map_added.connect(self.tile_map_picker.add_tile_map)
         self.tile_map_data.tile_map_removed.connect(self.tile_map_picker.remove_tile_map)
+        self.tile_map_data.tile_map_renamed.connect(self.tile_map_picker.rename_tile_map)
 
         self.sprite_color_data.color_updated.connect(self.sprite_color_palette.update_color)
         self.tile_color_data.color_updated.connect(self.tile_color_palette.update_color)

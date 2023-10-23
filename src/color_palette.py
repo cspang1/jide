@@ -67,7 +67,6 @@ class ColorPalette(QWidget, Ui_color_palette):
 
     @pyqtSlot(str, str)
     def rename_color_palette(self, old_color_palette_name, new_color_palette_name):
-        index = self.color_palette_name_combo.findText(old_color_palette_name)
         self.color_palette_name_combo.setItemText(
             self.color_palette_name_combo.findText(old_color_palette_name),
             new_color_palette_name

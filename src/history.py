@@ -227,3 +227,28 @@ class cmd_remove_tile_map(QUndoCommand):
             return Validator(False, "At least one tile map is required")
         
         return Validator(True, "")
+
+class cmd_rename_tile_map(QUndoCommand):
+
+    def __init__(self, data_source, old_tile_map_name, new_tile_map_name, parent=None):
+        super().__init__("rename tile map", parent)
+        self.data_source = data_source
+        self.old_tile_map_name = old_tile_map_name
+        self.new_tile_map_name = new_tile_map_name
+
+    def redo(self):
+        self.data_source.rename_tile_map(self.old_tile_map_name, self.new_tile_map_name)
+
+    def undo(self):
+        self.data_source.rename_tile_map(self.new_tile_map_name, self.old_tile_map_name)
+
+    def validate(self):
+        if self.old_tile_map_name == self.new_tile_map_name:
+            return Validator(False, "")
+        if not self.new_tile_map_name:
+            return Validator(False, "Tile map name cannot be blank")
+        for tile_map in self.data_source.get_tile_maps():
+            if tile_map.get_name() == self.new_tile_map_name:
+                return Validator(False, "A tile map with that name already exists")
+
+        return Validator(True, "")

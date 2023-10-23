@@ -44,6 +44,14 @@ class TileMapData(QObject):
 
         return removed_tile_map
 
+    @pyqtSlot(str, str)
+    def rename_tile_map(self, old_tile_map_name, new_tile_map_name):
+        for tile_map in self.tile_maps:
+            if tile_map.get_name() == old_tile_map_name:
+                tile_map.set_name(new_tile_map_name)
+
+        self.tile_map_renamed.emit(old_tile_map_name, new_tile_map_name)
+
     def get_tile_maps(self):
         return self.tile_maps
 
@@ -67,6 +75,9 @@ class TileMap:
 
     def set_tile(self, x, y, color_palette_index, tile_palette_index):
         self.data[y][x] = Tile(color_palette_index, tile_palette_index)
+
+    def set_name(self, tile_map_name):
+        self.name = tile_map_name
 
     def get_name(self):
         return self.name

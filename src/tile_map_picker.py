@@ -57,13 +57,12 @@ class TileMapPicker(QWidget, Ui_tile_map_picker):
 
     @pyqtSlot(str, str)
     def rename_tile_map(self, old_tile_map_name, new_tile_map_name):
-        index = self.tile_map_name_combo.findText(old_tile_map_name)
         self.tile_map_name_combo.setItemText(
             self.tile_map_name_combo.findText(old_tile_map_name),
             new_tile_map_name
         )
         self.tile_map_name_combo.setCurrentIndex(
-            self.tile_map_name_combo.findText(old_tile_map_name)
+            self.tile_map_name_combo.findText(new_tile_map_name)
         )
 
         # If the renamed palette has the same index as the current one,
