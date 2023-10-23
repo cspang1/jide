@@ -3,6 +3,7 @@ import sys
 from PyQt5.QtCore import Qt, QRect, QRectF, QEvent, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QPixmap, QPainter, QImage, QColor, QPen
 from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QWidget, QStyleOptionGraphicsItem, QGraphicsPixmapItem
+from collections import namedtuple
 
 class MapEditorScene(QGraphicsScene):
 
@@ -10,27 +11,34 @@ class MapEditorScene(QGraphicsScene):
         super().__init__(parent)
         self.subject = QImage()
         self.crop_rect = QRect()
+        self.tile_map_images = []
 
     @pyqtSlot()
-    def set_tile_map(self, tile_map):
-        # Clear the existing items in the scene
+    def set_tile_map(self, tile_map_images):
+        self.tile_map_images = tile_map_images
+        self.refresh_tile_map()
+
+    def refresh_tile_map(self):
         self.clear()
-
-        # Initialize positions for placing the tiles
         x, y = 0, 0
-
-        # Add each QImage as a QGraphicsPixmapItem to the scene
-        for row in tile_map:
+        for row in self.tile_map_images:
             for tile in row:
                 pixmap = QPixmap.fromImage(tile)
                 item = QGraphicsPixmapItem(pixmap)
                 item.setPos(x, y)
                 self.addItem(item)
+                x += pixmap.width()
 
-                # Update the position for the next tile
-                x += pixmap.width()  # Adjust as needed for spacing
-            x = 0  # Reset x for the next row
-            y += pixmap.height()  # Adjust as needed for spacing
+            x = 0
+            y += pixmap.height()
+
+    @pyqtSlot(str, QColor, int)
+    def set_color(self, color_palette, color, index):
+        for tile in [tile for row in self.tile_map_images for tile in row]:
+            if tile.color_palette_name == color_palette:
+                tile.setColor(index, color.rgb())
+
+        self.refresh_tile_map()
 
     def drawForeground(self, painter, rect):
         super().drawBackground(painter, rect)
@@ -68,3 +76,27 @@ class MapEditorScene(QGraphicsScene):
             painter.setPen(grid_pen)
             painter.drawLine(left, y, right, y)
             y += grid_size
+
+class RenderedTile(QImage):
+
+    def __init__(self, tile_image, color_palette_name, tile_palette_index):
+        super().__init__(tile_image)
+        self.color_palette_name = color_palette_name
+        self.tile_palette_index = tile_palette_index
+
+def render_tile_map(tile_map_data, color_palette_data, tile_palette_data):
+    map_height = tile_map_data.get_height()
+    map_width = tile_map_data.get_width()
+    tile_map_images = [[None for _ in range(map_width)] for _ in range(map_height)]
+    for row in range(map_height):
+        for col in range(map_width):
+            tile = tile_map_data.get_tile(col, row)
+            color_palette_index = tile.color_palette_index
+            tile_palette_index = tile.tile_palette_index
+            tile_image = tile_palette_data.get_asset(tile_palette_index)
+            color_palette_name = color_palette_data.get_color_palette_name(color_palette_index)
+            color_palette = color_palette_data.get_color_palette(color_palette_name)
+            tile_image.setColorTable([color.rgb() for color in color_palette])
+            tile_map_images[row][col] = RenderedTile(tile_image, color_palette_name, tile_palette_index)
+
+    return tile_map_images

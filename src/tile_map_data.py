@@ -15,6 +15,7 @@ class TileMapData(QObject):
 
     tile_map_added = pyqtSignal(str)
     tile_map_removed = pyqtSignal(str)
+    tile_map_renamed = pyqtSignal(str, str)
 
     def __init__(self):
         super().__init__()

@@ -29,7 +29,10 @@ from tile_map_data import TileMapData
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
 from asset_editor_scene import AssetEditorScene
-from map_editor_scene import MapEditorScene
+from map_editor_scene import (
+    MapEditorScene,
+    render_tile_map
+)
 from history import (
     UndoStack,
     cmd_add_color_palette,
@@ -247,14 +250,14 @@ class Jide(QMainWindow, Ui_main_window):
                 self.sprite_color_data.get_color_palette(palette_name)
             )
         )
-        self.tile_color_palette.color_palette_changed.connect(
-            lambda palette_name: self.tile_color_palette.change_palette(
-                self.tile_color_data.get_color_palette(palette_name)
-            )
-        )
         self.sprite_color_palette.color_palette_changed.connect(
             lambda palette_name: self.sprite_pixel_palette.set_color_table(
                 self.sprite_color_data.get_color_palette(palette_name)
+            )
+        )
+        self.tile_color_palette.color_palette_changed.connect(
+            lambda palette_name: self.tile_color_palette.change_palette(
+                self.tile_color_data.get_color_palette(palette_name)
             )
         )
         self.tile_color_palette.color_palette_changed.connect(
@@ -273,6 +276,9 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_color_data.color_palette_renamed.connect(self.sprite_color_palette.rename_color_palette)
         self.tile_color_data.color_palette_renamed.connect(self.tile_color_palette.rename_color_palette)
 
+        # remove, rename, etc. tile map connections here
+        self.tile_map_data.tile_map_added.connect(self.tile_map_picker.add_tile_map)
+
         self.sprite_color_data.color_updated.connect(self.sprite_color_palette.update_color)
         self.tile_color_data.color_updated.connect(self.tile_color_palette.update_color)
         self.sprite_color_data.color_updated.connect(
@@ -285,13 +291,13 @@ class Jide(QMainWindow, Ui_main_window):
             lambda _, color, index: self.sprite_color_palette.color_preview.set_primary_color(color, index)
         )
         self.tile_color_data.color_updated.connect(
-            lambda _, color, index: self.stile_color_palette.color_preview.set_primary_color(color, index)
+            lambda _, color, index: self.tile_color_palette.color_preview.set_primary_color(color, index)
         )
         self.sprite_color_data.color_updated.connect(
             lambda _, _color, index: self.sprite_color_palette.color_palette_grid.select_primary_color(index)
         )
         self.tile_color_data.color_updated.connect(
-            lambda _, _color, index: self.stile_color_palette.color_palette_grid.select_primary_color(index)
+            lambda _, _color, index: self.tile_color_palette.color_palette_grid.select_primary_color(index)
         )
 
         self.sprite_pixel_data.data_updated.connect(
@@ -317,9 +323,21 @@ class Jide(QMainWindow, Ui_main_window):
         )
 
         self.sprite_color_palette.color_previewed.connect(self.sprite_scene.set_color)
-        self.tile_color_palette.color_previewed.connect(self.tile_scene.set_color)
         self.sprite_pixel_palette.assets_selected.connect(self.sprite_scene.select_cells)
+        self.tile_color_palette.color_previewed.connect(self.tile_scene.set_color)
         self.tile_pixel_palette.assets_selected.connect(self.tile_scene.select_cells)
+        self.tile_color_palette.color_previewed.connect(
+            lambda color, index:
+            self.tile_map_scene.set_color(
+                self.tile_color_palette.color_palette_name_combo.currentText(),
+                color,
+                index
+            )
+        )
+        # This will determine what tiles will be placed with the place tile tool
+        # self.tile_pixel_palette.assets_selected.connect(
+        #     self.tile_map_scene.select_cells
+        # )
 
         self.sprite_color_data.color_updated.connect(
             lambda _, color, index: self.sprite_scene.set_color(color, index)
@@ -327,6 +345,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_color_data.color_updated.connect(
             lambda _, color, index:  self.tile_scene.set_color(color, index)
         )
+        self.tile_color_data.color_updated.connect(self.tile_map_scene.set_color)
 
         self.sprite_color_palette.color_palette_changed.connect(
             lambda palette_name: self.sprite_scene.set_color_table(
@@ -338,10 +357,20 @@ class Jide(QMainWindow, Ui_main_window):
                 self.tile_color_data.get_color_palette(palette_name)
             )
         )
+        # This will determine what color palette newly placed tiles will use
+        # self.tile_color_palette.color_palette_changed.connect(
+        #     lambda palette_name: self.tile_map_scene.set_color_table(
+        #         self.tile_color_data.get_color_palette(palette_name)
+        #     )
+        # )
 
         self.tile_map_picker.tile_map_changed.connect(
             lambda tile_map_name: self.tile_map_scene.set_tile_map(
-                self.render_tile_map(tile_map_name)
+                render_tile_map(
+                    self.tile_map_data.get_tile_map(tile_map_name),
+                    self.tile_color_data,
+                    self.tile_pixel_data
+                )
             )
         )
 
@@ -368,6 +397,17 @@ class Jide(QMainWindow, Ui_main_window):
         self.editor_tabs.setCurrentIndex(0)
 
     def populate_models(self, project_data):
+        for palette in parse_color_data(project_data["sprite_color_palettes"]):
+            self.sprite_color_data.add_color_palette(*palette)
+        for palette in parse_color_data(project_data["tile_color_palettes"]):
+            self.tile_color_data.add_color_palette(*palette)
+        sprite_data = parse_pixel_data(project_data["sprites"])
+        tile_data = parse_pixel_data(project_data["tiles"])
+        self.sprite_pixel_data.set_image(*sprite_data[:3])
+        self.sprite_pixel_data.set_asset_names(sprite_data[-1])
+        self.tile_pixel_data.set_image(*tile_data[:3])
+        self.tile_pixel_data.set_asset_names(tile_data[-1])
+
         for tile_map in project_data["tile_maps"]:
             self.tile_map_data.add_tile_map(
                 tile_map["name"],
@@ -375,19 +415,6 @@ class Jide(QMainWindow, Ui_main_window):
                 tile_map["height"],
                 tile_map["contents"]
             )
-
-        for palette in parse_color_data(project_data["sprite_color_palettes"]):
-            self.sprite_color_data.add_color_palette(*palette)
-        for palette in parse_color_data(project_data["tile_color_palettes"]):
-            self.tile_color_data.add_color_palette(*palette)
-        
-        sprite_data = parse_pixel_data(project_data["sprites"])
-        tile_data = parse_pixel_data(project_data["tiles"])
-
-        self.sprite_pixel_data.set_image(*sprite_data[:3])
-        self.sprite_pixel_data.set_asset_names(sprite_data[-1])
-        self.tile_pixel_data.set_image(*tile_data[:3])
-        self.tile_pixel_data.set_asset_names(tile_data[-1])
 
         self.sprite_pixel_palette.pixel_palette_grid.set_asset_names(self.sprite_pixel_data.get_names())
         self.tile_pixel_palette.pixel_palette_grid.set_asset_names(self.tile_pixel_data.get_names())
@@ -409,18 +436,18 @@ class Jide(QMainWindow, Ui_main_window):
             )]
         )
 
-        self.sprite_color_palette.color_palette_engaged.connect(
-            lambda: self.editor_tabs.setCurrentIndex(0)
-        )
-        self.tile_color_palette.color_palette_engaged.connect(
-            lambda: self.editor_tabs.setCurrentIndex(1)
-        )
-        self.sprite_pixel_palette.pixel_palette_engaged.connect(
-            lambda: self.editor_tabs.setCurrentIndex(0)
-        )
-        self.tile_pixel_palette.pixel_palette_engaged.connect(
-            lambda: self.editor_tabs.setCurrentIndex(1)
-        )
+        # self.sprite_color_palette.color_palette_engaged.connect(
+        #     lambda: self.editor_tabs.setCurrentIndex(0)
+        # )
+        # self.tile_color_palette.color_palette_engaged.connect(
+        #     lambda: self.editor_tabs.setCurrentIndex(1)
+        # )
+        # self.sprite_pixel_palette.pixel_palette_engaged.connect(
+        #     lambda: self.editor_tabs.setCurrentIndex(0)
+        # )
+        # self.tile_pixel_palette.pixel_palette_engaged.connect(
+        #     lambda: self.editor_tabs.setCurrentIndex(1)
+        # )
 
         self.sprite_pixel_data.name_updated.connect(
             self.sprite_pixel_palette.set_asset_name
@@ -429,9 +456,13 @@ class Jide(QMainWindow, Ui_main_window):
             self.tile_pixel_palette.set_asset_name
         )
 
-        self.tile_map_scene.set_tile_map(
-            self.render_tile_map("tile_map0")
-        )
+        # self.tile_map_scene.set_tile_map(
+        #     render_tile_map(
+        #         self.tile_map_data.get_tile_map("tile_map0"),
+        #         self.tile_color_data,
+        #         self.tile_pixel_data
+        #     )
+        # )
 
     def enable_ui(self):
         self.tool_bar.setEnabled(True)
@@ -445,25 +476,6 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_pixel_palette.setEnabled(True)
         self.tile_pixel_palette.setEnabled(True)
         self.tile_map_picker.setEnabled(True)
-
-    def render_tile_map(self, tile_map_name):
-        tile_map = self.tile_map_data.get_tile_map(tile_map_name)
-        map_height = tile_map.get_height()
-        map_width = tile_map.get_width()
-        tile_map_data = [[None for _ in range(map_width)] for _ in range(map_height)]
-        for row in range(map_height):
-            for col in range(map_width):
-                tile = tile_map.get_tile(col, row)
-                color_palette_index = tile.color_palette_index
-                tile_palette_index = tile.tile_palette_index
-                rendered_tile = self.tile_pixel_data.get_asset(tile_palette_index)
-                color_palette = self.tile_color_data.get_color_palette(
-                    self.tile_color_data.get_color_palette_name(color_palette_index)
-                )
-                rendered_tile.setColorTable([color.rgb() for color in color_palette])
-                tile_map_data[row][col] = rendered_tile
-
-        return tile_map_data
 
     def select_tab(self, index):
         dock_visibility = {
