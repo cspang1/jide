@@ -486,6 +486,10 @@ class Jide(QMainWindow, Ui_main_window):
             self.tile_pixel_palette.set_asset_name
         )
 
+        self.sprite_color_palette.color_palette_name_combo.setCurrentIndex(0)
+        self.tile_color_palette.color_palette_name_combo.setCurrentIndex(0)
+        self.tile_map_picker.tile_map_name_combo.setCurrentIndex(0)
+
     def enable_ui(self):
         self.tool_bar.setEnabled(True)
         self.editor_tabs.setEnabled(True)

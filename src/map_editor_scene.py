@@ -32,6 +32,8 @@ class MapEditorScene(QGraphicsScene):
             x = 0
             y += pixmap.height()
 
+        self.setSceneRect(self.itemsBoundingRect())
+
     @pyqtSlot(str, QColor, int)
     def set_color(self, color_palette, color, index):
         for tile in [tile for row in self.tile_map_images for tile in row]:
