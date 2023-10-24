@@ -1,9 +1,15 @@
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QPainter, QPen, QBrush
-from PyQt5.QtWidgets import (
-    QWidget,
+from PyQt5.QtCore import (
+    Qt,
+    pyqtSignal,
+    pyqtSlot
 )
-# from source import Source
+from PyQt5.QtGui import (
+    QColor,
+    QPainter,
+    QPen,
+    QBrush
+)
+from PyQt5.QtWidgets import QWidget
 from ui.color_preview_ui import Ui_color_preview
 
 class ColorPreview(QWidget, Ui_color_preview):

@@ -1,8 +1,20 @@
-from math import floor, ceil
-import sys
-from PyQt5.QtCore import Qt, QRect, QRectF, QEvent, pyqtSlot
-from PyQt5.QtGui import QPixmap, QPainter, QImage, QColor, QPen
-from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QWidget, QStyleOptionGraphicsItem, QGraphicsPixmapItem
+import math
+from PyQt5.QtCore import (
+    Qt,
+    QRect,
+    pyqtSlot
+)
+from PyQt5.QtGui import (
+    QPixmap,
+    QPainter,
+    QImage,
+    QColor,
+    QPen
+)
+from PyQt5.QtWidgets import (
+    QGraphicsScene,
+    QGraphicsPixmapItem
+)
 
 class AssetEditorScene(QGraphicsScene):
 
@@ -44,10 +56,10 @@ class AssetEditorScene(QGraphicsScene):
         painter.setRenderHint(QPainter.Antialiasing, True)
         
         rect = QRect(
-            floor(rect.x()),
-            floor(rect.y()),
-            ceil(rect.width() + 8),
-            ceil(rect.height() + 8)
+            math.floor(rect.x()),
+            math.floor(rect.y()),
+            math.ceil(rect.width() + 8),
+            math.ceil(rect.height() + 8)
         )
 
         # Define grid parameters

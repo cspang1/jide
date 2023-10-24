@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import (
     QDialog,
     QFileDialog
 )
-from PyQt5.QtCore import QSettings
 from serial.tools import list_ports
 from PyQt5.QtCore import pyqtSlot
 from ui.preferences_dialog_ui import Ui_preferences_dialog

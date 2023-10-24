@@ -2,15 +2,15 @@ from math import pow
 from PyQt5.QtWidgets import (
     QDialog
 )
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QRegExp, QEvent
+from PyQt5.QtCore import (
+    Qt, pyqtSignal,
+    pyqtSlot,
+    QRegExp
+)
 from PyQt5.QtGui import (
     QColor,
     QValidator,
-    QPixmap,
-    QFont,
     QRegExpValidator,
-    QPainter,
-    QPen,
 )
 from ui.color_picker_dialog_ui import Ui_color_picker_dialog
 from color_data import ColorData

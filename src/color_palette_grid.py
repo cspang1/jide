@@ -1,14 +1,11 @@
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QRegExp, QEvent, QRect
-from PyQt5.QtWidgets import (
-    QWidget,
-    QSizePolicy
+from PyQt5.QtCore import (
+    Qt,
+    pyqtSignal,
+    pyqtSlot
 )
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import (
     QColor,
-    QValidator,
-    QPixmap,
-    QFont,
-    QRegExpValidator,
     QPainter,
     QPen
 )

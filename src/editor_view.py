@@ -1,7 +1,9 @@
-import sys
-from PyQt5.QtCore import Qt, QRectF, QEvent
-from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QWidget, QStyleOptionGraphicsItem
+from PyQt5.QtCore import QEvent
+from PyQt5.QtWidgets import (
+    QGraphicsView,
+    QGraphicsScene,
+    QStyleOptionGraphicsItem
+)
 
 class EditorView(QGraphicsView):
     """QGraphicsView into sprite/tile canvas

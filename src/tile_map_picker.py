@@ -3,8 +3,10 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QLineEdit
 )
-from PyQt5.QtGui import QColor, QImage, QPainter, QPen
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import (
+    pyqtSlot,
+    pyqtSignal
+)
 
 from ui.tile_map_picker import (
     Ui_tile_map_picker

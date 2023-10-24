@@ -3,8 +3,11 @@ from PyQt5.QtWidgets import (
     QInputDialog,
     QLineEdit
 )
-from PyQt5.QtGui import QColor, QImage, QPainter, QPen
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt5.QtGui import QColor
+from PyQt5.QtCore import (
+    pyqtSlot,
+    pyqtSignal
+)
 
 from ui.color_palette_ui import (
     Ui_color_palette
