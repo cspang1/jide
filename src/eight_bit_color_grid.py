@@ -96,4 +96,3 @@ class EightBitColorGrid(QWidget):
                 self.color_selected.emit(self.palette[index])
                 self.update()
                 return
-        self.update()

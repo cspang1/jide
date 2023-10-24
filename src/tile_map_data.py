@@ -39,6 +39,7 @@ class TileMapData(QObject):
             if tile_map.name == tile_map_name:
                 removed_tile_map = tile_map
                 self.tile_maps.remove(tile_map)
+                break
 
         self.tile_map_removed.emit(tile_map_name)
 
@@ -49,6 +50,7 @@ class TileMapData(QObject):
         for tile_map in self.tile_maps:
             if tile_map.get_name() == old_tile_map_name:
                 tile_map.set_name(new_tile_map_name)
+                break
 
         self.tile_map_renamed.emit(old_tile_map_name, new_tile_map_name)
 
