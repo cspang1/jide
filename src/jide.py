@@ -19,33 +19,31 @@ from ui.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
 from pixel_data import (
     PixelData,
-    parse_pixel_data
+    cmd_add_pixel_palette_row,
+    cmd_remove_pixel_palette_row,
+    cmd_set_asset_name,
 )
 from color_data import (
     ColorData,
-    parse_color_data
+    cmd_add_color_palette,
+    cmd_remove_color_palette,
+    cmd_rename_color_palette,
+    cmd_set_color,
 )
-from tile_map_data import TileMapData
+from tile_map_data import (
+    TileMapData,
+    cmd_add_tile_map,
+    cmd_remove_tile_map,
+    cmd_rename_tile_map
+)
 from pixel_palette import PixelPalette
 from color_palette import ColorPalette
 from asset_editor_scene import AssetEditorScene
 from map_editor_scene import (
     MapEditorScene,
-    render_tile_map
+    RenderedTile
 )
-from history import (
-    UndoStack,
-    cmd_add_color_palette,
-    cmd_add_pixel_palette_row,
-    cmd_add_tile_map,
-    cmd_remove_color_palette,
-    cmd_remove_pixel_palette_row,
-    cmd_rename_color_palette,
-    cmd_set_asset_name,
-    cmd_set_color,
-    cmd_remove_tile_map,
-    cmd_rename_tile_map
-)
+from undo_stack import UndoStack
 
 class Jide(QMainWindow, Ui_main_window):
 
@@ -398,7 +396,7 @@ class Jide(QMainWindow, Ui_main_window):
 
         self.tile_map_picker.tile_map_changed.connect(
             lambda tile_map_name: self.tile_map_scene.set_tile_map(
-                render_tile_map(
+                RenderedTile.render_tile_map(
                     self.tile_map_data.get_tile_map(tile_map_name),
                     self.tile_color_data,
                     self.tile_pixel_data
@@ -429,12 +427,12 @@ class Jide(QMainWindow, Ui_main_window):
         self.editor_tabs.setCurrentIndex(0)
 
     def populate_models(self, project_data):
-        for palette in parse_color_data(project_data["sprite_color_palettes"]):
+        for palette in ColorData.parse_color_data(project_data["sprite_color_palettes"]):
             self.sprite_color_data.add_color_palette(*palette)
-        for palette in parse_color_data(project_data["tile_color_palettes"]):
+        for palette in ColorData.parse_color_data(project_data["tile_color_palettes"]):
             self.tile_color_data.add_color_palette(*palette)
-        sprite_data = parse_pixel_data(project_data["sprites"])
-        tile_data = parse_pixel_data(project_data["tiles"])
+        sprite_data = PixelData.parse_pixel_data(project_data["sprites"])
+        tile_data = PixelData.parse_pixel_data(project_data["tiles"])
         self.sprite_pixel_data.set_image(*sprite_data[:3])
         self.sprite_pixel_data.set_asset_names(sprite_data[-1])
         self.tile_pixel_data.set_image(*tile_data[:3])

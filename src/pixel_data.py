@@ -5,6 +5,8 @@ from PyQt5.QtCore import (
     pyqtSlot
 )
 from PyQt5.QtGui import QImage
+from PyQt5.QtWidgets import QUndoCommand
+from undo_stack import Validator
 
 class PixelData(QObject):
 
@@ -136,19 +138,79 @@ class PixelData(QObject):
 
         return image_data
 
-def parse_pixel_data(data):
-    pixel_data = bytearray([0] * len(data) * PixelData.pixels_per_asset)
-    names = []
+    @staticmethod
+    def parse_pixel_data(data):
+        pixel_data = bytearray([0] * len(data) * PixelData.pixels_per_asset)
+        names = []
 
-    for index, palette in enumerate(data):
-        names.append(palette["name"])
-        col_index = math.floor(index / PixelData.assets_per_line) * PixelData.asset_width * PixelData.assets_per_line * PixelData.asset_height
-        col_offset = (index % PixelData.assets_per_line) * PixelData.asset_width
-        for pixel_row, pixel_row_data in enumerate(palette["contents"]):
-            row_offset = pixel_row * PixelData.assets_per_line * PixelData.asset_width
-            pixel_data_index = col_index + row_offset + col_offset
-            pixel_data[pixel_data_index:pixel_data_index + 8] = pixel_row_data
+        for index, palette in enumerate(data):
+            names.append(palette["name"])
+            col_index = math.floor(index / PixelData.assets_per_line) * PixelData.asset_width * PixelData.assets_per_line * PixelData.asset_height
+            col_offset = (index % PixelData.assets_per_line) * PixelData.asset_width
+            for pixel_row, pixel_row_data in enumerate(palette["contents"]):
+                row_offset = pixel_row * PixelData.assets_per_line * PixelData.asset_width
+                pixel_data_index = col_index + row_offset + col_offset
+                pixel_data[pixel_data_index:pixel_data_index + 8] = pixel_row_data
 
-    width = PixelData.asset_width * PixelData.assets_per_line
-    height = math.ceil(len(pixel_data) / width)
-    return (pixel_data, width, height, names)
+        width = PixelData.asset_width * PixelData.assets_per_line
+        height = math.ceil(len(pixel_data) / width)
+        return (pixel_data, width, height, names)
+
+class cmd_add_pixel_palette_row(QUndoCommand):
+
+    def __init__(self, data_source, parent=None):
+        super().__init__("add pixel palette row", parent)
+        self.data_source = data_source
+
+    def redo(self):
+        self.data_source.add_palette_row()
+
+    def undo(self):
+        self.data_source.remove_palette_row()
+
+    def validate(self):
+        return Validator(True, "")
+
+class cmd_remove_pixel_palette_row(QUndoCommand):
+
+    def __init__(self, data_source, parent=None):
+        super().__init__("remove pixel palette row", parent)
+        self.data_source = data_source
+        self.removed_row = None
+
+    def redo(self):
+        self.removed_row = self.data_source.remove_palette_row()
+
+    def undo(self):
+        self.data_source.add_palette_row(self.removed_row)
+
+    def validate(self):
+        if self.data_source.get_image().height() <= 8:
+            return Validator(False, "At least one row of assets is required")
+
+        return Validator(True, "")
+
+class cmd_set_asset_name(QUndoCommand):
+
+    def __init__(self, data_source, asset_index, new_asset_name, parent=None):
+        super().__init__("set asset name", parent)
+        self.data_source = data_source
+        self.asset_index = asset_index
+        self.new_asset_name = new_asset_name
+        self.old_asset_name = self.data_source.get_name(self.asset_index)
+
+    def redo(self):
+        self.data_source.set_asset_name(self.asset_index, self.new_asset_name)
+
+    def undo(self):
+        self.data_source.set_asset_name(self.asset_index, self.old_asset_name)
+
+    def validate(self):
+        if self.old_asset_name == self.new_asset_name:
+            return Validator(False, "")
+        if self.new_asset_name in self.data_source.get_names():
+            return Validator(False, "An asset with that name already exists")
+        if not self.new_asset_name:
+            return Validator(False, "Asset name cannot be blank")
+
+        return Validator(True, "")

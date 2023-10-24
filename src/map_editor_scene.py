@@ -84,19 +84,20 @@ class RenderedTile(QImage):
         self.color_palette_name = color_palette_name
         self.tile_palette_index = tile_palette_index
 
-def render_tile_map(tile_map_data, color_palette_data, tile_palette_data):
-    map_height = tile_map_data.get_height()
-    map_width = tile_map_data.get_width()
-    tile_map_images = [[None for _ in range(map_width)] for _ in range(map_height)]
-    for row in range(map_height):
-        for col in range(map_width):
-            tile = tile_map_data.get_tile(col, row)
-            color_palette_index = tile.color_palette_index
-            tile_palette_index = tile.tile_palette_index
-            tile_image = tile_palette_data.get_asset(tile_palette_index)
-            color_palette_name = color_palette_data.get_color_palette_name(color_palette_index)
-            color_palette = color_palette_data.get_color_palette(color_palette_name)
-            tile_image.setColorTable([color.rgb() for color in color_palette])
-            tile_map_images[row][col] = RenderedTile(tile_image, color_palette_name, tile_palette_index)
+    @staticmethod
+    def render_tile_map(tile_map_data, color_palette_data, tile_palette_data):
+        map_height = tile_map_data.get_height()
+        map_width = tile_map_data.get_width()
+        tile_map_images = [[None for _ in range(map_width)] for _ in range(map_height)]
+        for row in range(map_height):
+            for col in range(map_width):
+                tile = tile_map_data.get_tile(col, row)
+                color_palette_index = tile.color_palette_index
+                tile_palette_index = tile.tile_palette_index
+                tile_image = tile_palette_data.get_asset(tile_palette_index)
+                color_palette_name = color_palette_data.get_color_palette_name(color_palette_index)
+                color_palette = color_palette_data.get_color_palette(color_palette_name)
+                tile_image.setColorTable([color.rgb() for color in color_palette])
+                tile_map_images[row][col] = RenderedTile(tile_image, color_palette_name, tile_palette_index)
 
-    return tile_map_images
+        return tile_map_images

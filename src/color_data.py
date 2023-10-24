@@ -5,6 +5,8 @@ from PyQt5.QtCore import (
     pyqtSlot
 )
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QUndoCommand
+from undo_stack import Validator
 
 class ColorData(QObject):
 
@@ -56,7 +58,7 @@ class ColorData(QObject):
         for color_palette_name, color_palette in self.color_data.items():
             colors = []
             for color in color_palette:
-                r, g, b = downsample(color.red(), color.green(), color.blue())
+                r, g, b = ColorData.downsample(color.red(), color.green(), color.blue())
                 color = (r << 5) | (g << 2) | b
                 colors.append(color)
 
@@ -68,60 +70,116 @@ class ColorData(QObject):
             color_data.append(palette)
 
         return color_data
+    
+    @staticmethod
+    def upsample(red, green, blue):
+        red = round((red / 7) * 255)
+        green = round((green / 7) * 255)
+        blue = round((blue / 3) * 255)
+        return (red, green, blue)
 
-def upsample(red, green, blue):
-    """Upsamples RGB from 8-bit to 24-bit
+    @staticmethod
+    def downsample(red, green, blue):
+        red = round((red / 255) * 7)
+        green = round((green / 255) * 7)
+        blue = round((blue / 255) * 3)
+        return (red, green, blue)
 
-    :param red:     8-bit red value
-    :type red:      int
-    :param green:   8-bit green value
-    :type green:    int
-    :param blue:    8-bit blue value
-    :type blue:     int
-    :return:        24-bit upscaled RGB tuple
-    :rtype:         tuple(int, int, int)
-    """
-    red = round((red / 7) * 255)
-    green = round((green / 7) * 255)
-    blue = round((blue / 3) * 255)
-    return (red, green, blue)
+    @staticmethod
+    def normalize(red, green, blue):
+        return ColorData.upsample(*ColorData.downsample(red, green, blue))
 
-def downsample(red, green, blue):
-    """Downsamples RGB from 24-bit to 8-bit
+    @staticmethod
+    def parse_color_data(data):
+        for palette in data:
+            cur_pal = palette["contents"]
+            cur_pal[:] = [
+                QColor(*ColorData.upsample(color >> 5, (color >> 2) & 7, color & 3))
+                for color in cur_pal
+            ]
+            yield (palette["name"], cur_pal)
 
-    :param red:     24-bit red value
-    :type red:      int
-    :param green:   24-bit green value
-    :type green:    int
-    :param blue:    24-bit blue value
-    :type blue:     int
-    :return:        8-bit downscaled RGB tuple
-    :rtype:         tuple(int, int, int)
-    """
-    red = round((red / 255) * 7)
-    green = round((green / 255) * 7)
-    blue = round((blue / 255) * 3)
-    return (red, green, blue)
+class cmd_set_color(QUndoCommand):
 
-def normalize(red, green, blue):
-    """Normalizes any RGB value to be representable by a whole 8-bit value
+    def __init__(self, data_source, palette_name, update_color, update_index, parent=None):
+        super().__init__("set palette color", parent)
+        self.data_source = data_source
+        self.palette_name = palette_name
+        self.update_index = update_index
+        self.update_color = update_color
+        self.original_color = self.data_source.get_color_palette(palette_name)[update_index]
 
-    :param red:     Red value
-    :type red:      int
-    :param green:   Green value
-    :type green:    int
-    :param blue:    Blue value
-    :type blue:     int
-    :return:        24-bit normalized RGB tuple
-    :rtype:         tuple(int, int, int)
-    """
-    return upsample(*downsample(red, green, blue))
+    def redo(self):
+        self.data_source.update_color(self.palette_name, self.update_color, self.update_index)
 
-def parse_color_data(data):
-    for palette in data:
-        cur_pal = palette["contents"]
-        cur_pal[:] = [
-            QColor(*upsample(color >> 5, (color >> 2) & 7, color & 3))
-            for color in cur_pal
-        ]
-        yield (palette["name"], cur_pal)
+    def undo(self):
+        self.data_source.update_color(self.palette_name, self.original_color, self.update_index)
+
+    def validate(self):
+        return Validator(True, "")
+
+class cmd_rename_color_palette(QUndoCommand):
+
+    def __init__(self, data_source, old_palette_name, new_palette_name, parent=None):
+        super().__init__("rename color palette", parent)
+        self.data_source = data_source
+        self.old_palette_name = old_palette_name
+        self.new_palette_name = new_palette_name
+
+    def redo(self):
+        self.data_source.rename_color_palette(self.old_palette_name, self.new_palette_name)
+
+    def undo(self):
+        self.data_source.rename_color_palette(self.new_palette_name, self.old_palette_name)
+
+    def validate(self):
+        if self.old_palette_name == self.new_palette_name:
+            return Validator(False, "")
+        if self.new_palette_name in self.data_source.get_color_data():
+            return Validator(False, "A color palette with that name already exists")
+        if not self.new_palette_name:
+            return Validator(False, "Color palette name cannot be blank")
+
+        return Validator(True, "")
+
+class cmd_add_color_palette(QUndoCommand):
+
+    def __init__(self, data_source, palette_name, palette_contents=[QColor(255, 0, 255)] * 16, parent=None):
+        super().__init__("add  color palette", parent)
+        self.data_source = data_source
+        self.palette_name = palette_name
+        self.palette_contents = palette_contents
+
+    def redo(self):
+        self.data_source.add_color_palette(self.palette_name, self.palette_contents)
+
+    def undo(self):
+        self.data_source.remove_color_palette(self.palette_name)
+
+    def validate(self):
+        if not self.palette_name:
+            return Validator(False, "Color palette name cannot be blank")
+        if self.palette_name in self.data_source.get_color_data():
+            return Validator(False, "A color palette with that name already exists")
+
+        return Validator(True, "")
+
+class cmd_remove_color_palette(QUndoCommand):
+
+    def __init__(self, data_source, palette_name, parent=None):
+        super().__init__("remove color palette", parent)
+        self.data_source = data_source
+        self.palette_name = palette_name
+        self.original_contents = self.data_source.get_color_palette(palette_name)
+
+    def redo(self):
+        self.data_source.remove_color_palette(self.palette_name)
+
+    def undo(self):
+        self.data_source.add_color_palette(self.palette_name, self.original_contents)
+
+    def validate(self):
+        if len(self.data_source.get_color_data()) == 1:
+            return Validator(False, "At least one color palette is required")
+        
+        return Validator(True, "")

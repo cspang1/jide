@@ -13,11 +13,7 @@ from PyQt5.QtGui import (
     QPainter,
     QPen
 )
-from color_data import (
-    upsample,
-    downsample,
-    normalize
-)
+from color_data import ColorData
 
 class EightBitColorGrid(QWidget):
 
@@ -36,7 +32,7 @@ class EightBitColorGrid(QWidget):
         self.selected_cell = None
 
         self.palette = [
-            QColor(*upsample(red, green, blue))
+            QColor(*ColorData.upsample(red, green, blue))
             for blue in range(4)
             for red in range(8)
             for green in range(8)
