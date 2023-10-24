@@ -1,4 +1,5 @@
-from PyQt5.QtCore import QEvent
+from PyQt5.QtCore import Qt, QEvent, QPointF
+from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
@@ -6,13 +7,6 @@ from PyQt5.QtWidgets import (
 )
 
 class EditorView(QGraphicsView):
-    """QGraphicsView into sprite/tile canvas
-
-    :param scene:   QGraphicsScene representing sprite/tile canvas
-    :type scene:    QGraphicsScene, defaults to None
-    :param parent:  Parent widget, defaults to None
-    :type parent:   QWidget
-    """
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -20,22 +14,43 @@ class EditorView(QGraphicsView):
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
         self.scale(50, 50)
         self.setEnabled(True)
+        self.panning = False
+        self.last_pos = None
+
+    def setScene(self, scene: QGraphicsScene) -> None:
+        super().setScene(scene)
+        self.scene().installEventFilter(self)
 
     def eventFilter(self, source, event):
-        """Event filter for handling zoom/pan events
-
-        :param source:  Source of event
-        :type source:   QObject
-        :param event:   Triggered event
-        :type event:    QEvent
-        :return:        Whether to continue processing event downstream
-        :rtype:         bool
-        """
         if event.type() == QEvent.GraphicsSceneWheel:
             self.zoomCanvas(event)
             event.accept()
             return True
-        return False
+
+        return super().eventFilter(source, event)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            self.last_pos = event.pos()
+            self.panning = True
+            self.setDragMode(QGraphicsView.ScrollHandDrag)
+            self.viewport().setCursor(Qt.ClosedHandCursor)
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            self.panning = False
+            self.setDragMode(QGraphicsView.NoDrag)
+            self.viewport().setCursor(Qt.ArrowCursor)
+        super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.panning:
+            delta = event.pos() - self.last_pos
+            self.last_pos = event.pos()
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+        super().mouseMoveEvent(event)
 
     def zoomCanvas(self, event):
         """Zoom view into sprite/tile canvas
@@ -57,7 +72,3 @@ class EditorView(QGraphicsView):
         newPos = event.scenePos()
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
-    
-    def setScene(self, scene: QGraphicsScene) -> None:
-        super().setScene(scene)
-        self.scene().installEventFilter(self)
