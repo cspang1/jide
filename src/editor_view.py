@@ -1,13 +1,18 @@
-from PyQt5.QtCore import Qt, QEvent, QPointF
-from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtCore import (
+    Qt,
+    QEvent
+)
 from PyQt5.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QStyleOptionGraphicsItem
 )
+from pixel_tools import (
+    ToolType,
+    PenTool
+)
 
 class EditorView(QGraphicsView):
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
@@ -16,9 +21,11 @@ class EditorView(QGraphicsView):
         self.setEnabled(True)
         self.panning = False
         self.last_pos = None
+        self.pen_tool = PenTool(self,self.scene(), Qt.red)
 
     def setScene(self, scene: QGraphicsScene) -> None:
         super().setScene(scene)
+        self.pen_tool.set_scene(self.scene())
         self.scene().installEventFilter(self)
 
     def eventFilter(self, source, event):
@@ -30,12 +37,22 @@ class EditorView(QGraphicsView):
         return super().eventFilter(source, event)
 
     def mousePressEvent(self, event):
+        super().mousePressEvent(event)
         if event.button() == Qt.MiddleButton:
             self.last_pos = event.pos()
             self.panning = True
             self.setDragMode(QGraphicsView.ScrollHandDrag)
             self.viewport().setCursor(Qt.ClosedHandCursor)
-        super().mousePressEvent(event)
+        self.pen_tool.mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        if self.panning:
+            delta = event.pos() - self.last_pos
+            self.last_pos = event.pos()
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+        self.pen_tool.mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MiddleButton:
@@ -43,21 +60,9 @@ class EditorView(QGraphicsView):
             self.setDragMode(QGraphicsView.NoDrag)
             self.viewport().setCursor(Qt.ArrowCursor)
         super().mouseReleaseEvent(event)
-
-    def mouseMoveEvent(self, event):
-        if self.panning:
-            delta = event.pos() - self.last_pos
-            self.last_pos = event.pos()
-            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
-            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
-        super().mouseMoveEvent(event)
+        self.pen_tool.mouseReleaseEvent(event)
 
     def zoomCanvas(self, event):
-        """Zoom view into sprite/tile canvas
-
-        :param event:   Source event
-        :type event:    QEvent
-        """
         zoomFactor = 2
         oldPos = event.scenePos()
 

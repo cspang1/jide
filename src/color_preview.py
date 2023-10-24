@@ -13,13 +13,6 @@ from PyQt5.QtWidgets import QWidget
 from ui.color_preview_ui import Ui_color_preview
 
 class ColorPreview(QWidget, Ui_color_preview):
-    """Color preview widget showing primary and secondary color selections
-
-    :param source:  Subject source of preview, either sprite or tile
-    :type source:   Source
-    :param parent:  Parent widget, defaults to None
-    :type parent:   QWidget, optional
-    """
 
     switch = pyqtSignal()
 
