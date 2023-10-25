@@ -2,7 +2,7 @@ import math
 from enum import Enum
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGraphicsPixmapItem
-from PyQt5.QtGui import  QPixmap
+from PyQt5.QtGui import  QPixmap, QImage, qRgba, QColor
 
 class ToolType(Enum):
     PEN = 2
@@ -31,6 +31,8 @@ class PenTool(BaseTool):
     def __init__(self, view, scene, color):
         super().__init__(view, scene)
         self.color = color
+        self.image = None
+        self.pixmap = None
 
     def mousePressEvent(self, event):
         scene_pos = self.view.mapToScene(event.pos())
@@ -38,17 +40,31 @@ class PenTool(BaseTool):
         if not (0 <= scene_pos.x() < scene_rect.width() and 0 <= scene_pos.y() < scene_rect.height()):
             return
 
-        pixel_item = QGraphicsPixmapItem(QPixmap(1, 1))
-        pixel_item.setPos(
-            math.floor(scene_pos.x()),
-            math.floor(scene_pos.y())
-        )
-        pixmap = QPixmap(1, 1)  # Create a new QPixmap for each pixel_item
-        pixmap.fill(self.color)  # Fill the pixmap with the desired color
-        pixel_item.setPixmap(pixmap)  # Set the pixmap to the pixel_item
+        if not self.image:
+            width = math.floor(scene_rect.width())
+            height = math.floor(scene_rect.height())
+            data = bytearray([1] * width * height)
+            self.image = QImage(data, width, height, QImage.Format_Indexed8)
+            self.image.setColorTable(
+                [QColor("red").rgba(),
+                 qRgba(0, 0, 0, 0)]
+            )
+            self.pixmap = QGraphicsPixmapItem(QPixmap.fromImage(self.image))
+            self.pixmap.setPos(0, 0)
+            self.scene.addItem(self.pixmap)
 
-        self.scene.addItem(pixel_item)
+        x, y = math.floor(scene_pos.x()), math.floor(scene_pos.y())
+        self.image.setPixel(x, y, 0)
+        updated_pixmap = QGraphicsPixmapItem(QPixmap.fromImage(self.image))
+        updated_pixmap.setPos(0, 0)
+        self.scene.removeItem(self.pixmap)
+        self.pixmap = updated_pixmap
+        self.scene.addItem(self.pixmap)
 
     def mouseMoveEvent(self, event):
         if event.buttons() == Qt.LeftButton:
             self.mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self.image = None
+        self.scene.removeItem(self.pixmap)

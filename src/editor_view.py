@@ -43,7 +43,9 @@ class EditorView(QGraphicsView):
             self.panning = True
             self.setDragMode(QGraphicsView.ScrollHandDrag)
             self.viewport().setCursor(Qt.ClosedHandCursor)
-        self.pen_tool.mousePressEvent(event)
+
+        if event.button() == Qt.LeftButton:
+            self.pen_tool.mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -52,6 +54,7 @@ class EditorView(QGraphicsView):
             self.last_pos = event.pos()
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
+
         self.pen_tool.mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -60,7 +63,9 @@ class EditorView(QGraphicsView):
             self.setDragMode(QGraphicsView.NoDrag)
             self.viewport().setCursor(Qt.ArrowCursor)
         super().mouseReleaseEvent(event)
-        self.pen_tool.mouseReleaseEvent(event)
+
+        if event.button() == Qt.LeftButton:
+            self.pen_tool.mouseReleaseEvent(event)
 
     def zoomCanvas(self, event):
         zoomFactor = 2
