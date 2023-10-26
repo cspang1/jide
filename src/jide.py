@@ -43,7 +43,7 @@ from map_editor_scene import (
     MapEditorScene,
     RenderedTile
 )
-from pixel_tools import ToolType
+from base_tool import ToolType
 from undo_stack import UndoStack
 
 class Jide(QMainWindow, Ui_main_window):
@@ -357,7 +357,7 @@ class Jide(QMainWindow, Ui_main_window):
         # self.tool_actions.addAction(self.action_line_tool)
         # self.tool_actions.addAction(self.action_rectangle_tool)
         # self.tool_actions.addAction(self.action_ellipse_tool)
-        self.action_pen_tool.trigger()
+        self.action_select_tool.trigger()
 
         self.sprite_color_palette.color_selected.connect(
             lambda color, _: self.sprite_editor_view.set_tool_color(color)

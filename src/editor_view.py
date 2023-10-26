@@ -9,12 +9,12 @@ from PyQt5.QtWidgets import (
     QStyleOptionGraphicsItem
 )
 from PyQt5.QtGui import QColor
-from pixel_tools import (
-    ToolType,
+from base_tool import (
     BaseTool,
-    PenTool,
-    SelectTool
+    ToolType
 )
+from pen_tool import PenTool
+from select_tool import SelectTool
 
 class EditorView(QGraphicsView):
     def __init__(self, parent=None):
