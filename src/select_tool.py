@@ -37,6 +37,7 @@ class SelectionBoxItem(QGraphicsItem):
         self.selection_end = selection_start
         self.subject_width = subject_width
         self.subject_height = subject_height
+        self.selection = QRect()
         self.ant_offset = 0
         self.grid_cell_size = 8
 
@@ -44,9 +45,6 @@ class SelectionBoxItem(QGraphicsItem):
         self.ant_timer.timeout.connect(self.update_ants)
         self.ant_timer.start(250)
 
-        self.selection = QRect()
-        self.select_start = QPoint()
-        self.select_end = QPoint()
 
     def boundingRect(self):
         return QRectF(self.selection)
