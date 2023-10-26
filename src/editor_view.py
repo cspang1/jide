@@ -1,15 +1,19 @@
 from PyQt5.QtCore import (
     Qt,
-    QEvent
+    QEvent,
+    pyqtSlot
 )
 from PyQt5.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QStyleOptionGraphicsItem
 )
+from PyQt5.QtGui import QColor
 from pixel_tools import (
     ToolType,
-    PenTool
+    BaseTool,
+    PenTool,
+    SelectTool
 )
 
 class EditorView(QGraphicsView):
@@ -21,20 +25,16 @@ class EditorView(QGraphicsView):
         self.setEnabled(True)
         self.panning = False
         self.last_pos = None
-        self.pen_tool = PenTool(self,self.scene(), Qt.red)
-
-    def setScene(self, scene: QGraphicsScene) -> None:
-        super().setScene(scene)
-        self.pen_tool.set_scene(self.scene())
-        self.scene().installEventFilter(self)
-
-    def eventFilter(self, source, event):
-        if event.type() == QEvent.GraphicsSceneWheel:
-            self.zoomCanvas(event)
-            event.accept()
-            return True
-
-        return super().eventFilter(source, event)
+        self.active_tool = None
+        self.tools = {
+            ToolType.NONE: BaseTool(self),
+            ToolType.SELECT: SelectTool(self),
+            ToolType.PEN: PenTool(self),
+            # ToolType.FILL: PenTool(self, None),
+            # ToolType.LINE: PenTool(self, None),
+            # ToolType.RECTANGLE: RectangleTool(self.scene),
+            # ToolType.ELLIPSE: EllipseTool(self.scene)
+        }
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -45,7 +45,7 @@ class EditorView(QGraphicsView):
             self.viewport().setCursor(Qt.ClosedHandCursor)
 
         if event.button() == Qt.LeftButton:
-            self.pen_tool.mousePressEvent(event)
+            self.tools[self.active_tool].mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -55,7 +55,7 @@ class EditorView(QGraphicsView):
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
 
-        self.pen_tool.mouseMoveEvent(event)
+        self.tools[self.active_tool].mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MiddleButton:
@@ -65,7 +65,30 @@ class EditorView(QGraphicsView):
         super().mouseReleaseEvent(event)
 
         if event.button() == Qt.LeftButton:
-            self.pen_tool.mouseReleaseEvent(event)
+            self.tools[self.active_tool].mouseReleaseEvent(event)
+
+    @pyqtSlot(ToolType)
+    def set_tool(self, tool):
+        self.active_tool = tool
+
+    @pyqtSlot(QColor)
+    def set_tool_color(self, color):
+        for tool in self.tools.values():
+            tool.set_color(color)
+
+    def setScene(self, scene: QGraphicsScene) -> None:
+        super().setScene(scene)
+        for tool in self.tools.values():
+            tool.set_scene(self.scene())
+        self.scene().installEventFilter(self)
+
+    def eventFilter(self, source, event):
+        if event.type() == QEvent.GraphicsSceneWheel:
+            self.zoomCanvas(event)
+            event.accept()
+            return True
+
+        return super().eventFilter(source, event)
 
     def zoomCanvas(self, event):
         zoomFactor = 2

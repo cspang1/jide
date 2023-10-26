@@ -16,7 +16,7 @@ from ui.color_palette_ui import (
 class ColorPalette(QWidget, Ui_color_palette):
 
     color_set = pyqtSignal(QColor, int)
-    color_changed = pyqtSignal(QColor, int)
+    color_selected = pyqtSignal(QColor, int)
     color_palette_changed = pyqtSignal(str)
     color_palette_added = pyqtSignal(str)
     color_palette_removed = pyqtSignal(str)
@@ -31,7 +31,7 @@ class ColorPalette(QWidget, Ui_color_palette):
         self.color_palette_grid.primary_color_selected.connect(self.color_preview.set_primary_color)
         self.color_palette_grid.secondary_color_selected.connect(self.color_preview.set_secondary_color)
         self.color_palette_grid.primary_color_changed.connect(self.color_preview.set_primary_color)
-        self.color_palette_grid.primary_color_changed.connect(self.color_changed)
+        self.color_palette_grid.primary_color_selected.connect(self.color_selected)
         self.color_palette_grid.color_set.connect(self.color_set)
         self.color_palette_grid.color_previewed.connect(self.color_previewed)
 
