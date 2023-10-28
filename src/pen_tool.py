@@ -17,6 +17,7 @@ class PenTool(BaseTool):
         self.image = None
         self.pixmap = None
         self.color = None
+        self.color_index = None
 
     def mousePressEvent(self, event):
         scene = self.view.scene()

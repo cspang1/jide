@@ -380,12 +380,16 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_pen_tool.triggered.connect(
             lambda: self.tile_editor_view.set_tool(ToolType.PEN)
         )
-        # self.tool_actions.addAction(self.action_pen_tool)
+        self.action_line_tool.triggered.connect(
+            lambda: self.sprite_editor_view.set_tool(ToolType.LINE)
+        )
+        self.action_line_tool.triggered.connect(
+            lambda: self.tile_editor_view.set_tool(ToolType.LINE)
+        )
         # self.tool_actions.addAction(self.action_fill_tool)
-        # self.tool_actions.addAction(self.action_line_tool)
         # self.tool_actions.addAction(self.action_rectangle_tool)
         # self.tool_actions.addAction(self.action_ellipse_tool)
-        self.action_pen_tool.trigger()
+        self.action_line_tool.trigger()
 
         self.sprite_color_palette.color_selected.connect(self.sprite_editor_view.set_tool_color)
         self.tile_color_palette.color_selected.connect(self.tile_editor_view.set_tool_color)
