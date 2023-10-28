@@ -52,9 +52,9 @@ class AssetEditorScene(QGraphicsScene):
         self.select_cells(self.crop_rect)
 
     def drawForeground(self, painter, rect):
-        super().drawBackground(painter, rect)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        
+        super().drawForeground(painter, rect)
+        # painter.setRenderHint(QPainter.Antialiasing, True)
+
         rect = QRect(
             math.floor(rect.x()),
             math.floor(rect.y()),
@@ -63,10 +63,16 @@ class AssetEditorScene(QGraphicsScene):
         )
 
         # Define grid parameters
-        grid_size = 8  # Adjust the size of the grid cells as needed
-        grid_color = Qt.black
+        grid_size = 8
+        grid_color = QColor(0, 0, 0, 128)
         grid_pen = QPen(grid_color)
         grid_pen.setWidth(0)
+
+        # Define 1x1 pixel grid parameters
+        small_grid_size = 1
+        small_grid_color = QColor(192, 192, 192, 128)
+        small_grid_pen = QPen(small_grid_color)
+        small_grid_pen.setWidth(0)
         
         # Set the spacing of the grid lines
         left = int(rect.left())
@@ -74,6 +80,20 @@ class AssetEditorScene(QGraphicsScene):
         top = int(rect.top())
         bottom = int(rect.bottom())
         
+        # Draw vertical small grid lines
+        x = left - (left % small_grid_size)
+        while x <= right:
+            painter.setPen(small_grid_pen)
+            painter.drawLine(x, top, x, bottom)
+            x += small_grid_size
+            
+        # Draw horizontal small grid lines
+        y = top - (top % small_grid_size)
+        while y <= bottom:
+            painter.setPen(small_grid_pen)
+            painter.drawLine(left, y, right, y)
+            y += small_grid_size
+
         # Draw vertical grid lines
         x = left - (left % grid_size)
         while x <= right:
