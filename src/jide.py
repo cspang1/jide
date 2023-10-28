@@ -22,6 +22,7 @@ from pixel_data import (
     cmd_add_pixel_palette_row,
     cmd_remove_pixel_palette_row,
     cmd_set_asset_name,
+    cmd_set_pixels
 )
 from color_data import (
     ColorData,
@@ -242,6 +243,27 @@ class Jide(QMainWindow, Ui_main_window):
             )
         )
 
+        self.sprite_editor_view.scene_edited.connect(
+            lambda new_pixels:
+            self.undo_stack.push(
+                cmd_set_pixels(
+                    self.sprite_pixel_data,
+                    new_pixels,
+                    self.sprite_pixel_palette.get_selection()
+                )
+            )
+        )
+        self.tile_editor_view.scene_edited.connect(
+            lambda new_pixels:
+            self.undo_stack.push(
+                cmd_set_pixels(
+                    self.tile_pixel_data,
+                    new_pixels,
+                    self.tile_pixel_palette.get_selection(),
+                )
+            )
+        )
+
         self.tile_map_picker.tile_map_added.connect(
             lambda tile_map_name:
             self.undo_stack.push(
@@ -349,8 +371,14 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_select_tool.triggered.connect(
             lambda: self.sprite_editor_view.set_tool(ToolType.SELECT)
         )
+        self.action_select_tool.triggered.connect(
+            lambda: self.tile_editor_view.set_tool(ToolType.SELECT)
+        )
         self.action_pen_tool.triggered.connect(
             lambda: self.sprite_editor_view.set_tool(ToolType.PEN)
+        )
+        self.action_pen_tool.triggered.connect(
+            lambda: self.tile_editor_view.set_tool(ToolType.PEN)
         )
         # self.tool_actions.addAction(self.action_pen_tool)
         # self.tool_actions.addAction(self.action_fill_tool)
@@ -359,9 +387,8 @@ class Jide(QMainWindow, Ui_main_window):
         # self.tool_actions.addAction(self.action_ellipse_tool)
         self.action_pen_tool.trigger()
 
-        self.sprite_color_palette.color_selected.connect(
-            lambda color, _: self.sprite_editor_view.set_tool_color(color)
-        )
+        self.sprite_color_palette.color_selected.connect(self.sprite_editor_view.set_tool_color)
+        self.tile_color_palette.color_selected.connect(self.tile_editor_view.set_tool_color)
 
         self.sprite_pixel_data.data_updated.connect(
             lambda: self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
@@ -388,10 +415,10 @@ class Jide(QMainWindow, Ui_main_window):
         # )
 
         self.sprite_pixel_palette.assets_selected.connect(
-            lambda _: self.sprite_editor_view.set_selection(None)
+            lambda _: self.sprite_editor_view.clear_selection()
         )
         self.tile_pixel_palette.assets_selected.connect(
-            lambda _: self.tile_editor_view.set_selection(None)
+            lambda _: self.tile_editor_view.clear_selection()
         )
 
         self.sprite_color_data.color_updated.connect(

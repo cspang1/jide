@@ -1,22 +1,28 @@
 from PyQt5.QtCore import (
     Qt,
     QEvent,
-    pyqtSlot
+    pyqtSlot,
+    pyqtSignal,
+    QRect
 )
 from PyQt5.QtWidgets import (
     QGraphicsView,
     QGraphicsScene,
     QStyleOptionGraphicsItem
 )
-from PyQt5.QtGui import QColor
-from base_tool import (
-    BaseTool,
-    ToolType
+from PyQt5.QtGui import (
+    QColor,
+    QImage
 )
+from base_tool import ToolType
 from pen_tool import PenTool
 from select_tool import SelectTool
+from arrow_tool import ArrowTool
 
 class EditorView(QGraphicsView):
+
+    scene_edited = pyqtSignal(QImage)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
@@ -28,7 +34,7 @@ class EditorView(QGraphicsView):
         self.last_pos = None
         self.active_tool = None
         self.tools = {
-            ToolType.NONE: BaseTool(self),
+            ToolType.ARROW: ArrowTool(self),
             ToolType.SELECT: SelectTool(self),
             ToolType.PEN: PenTool(self),
             # ToolType.FILL: PenTool(self, None),
@@ -36,6 +42,12 @@ class EditorView(QGraphicsView):
             # ToolType.RECTANGLE: RectangleTool(self.scene),
             # ToolType.ELLIPSE: EllipseTool(self.scene)
         }
+
+        self.tools[ToolType.PEN].scene_edited.connect(self.scene_edited)
+        # self.tools[ToolType.FILL].scene_edited.connect(self.scene_edited)
+        # self.tools[ToolType.LINE].scene_edited.connect(self.scene_edited)
+        # self.tools[ToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
+        # self.tools[ToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -73,10 +85,13 @@ class EditorView(QGraphicsView):
     def set_tool(self, tool):
         self.active_tool = tool
 
-    @pyqtSlot(QColor)
-    def set_tool_color(self, color):
-        for tool in self.tools.values():
-            tool.set_color(color)
+    @pyqtSlot(QColor, int)
+    def set_tool_color(self, color, color_index):
+        self.tools[ToolType.PEN].set_color(color, color_index)
+        # self.tools[ToolType.FILL].set_color(color)
+        # self.tools[ToolType.LINE].set_color(color)
+        # self.tools[ToolType.RECTANGLE].set_color(color)
+        # self.tools[ToolType.ELLIPSE].set_color(color)
 
     def setScene(self, scene: QGraphicsScene) -> None:
         super().setScene(scene)
@@ -111,3 +126,7 @@ class EditorView(QGraphicsView):
     
     def set_selection(self, selection):
         self.selection = selection
+
+    def clear_selection(self):
+        self.set_selection(None)
+        self.tools[ToolType.SELECT].remove_selection_box()

@@ -37,6 +37,9 @@ class PixelPalette(QWidget, Ui_pixel_palette):
     def set_color_table(self, color_table):
         self.pixel_palette_grid.set_color_table(color_table)
 
+    def get_selection(self):
+        return self.pixel_palette_grid.get_selection()
+
     def set_selection(self, selection):
         self.pixel_palette_grid.set_selection(selection)
 

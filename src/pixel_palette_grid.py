@@ -169,6 +169,9 @@ class PixelPaletteGrid(QWidget):
     def update_from_selection(self):
         self.assets_selected.emit(self.selection)
 
+    def get_selection(self):
+        return self.selection
+
     def set_selection(self, selection):
         self.selection = selection
         self.update_from_selection()

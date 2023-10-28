@@ -2,7 +2,7 @@ import math
 from PyQt5.QtCore import (
     QObject,
     pyqtSignal,
-    pyqtSlot
+    QRect
 )
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QUndoCommand
@@ -68,7 +68,18 @@ class PixelData(QObject):
         self.data.setColorTable(color_table)
         self.data_updated.emit()
 
-    @pyqtSlot()
+    def set_pixels(self, new_pixels, selection):
+        for y in range(selection.top(), selection.bottom()):
+            for x in range(selection.left(), selection.right()):
+                pixel_index = new_pixels.pixelIndex(x - selection.left(), y - selection.top())
+                if pixel_index != 16:
+                    self.data.setPixel(x, y, pixel_index)
+
+        self.data_updated.emit()
+
+    def get_pixels(self, selection):
+        return self.data.copy(selection)
+
     def add_palette_row(self, row_data = None):
         new_image = QImage(self.data.width(), self.data.height() + 8, QImage.Format_Indexed8)
         new_image.setColorTable(self.data.colorTable())
@@ -91,7 +102,6 @@ class PixelData(QObject):
 
         self.data_updated.emit()
 
-    @pyqtSlot()
     def remove_palette_row(self):
         new_image = QImage(self.data.width(), self.data.height() - 8, QImage.Format_Indexed8)
         new_image.setColorTable(self.data.colorTable())
@@ -213,4 +223,28 @@ class cmd_set_asset_name(QUndoCommand):
         if not self.new_asset_name:
             return Validator(False, "Asset name cannot be blank")
 
+        return Validator(True, "")
+
+class cmd_set_pixels(QUndoCommand):
+
+    def __init__(self, data_source, new_pixels, selection, parent=None):
+        super().__init__("set pixels", parent)
+        self.data_source = data_source
+        self.new_pixels = new_pixels
+        scale_factor = 8
+        self.selection = QRect(
+            selection.x() * scale_factor,
+            selection.y() * scale_factor,
+            selection.width() * scale_factor + 1,
+            selection.height() * scale_factor + 1
+        )
+        self.original_pixels = data_source.get_pixels(self.selection)
+
+    def redo(self):
+        self.data_source.set_pixels(self.new_pixels, self.selection)
+
+    def undo(self):
+        self.data_source.set_pixels(self.original_pixels, self.selection)
+
+    def validate(self):
         return Validator(True, "")

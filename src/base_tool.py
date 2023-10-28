@@ -1,8 +1,9 @@
 from enum import Enum
 from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtCore import QObject
 
 class ToolType(Enum):
-    NONE = 0
+    ARROW = 0
     SELECT = 1
     PEN = 2
     FILL = 3
@@ -10,16 +11,10 @@ class ToolType(Enum):
     RECTANGLE = 5
     ELLIPSE = 6
 
-class BaseTool:
+class BaseTool(QObject):
     def __init__(self, view):
-        self.set_view(view)
-        self.color = None
-
-    def set_view(self, view):
+        super().__init__(view)
         self.view = view
-
-    def set_color(self, color):
-        self.color = color
 
     def mousePressEvent(self, event: QMouseEvent) -> None: ...
 

@@ -1,12 +1,10 @@
 import math
 from PyQt5.QtCore import (
-    Qt,
     QRect,
     pyqtSlot
 )
 from PyQt5.QtGui import (
     QPixmap,
-    QPainter,
     QImage,
     QColor,
     QPen
@@ -21,6 +19,7 @@ class AssetEditorScene(QGraphicsScene):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.subject = QImage()
+        self.pixmap = QGraphicsPixmapItem()
         self.crop_rect = QRect()
 
     @pyqtSlot(QRect)
@@ -32,8 +31,12 @@ class AssetEditorScene(QGraphicsScene):
         height = crop_rect.height() * scale_factor
         cropped_image = self.subject.copy(QRect(x, y, width, height))
         self.crop_rect = crop_rect
-        self.clear()
-        self.addItem(QGraphicsPixmapItem(QPixmap.fromImage(cropped_image)))
+
+        if self.pixmap in self.items():
+            self.removeItem(self.pixmap)
+        self.pixmap = QGraphicsPixmapItem(QPixmap.fromImage(cropped_image))
+        self.addItem(self.pixmap)
+
         self.setSceneRect(self.itemsBoundingRect())
 
     @pyqtSlot()

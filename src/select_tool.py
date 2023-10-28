@@ -1,5 +1,11 @@
-from PyQt5.QtCore import QRect, QRectF, Qt, QTimer, QPoint, QPointF
-from PyQt5.QtGui import QPainter, QPen
+from PyQt5.QtCore import (
+    Qt,
+    QRect,
+    QRectF,
+    QTimer,
+    QPoint
+)
+from PyQt5.QtGui import QPen
 from PyQt5.QtWidgets import QGraphicsItem
 from base_tool import BaseTool
 import math
@@ -27,13 +33,11 @@ class SelectTool(BaseTool):
         self.view.set_selection(self.selection_box.get_selection())
 
     def remove_selection_box(self):
+        if self.selection_box:
+            scene = self.view.scene()
+            scene.removeItem(self.selection_box)
+            scene.setSceneRect(scene.itemsBoundingRect())
         self.selection_box = None
-        self.view.set_selection(None)
-        scene = self.view.scene()
-        for item in scene.items():
-            if isinstance(item, SelectionBoxItem):
-                scene.removeItem(item)
-                return
 
 class SelectionBoxItem(QGraphicsItem):
     def __init__(self, selection_start, subject_width, subject_height, parent=None):
