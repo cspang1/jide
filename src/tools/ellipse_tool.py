@@ -4,16 +4,20 @@ from PyQt5.QtGui import (
     QImage,
     qAlpha
 )
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import (
+    pyqtSignal,
+    QRectF,
+    QPoint
+)
 from PyQt5.QtGui import (
     QPixmap,
     QPainter,
     QPen
 )
 from PyQt5.QtCore import Qt
-from base_tool import BaseTool
+from tools.base_tool import BaseTool
 
-class LineTool(BaseTool):
+class EllipseTool(BaseTool):
 
     scene_edited = pyqtSignal(QImage)
 
@@ -34,23 +38,36 @@ class LineTool(BaseTool):
             int(scene_rect.height())
         )
         self.pixmap.fill(Qt.transparent)
-        self.start_point = scene_pos.toPoint()
-        self.end_point = scene_pos
+        self.start_point = QPoint(
+            int(scene_pos.x()),
+            int(scene_pos.y())
+        )
+        self.end_point = QPoint(
+            int(scene_pos.x()),
+            int(scene_pos.y())
+        )
         self.mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
         if self.start_point is None:
             return
 
-        self.end_point = self.view.mapToScene(event.pos())
+        self.pixmap.fill(Qt.transparent)
+
+        scene_pos = self.view.mapToScene(event.pos())
+        self.end_point = QPoint(
+            int(scene_pos.x()),
+            int(scene_pos.y())
+        )
         painter = QPainter(self.pixmap)
         pen = QPen(self.color)
         painter.setPen(pen)
-        self.pixmap.fill(Qt.transparent)
+        drawn_rect = QRectF(self.start_point, self.end_point).normalized().toRect()
         painter.setClipRect(
             self.view.get_selection() or self.view.scene().sceneRect()
         )
-        painter.drawLine(self.start_point, self.end_point)
+        painter.setBrush(self.color)
+        painter.drawEllipse(drawn_rect)
 
         scene = self.view.scene()
         if self.pixmap_item:

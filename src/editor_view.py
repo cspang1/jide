@@ -14,12 +14,13 @@ from PyQt5.QtGui import (
     QColor,
     QImage
 )
-from base_tool import ToolType
-from pen_tool import PenTool
-from select_tool import SelectTool
-from arrow_tool import ArrowTool
-from line_tool import LineTool
-from rectangle_tool import RectangleTool
+from tools.base_tool import ToolType
+from tools.pen_tool import PenTool
+from tools.select_tool import SelectTool
+from tools.arrow_tool import ArrowTool
+from tools.line_tool import LineTool
+from tools.rectangle_tool import RectangleTool
+from tools.ellipse_tool import EllipseTool
 
 class EditorView(QGraphicsView):
 
@@ -41,14 +42,14 @@ class EditorView(QGraphicsView):
             ToolType.PEN: PenTool(self),
             ToolType.LINE: LineTool(self),
             ToolType.RECTANGLE: RectangleTool(self),
-            # ToolType.ELLIPSE: EllipseTool(self)
+            ToolType.ELLIPSE: EllipseTool(self)
             # ToolType.FILL: PenTool(self),
         }
 
         self.tools[ToolType.PEN].scene_edited.connect(self.scene_edited)
         self.tools[ToolType.LINE].scene_edited.connect(self.scene_edited)
         self.tools[ToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
-        # self.tools[ToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
+        self.tools[ToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
         # self.tools[ToolType.FILL].scene_edited.connect(self.scene_edited)
 
     def mousePressEvent(self, event):
@@ -92,7 +93,7 @@ class EditorView(QGraphicsView):
         self.tools[ToolType.PEN].set_color(color, color_index)
         self.tools[ToolType.LINE].set_color(color, color_index)
         self.tools[ToolType.RECTANGLE].set_color(color, color_index)
-        # self.tools[ToolType.ELLIPSE].set_color(color, color_index)
+        self.tools[ToolType.ELLIPSE].set_color(color, color_index)
         # self.tools[ToolType.FILL].set_color(color, color_index)
 
     def setScene(self, scene: QGraphicsScene) -> None:

@@ -6,7 +6,7 @@ from PyQt5.QtGui import (
     qRgba
 )
 from PyQt5.QtCore import pyqtSignal
-from base_tool import BaseTool
+from tools.base_tool import BaseTool
 
 class PenTool(BaseTool):
 
