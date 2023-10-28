@@ -28,6 +28,7 @@ class SelectTool(BaseTool):
 
     def remove_selection_box(self):
         self.selection_box = None
+        self.view.set_selection(None)
         scene = self.view.scene()
         for item in scene.items():
             if isinstance(item, SelectionBoxItem):

@@ -387,6 +387,13 @@ class Jide(QMainWindow, Ui_main_window):
         #     self.tile_map_scene.select_cells
         # )
 
+        self.sprite_pixel_palette.assets_selected.connect(
+            lambda _: self.sprite_editor_view.set_selection(None)
+        )
+        self.tile_pixel_palette.assets_selected.connect(
+            lambda _: self.tile_editor_view.set_selection(None)
+        )
+
         self.sprite_color_data.color_updated.connect(
             lambda _, color, index: self.sprite_scene.set_color(color, index)
         )

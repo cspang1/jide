@@ -35,7 +35,14 @@ class PenTool(BaseTool):
         scene = self.view.scene()
         scene_pos = self.view.mapToScene(event.pos())
         scene_rect = scene.sceneRect()
-        if not (0 <= scene_pos.x() < scene_rect.width() and 0 <= scene_pos.y() < scene_rect.height()):
+
+        selection_rect = self.view.get_selection()
+        x_limit = selection_rect.x() if selection_rect else 0
+        y_limit = selection_rect.y() if selection_rect else 0
+        width_limit = selection_rect.width() + x_limit if selection_rect else scene_rect.width()
+        height_limit = selection_rect.height() + y_limit if selection_rect else scene_rect.height()
+
+        if not (x_limit <= scene_pos.x() < width_limit and y_limit <= scene_pos.y() < height_limit):
             return
 
         x, y = math.floor(scene_pos.x()), math.floor(scene_pos.y())
