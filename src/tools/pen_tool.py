@@ -1,11 +1,20 @@
-import math
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from PyQt5.QtGui import (
     QPixmap,
     QImage,
-    qRgba
+    qAlpha
 )
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import (
+    pyqtSignal,
+    QRectF,
+    QPoint
+)
+from PyQt5.QtGui import (
+    QPixmap,
+    QPainter,
+    QPen
+)
+from PyQt5.QtCore import Qt
 from tools.base_tool import BaseTool
 
 class PenTool(BaseTool):
@@ -14,58 +23,89 @@ class PenTool(BaseTool):
 
     def __init__(self, view):
         super().__init__(view)
-        self.image = None
         self.pixmap = None
+        self.pixmap_item = None
         self.color = None
         self.color_index = None
+        self.previous_point = None
+        self.current_point = None
 
     def mousePressEvent(self, event):
-        scene = self.view.scene()
-        scene_rect = scene.sceneRect()
-        width = math.floor(scene_rect.width())
-        height = math.floor(scene_rect.height())
-        data = bytearray([16] * width * height)
-        self.image = QImage(data, width, height, QImage.Format_Indexed8)
-        self.image.setColorCount(17)
-        self.image.setColor(16, qRgba(0, 0, 0, 0))
-        self.image.setColor(self.color_index, self.color.rgb())
-        self.pixmap = QGraphicsPixmapItem(QPixmap.fromImage(self.image))
-        self.pixmap.setPos(0, 0)
-        self.view.scene().addItem(self.pixmap)
+        scene_pos = self.view.mapToScene(event.pos())
+        scene_rect = self.view.scene().sceneRect()
+        self.pixmap = QPixmap(
+            int(scene_rect.width()),
+            int(scene_rect.height())
+        )
+        self.pixmap.fill(Qt.transparent)
+        self.current_point = QPoint(
+            int(scene_pos.x()),
+            int(scene_pos.y())
+        )
+        self.previous_point = QPoint(
+            int(scene_pos.x()),
+            int(scene_pos.y())
+        )
         self.mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
-        scene = self.view.scene()
-        scene_pos = self.view.mapToScene(event.pos())
-        scene_rect = scene.sceneRect()
-        selection_rect = self.view.get_selection()
-        x_limit = selection_rect.x() if selection_rect else 0
-        y_limit = selection_rect.y() if selection_rect else 0
-        width_limit = selection_rect.width() + x_limit if selection_rect else scene_rect.width()
-        height_limit = selection_rect.height() + y_limit if selection_rect else scene_rect.height()
-        if not (x_limit <= scene_pos.x() < width_limit and y_limit <= scene_pos.y() < height_limit):
+        if self.previous_point is None:
             return
 
-        x, y = math.floor(scene_pos.x()), math.floor(scene_pos.y())
-        self.image.setPixel(x, y, self.color_index)
-        updated_pixmap = QGraphicsPixmapItem(QPixmap.fromImage(self.image))
-        updated_pixmap.setPos(0, 0)
-        scene.removeItem(self.pixmap)
-        self.pixmap = updated_pixmap
-        scene.addItem(self.pixmap)
+        scene_pos = self.view.mapToScene(event.pos())
+        self.previous_point = self.current_point
+        self.current_point = QPoint(
+            int(scene_pos.x()),
+            int(scene_pos.y())
+        )
+        painter = QPainter(self.pixmap)
+        pen = QPen(self.color)
+        painter.setPen(pen)
+        painter.setClipRect(
+            self.view.get_selection() or self.view.scene().sceneRect()
+        )
+        painter.drawLine(self.previous_point, self.current_point)
+
+        scene = self.view.scene()
+        if self.pixmap_item:
+            scene.removeItem(self.pixmap_item)
+        self.pixmap_item = QGraphicsPixmapItem(self.pixmap)
+        scene.addItem(self.pixmap_item)
 
     def mouseReleaseEvent(self, event):
+        if self.current_point is None:
+            return
+
         scene = self.view.scene()
-        scene.removeItem(self.pixmap)
+        scene.removeItem(self.pixmap_item)
         scene.setSceneRect(scene.itemsBoundingRect())
-        if self.edits_made():
-            self.scene_edited.emit(self.image)
+        self.pixmap_item = None
+        self.current_point = None
+
+        if not self.edits_made():
+            return
+
+        image = QImage(self.pixmap.size(), QImage.Format_Indexed8)
+        image.setColorCount(17)
+        image.setColor(self.color_index, self.color.rgb())
+
+        for y in range(self.pixmap.height()):
+            for x in range(self.pixmap.width()):
+                pixel = self.pixmap.toImage().pixel(x, y)
+                if pixel == self.color.rgb():
+                    image.setPixel(x, y, self.color_index)
+                else:
+                    image.setPixel(x, y, 16)
+
+        self.scene_edited.emit(image)
+
 
     def edits_made(self):
-        for y in range(self.image.height()):
-            for x in range(self.image.width()):
-                pixel_index = self.image.pixelIndex(x, y)
-                if pixel_index != 16:
+        for y in range(self.pixmap.height()):
+            for x in range(self.pixmap.width()):
+                pixel = self.pixmap.toImage().pixel(x, y)
+                alpha = qAlpha(pixel)
+                if alpha != 0:
                     return True
 
         return False

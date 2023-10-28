@@ -27,6 +27,8 @@ class FillTool(BaseTool):
         if not (x_limit <= scene_pos.x() < width_limit and y_limit <= scene_pos.y() < height_limit):
             return
 
+        # TODO: Check if there will be no change because target color = starting pixel color
+
         self.image = self.view.scene().get_image(cropped=True)
         self.flood_fill(
             QPoint(
