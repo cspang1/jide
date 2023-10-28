@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import (
     QDialog
 )
 from PyQt5.QtCore import (
-    Qt, pyqtSignal,
+    Qt,
+    pyqtSignal,
     pyqtSlot,
     QRegExp
 )

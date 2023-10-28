@@ -77,4 +77,4 @@ class Ui_tile_map_picker(object):
         self.add_tile_map_btn.setText(_translate("tile_map_picker", "..."))
         self.remove_tile_map_btn.setText(_translate("tile_map_picker", "..."))
         self.rename_tile_map_btn.setText(_translate("tile_map_picker", "..."))
-import resources_rc
+from . import resources_rc

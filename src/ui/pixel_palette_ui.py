@@ -64,4 +64,4 @@ class Ui_pixel_palette(object):
         self.add_palette_row_btn.setText(_translate("pixel_palette", "..."))
         self.remove_palette_row_btn.setText(_translate("pixel_palette", "..."))
 from pixel_palette_grid import PixelPaletteGrid
-import resources_rc
+from . import resources_rc

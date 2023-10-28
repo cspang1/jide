@@ -300,4 +300,4 @@ from color_palette import ColorPalette
 from editor_view import EditorView
 from pixel_palette import PixelPalette
 from tile_map_picker import TileMapPicker
-import resources_rc
+from . import resources_rc

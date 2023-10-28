@@ -1,9 +1,4 @@
-from PyQt5.QtWidgets import QGraphicsPixmapItem
-from PyQt5.QtGui import (
-    QPixmap,
-    QImage,
-    qRgba
-)
+from PyQt5.QtGui import QImage
 from PyQt5.QtCore import (
     pyqtSignal,
     QPoint

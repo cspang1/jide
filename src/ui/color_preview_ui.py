@@ -32,4 +32,4 @@ class Ui_color_preview(object):
         self.switch_color.setToolTip(_translate("color_preview", "Switch Color (X)"))
         self.switch_color.setText(_translate("color_preview", "..."))
         self.switch_color.setShortcut(_translate("color_preview", "X"))
-import resources_rc
+from . import resources_rc

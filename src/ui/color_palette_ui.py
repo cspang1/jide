@@ -102,4 +102,4 @@ class Ui_color_palette(object):
         self.rename_color_palette_btn.setText(_translate("color_palette", "..."))
 from color_palette_grid import ColorPaletteGrid
 from color_preview import ColorPreview
-import resources_rc
+from . import resources_rc
