@@ -12,11 +12,7 @@ class ToolType(Enum):
 class BaseTool:
     def __init__(self, view):
         self.set_view(view)
-        self.scene = None
         self.color = None
-
-    def set_scene(self, scene):
-        self.scene = scene
 
     def set_view(self, view):
         self.view = view
@@ -24,8 +20,8 @@ class BaseTool:
     def set_color(self, color):
         self.color = color
 
-    def mousePressEvent(self, event): pass
+    def mousePressEvent(self, event): ...
 
-    def mouseMoveEvent(self, event): pass
+    def mouseMoveEvent(self, event): ...
 
-    def mouseReleaseEvent(self, event): pass
+    def mouseReleaseEvent(self, event): ...

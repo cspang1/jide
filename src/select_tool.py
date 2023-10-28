@@ -10,25 +10,29 @@ class SelectTool(BaseTool):
         self.selection_box = None
 
     def mousePressEvent(self, event):
+        self.remove_selection_box()
+
         scene_pos = self.view.mapToScene(event.pos())
+        scene = self.view.scene()
+        self.selection_box = SelectionBoxItem(scene_pos, scene.width(), scene.height())
+        scene.addItem(self.selection_box)
+        self.mouseMoveEvent(event)
 
-        if not self.selection_box:
-            scene = self.view.scene()
-            self.selection_box = SelectionBoxItem(scene_pos, scene.width(), scene.height())
-            self.scene.addItem(self.selection_box)
-
+    def mouseMoveEvent(self, event):
+        scene_pos = self.view.mapToScene(event.pos())
         self.selection_box.update_selection(scene_pos)
         self.view.update()
 
-    def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
-            self.mousePressEvent(event)
-
     def mouseReleaseEvent(self, event):
-        if self.selection_box:
-            self.scene.removeItem(self.selection_box)
-            self.selection_box = None
-            self.view.update()
+        self.view.set_selection(self.selection_box.get_selection())
+
+    def remove_selection_box(self):
+        self.selection_box = None
+        scene = self.view.scene()
+        for item in scene.items():
+            if isinstance(item, SelectionBoxItem):
+                scene.removeItem(item)
+                return
 
 class SelectionBoxItem(QGraphicsItem):
     def __init__(self, selection_start, subject_width, subject_height, parent=None):
@@ -45,6 +49,7 @@ class SelectionBoxItem(QGraphicsItem):
         self.ant_timer.timeout.connect(self.update_ants)
         self.ant_timer.start(250)
 
+        self.setZValue(1)
 
     def boundingRect(self):
         return QRectF(self.selection)
@@ -62,6 +67,9 @@ class SelectionBoxItem(QGraphicsItem):
         pen.setDashOffset(self.ant_offset)
         painter.setPen(pen)
         painter.drawRect(self.selection)
+
+    def get_selection(self):
+        return self.selection
 
     def update_selection(self, selection_end):
         x_start = self.selection_start.x()

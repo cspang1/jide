@@ -24,6 +24,7 @@ class EditorView(QGraphicsView):
         self.scale(50, 50)
         self.setEnabled(True)
         self.panning = False
+        self.selection = None
         self.last_pos = None
         self.active_tool = None
         self.tools = {
@@ -55,7 +56,8 @@ class EditorView(QGraphicsView):
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
 
-        self.tools[self.active_tool].mouseMoveEvent(event)
+        if event.buttons() == Qt.LeftButton:
+            self.tools[self.active_tool].mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MiddleButton:
@@ -78,8 +80,6 @@ class EditorView(QGraphicsView):
 
     def setScene(self, scene: QGraphicsScene) -> None:
         super().setScene(scene)
-        for tool in self.tools.values():
-            tool.set_scene(self.scene())
         self.scene().installEventFilter(self)
 
     def eventFilter(self, source, event):
@@ -105,3 +105,9 @@ class EditorView(QGraphicsView):
         newPos = event.scenePos()
         delta = newPos - oldPos
         self.translate(delta.x(), delta.y())
+
+    def get_selection(self):
+        return self.selection
+    
+    def set_selection(self, selection):
+        self.selection = selection
