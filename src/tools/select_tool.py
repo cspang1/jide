@@ -16,21 +16,30 @@ class SelectTool(BaseTool):
         self.selection_box = None
 
     def mousePressEvent(self, event):
-        self.remove_selection_box()
+        self.view.clear_selection()
+
+        scene = self.view.scene()
+        scene_pos = self.view.mapToScene(event.pos())
+        scene_rect = scene.sceneRect()
+        if not (0 <= scene_pos.x() < scene_rect.width() and 0 <= scene_pos.y() < scene_rect.height()):
+            return
 
         scene_pos = self.view.mapToScene(event.pos())
-        scene = self.view.scene()
-        self.selection_box = SelectionBoxItem(scene_pos, scene.width(), scene.height())
+        self.selection_box = SelectionBoxItem(scene_pos, scene.width(), scene.height(), self.view)
         scene.addItem(self.selection_box)
         self.mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
+        if not self.selection_box:
+            return
+
         scene_pos = self.view.mapToScene(event.pos())
         self.selection_box.update_selection(scene_pos)
         self.view.update()
 
     def mouseReleaseEvent(self, event):
-        self.view.set_selection(self.selection_box.get_selection())
+        if self.selection_box:
+            self.view.set_selection(self.selection_box.get_selection())
 
     def remove_selection_box(self):
         if self.selection_box:
@@ -38,14 +47,16 @@ class SelectTool(BaseTool):
             scene.removeItem(self.selection_box)
             scene.setSceneRect(scene.itemsBoundingRect())
         self.selection_box = None
+        self.view.update()
 
 class SelectionBoxItem(QGraphicsItem):
-    def __init__(self, selection_start, subject_width, subject_height, parent=None):
+    def __init__(self, selection_start, subject_width, subject_height, view, parent=None):
         super().__init__(parent)
         self.selection_start = selection_start
         self.selection_end = selection_start
         self.subject_width = subject_width
         self.subject_height = subject_height
+        self.view = view
         self.selection = QRect()
         self.ant_offset = 0
         self.grid_cell_size = 8
@@ -105,3 +116,4 @@ class SelectionBoxItem(QGraphicsItem):
     def update_ants(self):
         self.ant_offset += 4
         self.update()
+        self.view.update()

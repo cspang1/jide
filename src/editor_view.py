@@ -81,6 +81,10 @@ class EditorView(QGraphicsView):
         if event.button() == Qt.LeftButton:
             self.tools[self.active_tool].mouseReleaseEvent(event)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.clear_selection()
+
     @pyqtSlot(ToolType)
     def set_tool(self, tool):
         self.active_tool = tool
