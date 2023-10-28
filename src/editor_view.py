@@ -19,6 +19,7 @@ from pen_tool import PenTool
 from select_tool import SelectTool
 from arrow_tool import ArrowTool
 from line_tool import LineTool
+from rectangle_tool import RectangleTool
 
 class EditorView(QGraphicsView):
 
@@ -38,17 +39,17 @@ class EditorView(QGraphicsView):
             ToolType.ARROW: ArrowTool(self),
             ToolType.SELECT: SelectTool(self),
             ToolType.PEN: PenTool(self),
-            # ToolType.FILL: PenTool(self),
             ToolType.LINE: LineTool(self),
-            # ToolType.RECTANGLE: RectangleTool(self),
+            ToolType.RECTANGLE: RectangleTool(self),
             # ToolType.ELLIPSE: EllipseTool(self)
+            # ToolType.FILL: PenTool(self),
         }
 
         self.tools[ToolType.PEN].scene_edited.connect(self.scene_edited)
-        # self.tools[ToolType.FILL].scene_edited.connect(self.scene_edited)
         self.tools[ToolType.LINE].scene_edited.connect(self.scene_edited)
-        # self.tools[ToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
+        self.tools[ToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
         # self.tools[ToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
+        # self.tools[ToolType.FILL].scene_edited.connect(self.scene_edited)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -89,10 +90,10 @@ class EditorView(QGraphicsView):
     @pyqtSlot(QColor, int)
     def set_tool_color(self, color, color_index):
         self.tools[ToolType.PEN].set_color(color, color_index)
-        # self.tools[ToolType.FILL].set_color(color, color_index)
         self.tools[ToolType.LINE].set_color(color, color_index)
-        # self.tools[ToolType.RECTANGLE].set_color(color, color_index)
+        self.tools[ToolType.RECTANGLE].set_color(color, color_index)
         # self.tools[ToolType.ELLIPSE].set_color(color, color_index)
+        # self.tools[ToolType.FILL].set_color(color, color_index)
 
     def setScene(self, scene: QGraphicsScene) -> None:
         super().setScene(scene)
