@@ -2,8 +2,7 @@ from PyQt5.QtCore import (
     Qt,
     QEvent,
     pyqtSlot,
-    pyqtSignal,
-    QRect
+    pyqtSignal
 )
 from PyQt5.QtWidgets import (
     QGraphicsView,
@@ -21,6 +20,7 @@ from tools.arrow_tool import ArrowTool
 from tools.line_tool import LineTool
 from tools.rectangle_tool import RectangleTool
 from tools.ellipse_tool import EllipseTool
+from tools.fill_tool import FillTool
 
 class EditorView(QGraphicsView):
 
@@ -32,7 +32,6 @@ class EditorView(QGraphicsView):
         self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
         self.scale(50, 50)
         self.setEnabled(True)
-        self.panning = False
         self.selection = None
         self.last_pos = None
         self.active_tool = None
@@ -42,21 +41,20 @@ class EditorView(QGraphicsView):
             ToolType.PEN: PenTool(self),
             ToolType.LINE: LineTool(self),
             ToolType.RECTANGLE: RectangleTool(self),
-            ToolType.ELLIPSE: EllipseTool(self)
-            # ToolType.FILL: PenTool(self),
+            ToolType.ELLIPSE: EllipseTool(self),
+            ToolType.FILL: FillTool(self)
         }
 
         self.tools[ToolType.PEN].scene_edited.connect(self.scene_edited)
         self.tools[ToolType.LINE].scene_edited.connect(self.scene_edited)
         self.tools[ToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
         self.tools[ToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
-        # self.tools[ToolType.FILL].scene_edited.connect(self.scene_edited)
+        self.tools[ToolType.FILL].scene_edited.connect(self.scene_edited)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == Qt.MiddleButton:
             self.last_pos = event.pos()
-            self.panning = True
             self.setDragMode(QGraphicsView.ScrollHandDrag)
             self.viewport().setCursor(Qt.ClosedHandCursor)
 
@@ -65,7 +63,7 @@ class EditorView(QGraphicsView):
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-        if self.panning:
+        if event.buttons() == Qt.MiddleButton:
             delta = event.pos() - self.last_pos
             self.last_pos = event.pos()
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
@@ -76,7 +74,6 @@ class EditorView(QGraphicsView):
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MiddleButton:
-            self.panning = False
             self.setDragMode(QGraphicsView.NoDrag)
             self.viewport().setCursor(Qt.ArrowCursor)
         super().mouseReleaseEvent(event)
@@ -94,7 +91,7 @@ class EditorView(QGraphicsView):
         self.tools[ToolType.LINE].set_color(color, color_index)
         self.tools[ToolType.RECTANGLE].set_color(color, color_index)
         self.tools[ToolType.ELLIPSE].set_color(color, color_index)
-        # self.tools[ToolType.FILL].set_color(color, color_index)
+        self.tools[ToolType.FILL].set_color(color, color_index)
 
     def setScene(self, scene: QGraphicsScene) -> None:
         super().setScene(scene)

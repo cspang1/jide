@@ -398,18 +398,22 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_ellipse_tool.triggered.connect(
             lambda: self.tile_editor_view.set_tool(ToolType.ELLIPSE)
         )
-        # self.tool_actions.addAction(self.action_ellipse_tool)
-        # self.tool_actions.addAction(self.action_fill_tool)
-        self.action_ellipse_tool.trigger()
+        self.action_fill_tool.triggered.connect(
+            lambda: self.sprite_editor_view.set_tool(ToolType.FILL)
+        )
+        self.action_fill_tool.triggered.connect(
+            lambda: self.tile_editor_view.set_tool(ToolType.FILL)
+        )
+        self.action_fill_tool.trigger()
 
         self.sprite_color_palette.color_selected.connect(self.sprite_editor_view.set_tool_color)
         self.tile_color_palette.color_selected.connect(self.tile_editor_view.set_tool_color)
 
         self.sprite_pixel_data.data_updated.connect(
-            lambda: self.sprite_scene.set_scene_image(self.sprite_pixel_data.get_image())
+            lambda: self.sprite_scene.set_image(self.sprite_pixel_data.get_image())
         )
         self.tile_pixel_data.data_updated.connect(
-            lambda: self.tile_scene.set_scene_image(self.tile_pixel_data.get_image())
+            lambda: self.tile_scene.set_image(self.tile_pixel_data.get_image())
         )
 
         self.sprite_color_palette.color_previewed.connect(self.sprite_scene.set_color)

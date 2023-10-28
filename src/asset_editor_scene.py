@@ -18,19 +18,14 @@ class AssetEditorScene(QGraphicsScene):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.subject = QImage()
+        self.image = QImage()
         self.pixmap = QGraphicsPixmapItem()
         self.crop_rect = QRect()
 
     @pyqtSlot(QRect)
     def select_cells(self, crop_rect):
-        scale_factor = 8
-        x = crop_rect.x() * scale_factor
-        y = crop_rect.y() * scale_factor
-        width = crop_rect.width() * scale_factor
-        height = crop_rect.height() * scale_factor
-        cropped_image = self.subject.copy(QRect(x, y, width, height))
         self.crop_rect = crop_rect
+        cropped_image = self.crop_image(self.crop_rect)
 
         if self.pixmap in self.items():
             self.removeItem(self.pixmap)
@@ -39,19 +34,30 @@ class AssetEditorScene(QGraphicsScene):
 
         self.setSceneRect(self.itemsBoundingRect())
 
+    def crop_image(self, crop_rect):
+        scale_factor = 8
+        x = crop_rect.x() * scale_factor
+        y = crop_rect.y() * scale_factor
+        width = crop_rect.width() * scale_factor
+        height = crop_rect.height() * scale_factor
+        return self.image.copy(QRect(x, y, width, height))
+
+    def get_image(self, cropped=False):
+        return self.image if not cropped else self.crop_image(self.crop_rect)
+
     @pyqtSlot()
-    def set_scene_image(self, subject):
-        self.subject = subject
+    def set_image(self, image):
+        self.image = image
         self.select_cells(self.crop_rect)
 
     @pyqtSlot(QColor, int)
     def set_color(self, color, index):
-        self.subject.setColor(index, color.rgb())
+        self.image.setColor(index, color.rgb())
         self.select_cells(self.crop_rect)
 
     def set_color_table(self, color_table):
         for index, color in enumerate(color_table):
-            self.subject.setColor(index, color.rgb())
+            self.image.setColor(index, color.rgb())
         self.select_cells(self.crop_rect)
 
     def drawForeground(self, painter, rect):
