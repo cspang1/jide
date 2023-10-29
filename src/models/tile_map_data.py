@@ -4,7 +4,7 @@ from PyQt5.QtCore import (
     pyqtSlot
 )
 from PyQt5.QtWidgets import QUndoCommand
-from undo_stack import Validator
+from models.undo_stack import Validator
 from collections import namedtuple
 
 Tile = namedtuple('Tile', ['color_palette_index', 'tile_palette_index'])

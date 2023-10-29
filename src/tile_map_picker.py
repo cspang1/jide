@@ -8,7 +8,7 @@ from PyQt5.QtCore import (
     pyqtSignal
 )
 
-from ui.tile_map_picker import (
+from views.tile_map_picker import (
     Ui_tile_map_picker
 )
 

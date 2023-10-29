@@ -13,8 +13,8 @@ from PyQt5.QtGui import (
     QValidator,
     QRegExpValidator,
 )
-from ui.color_picker_dialog_ui import Ui_color_picker_dialog
-from color_data import ColorData
+from views.color_picker_dialog_ui import Ui_color_picker_dialog
+from models.color_data import ColorData
 
 class ColorPickerDialog(QDialog, Ui_color_picker_dialog):
 

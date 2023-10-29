@@ -8,7 +8,7 @@ from PyQt5.QtGui import (
     QPainter,
     QPen
 )
-from color_data import ColorData
+from models.color_data import ColorData
 
 class EightBitColorGrid(QWidget):
 

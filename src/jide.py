@@ -15,23 +15,23 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QActionGroup
 )
-from ui.main_window_ui import Ui_main_window
+from views.main_window_ui import Ui_main_window
 from preferences_dialog import PreferencesDialog
-from pixel_data import (
+from models.pixel_data import (
     PixelData,
     cmd_add_pixel_palette_row,
     cmd_remove_pixel_palette_row,
     cmd_set_asset_name,
     cmd_set_pixels
 )
-from color_data import (
+from models.color_data import (
     ColorData,
     cmd_add_color_palette,
     cmd_remove_color_palette,
     cmd_rename_color_palette,
     cmd_set_color,
 )
-from tile_map_data import (
+from models.tile_map_data import (
     TileMapData,
     cmd_add_tile_map,
     cmd_remove_tile_map,
@@ -45,7 +45,7 @@ from map_editor_scene import (
     RenderedTile
 )
 from tools.base_tool import ToolType
-from undo_stack import UndoStack
+from models.undo_stack import UndoStack
 
 class Jide(QMainWindow, Ui_main_window):
 

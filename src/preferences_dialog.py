@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
 )
 from serial.tools import list_ports
 from PyQt5.QtCore import pyqtSlot
-from ui.preferences_dialog_ui import Ui_preferences_dialog
+from views.preferences_dialog_ui import Ui_preferences_dialog
 
 class PreferencesDialog(QDialog, Ui_preferences_dialog):
     def __init__(self, cpu_port, gpu_port, jcap_path, parent=None):

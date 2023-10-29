@@ -10,7 +10,7 @@ from PyQt5.QtGui import (
     QBrush
 )
 from PyQt5.QtWidgets import QWidget
-from ui.color_preview_ui import Ui_color_preview
+from views.color_preview_ui import Ui_color_preview
 
 class ColorPreview(QWidget, Ui_color_preview):
 

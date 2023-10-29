@@ -9,7 +9,7 @@ from PyQt5.QtCore import (
     pyqtSignal
 )
 
-from ui.color_palette_ui import (
+from views.color_palette_ui import (
     Ui_color_palette
 )
 

@@ -6,7 +6,7 @@ from PyQt5.QtCore import (
 )
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QUndoCommand
-from undo_stack import Validator
+from models.undo_stack import Validator
 
 class ColorData(QObject):
 

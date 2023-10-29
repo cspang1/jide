@@ -6,7 +6,7 @@ from PyQt5.QtCore import (
     pyqtSlot, 
     QRect,
 ) 
-from ui.pixel_palette_ui import Ui_pixel_palette
+from views.pixel_palette_ui import Ui_pixel_palette
 
 class PixelPalette(QWidget, Ui_pixel_palette):
 
