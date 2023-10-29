@@ -27,19 +27,25 @@ class SelectTool(BaseTool):
         scene_pos = self.view.mapToScene(event.pos())
         self.selection_box = SelectionBoxItem(scene_pos, scene.width(), scene.height(), self.view)
         scene.addItem(self.selection_box)
-        self.mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
         if not self.selection_box:
             return
 
+        self.selection_box.setVisible(True)
         scene_pos = self.view.mapToScene(event.pos())
         self.selection_box.update_selection(scene_pos)
         self.view.update()
 
     def mouseReleaseEvent(self, event):
-        if self.selection_box:
-            self.view.set_selection(self.selection_box.get_selection())
+        if not self.selection_box:
+            return
+
+        if not self.selection_box.isVisible():
+            self.remove_selection_box()
+            return
+        
+        self.view.set_selection(self.selection_box.get_selection())
 
     def remove_selection_box(self):
         if self.selection_box:
@@ -53,19 +59,18 @@ class SelectionBoxItem(QGraphicsItem):
     def __init__(self, selection_start, subject_width, subject_height, view, parent=None):
         super().__init__(parent)
         self.selection_start = selection_start
-        self.selection_end = selection_start
         self.subject_width = subject_width
         self.subject_height = subject_height
         self.view = view
         self.selection = QRect()
         self.ant_offset = 0
         self.grid_cell_size = 8
-
         self.ant_timer = QTimer()
         self.ant_timer.timeout.connect(self.update_ants)
         self.ant_timer.start(250)
-
         self.setZValue(1)
+        self.setVisible(False)
+        self.update_selection(self.selection_start)
 
     def boundingRect(self):
         return QRectF(self.selection)
