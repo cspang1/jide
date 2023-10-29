@@ -7,10 +7,10 @@ from PyQt5.QtCore import (
 )
 from PyQt5.QtGui import QPen
 from PyQt5.QtWidgets import QGraphicsItem
-from tools.base_tool import BaseTool
+from tools.asset_base_tool import AssetBaseTool
 import math
 
-class SelectTool(BaseTool):
+class AssetSelectTool(AssetBaseTool):
     def __init__(self, view):
         super().__init__(view)
         self.selection_box = None

@@ -3,9 +3,9 @@ from PyQt5.QtCore import (
     pyqtSignal,
     QPoint
 )
-from tools.base_tool import BaseTool
+from tools.asset_base_tool import AssetBaseTool
 
-class FillTool(BaseTool):
+class AssetFillTool(AssetBaseTool):
 
     scene_edited = pyqtSignal(QImage)
 

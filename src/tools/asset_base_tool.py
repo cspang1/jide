@@ -2,7 +2,7 @@ from enum import Enum
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtCore import QObject
 
-class ToolType(Enum):
+class AssetToolType(Enum):
     ARROW = 0
     SELECT = 1
     PEN = 2
@@ -11,7 +11,7 @@ class ToolType(Enum):
     RECTANGLE = 5
     ELLIPSE = 6
 
-class BaseTool(QObject):
+class AssetBaseTool(QObject):
     def __init__(self, view):
         super().__init__(view)
         self.view = view

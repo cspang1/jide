@@ -6,7 +6,6 @@ from PyQt5.QtGui import (
 )
 from PyQt5.QtCore import (
     pyqtSignal,
-    QRectF,
     QPoint
 )
 from PyQt5.QtGui import (
@@ -15,9 +14,9 @@ from PyQt5.QtGui import (
     QPen
 )
 from PyQt5.QtCore import Qt
-from tools.base_tool import BaseTool
+from tools.asset_base_tool import AssetBaseTool
 
-class PenTool(BaseTool):
+class AssetPenTool(AssetBaseTool):
 
     scene_edited = pyqtSignal(QImage)
 

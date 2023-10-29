@@ -44,7 +44,7 @@ from map_editor_scene import (
     MapEditorScene,
     RenderedTile
 )
-from tools.base_tool import ToolType
+from tools.asset_base_tool import AssetToolType
 from models.undo_stack import UndoStack
 
 class Jide(QMainWindow, Ui_main_window):
@@ -369,40 +369,40 @@ class Jide(QMainWindow, Ui_main_window):
         self.map_editor_view.setScene(self.tile_map_scene)
 
         self.action_select_tool.triggered.connect(
-            lambda: self.sprite_editor_view.set_tool(ToolType.SELECT)
+            lambda: self.sprite_editor_view.set_tool(AssetToolType.SELECT)
         )
         self.action_select_tool.triggered.connect(
-            lambda: self.tile_editor_view.set_tool(ToolType.SELECT)
+            lambda: self.tile_editor_view.set_tool(AssetToolType.SELECT)
         )
         self.action_pen_tool.triggered.connect(
-            lambda: self.sprite_editor_view.set_tool(ToolType.PEN)
+            lambda: self.sprite_editor_view.set_tool(AssetToolType.PEN)
         )
         self.action_pen_tool.triggered.connect(
-            lambda: self.tile_editor_view.set_tool(ToolType.PEN)
+            lambda: self.tile_editor_view.set_tool(AssetToolType.PEN)
         )
         self.action_line_tool.triggered.connect(
-            lambda: self.sprite_editor_view.set_tool(ToolType.LINE)
+            lambda: self.sprite_editor_view.set_tool(AssetToolType.LINE)
         )
         self.action_line_tool.triggered.connect(
-            lambda: self.tile_editor_view.set_tool(ToolType.LINE)
+            lambda: self.tile_editor_view.set_tool(AssetToolType.LINE)
         )
         self.action_rectangle_tool.triggered.connect(
-            lambda: self.sprite_editor_view.set_tool(ToolType.RECTANGLE)
+            lambda: self.sprite_editor_view.set_tool(AssetToolType.RECTANGLE)
         )
         self.action_rectangle_tool.triggered.connect(
-            lambda: self.tile_editor_view.set_tool(ToolType.RECTANGLE)
+            lambda: self.tile_editor_view.set_tool(AssetToolType.RECTANGLE)
         )
         self.action_ellipse_tool.triggered.connect(
-            lambda: self.sprite_editor_view.set_tool(ToolType.ELLIPSE)
+            lambda: self.sprite_editor_view.set_tool(AssetToolType.ELLIPSE)
         )
         self.action_ellipse_tool.triggered.connect(
-            lambda: self.tile_editor_view.set_tool(ToolType.ELLIPSE)
+            lambda: self.tile_editor_view.set_tool(AssetToolType.ELLIPSE)
         )
         self.action_fill_tool.triggered.connect(
-            lambda: self.sprite_editor_view.set_tool(ToolType.FILL)
+            lambda: self.sprite_editor_view.set_tool(AssetToolType.FILL)
         )
         self.action_fill_tool.triggered.connect(
-            lambda: self.tile_editor_view.set_tool(ToolType.FILL)
+            lambda: self.tile_editor_view.set_tool(AssetToolType.FILL)
         )
         self.action_select_tool.trigger()
 

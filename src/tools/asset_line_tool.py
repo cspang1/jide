@@ -11,9 +11,9 @@ from PyQt5.QtGui import (
     QPen
 )
 from PyQt5.QtCore import Qt
-from tools.base_tool import BaseTool
+from tools.asset_base_tool import AssetBaseTool
 
-class LineTool(BaseTool):
+class AssetLineTool(AssetBaseTool):
 
     scene_edited = pyqtSignal(QImage)
 

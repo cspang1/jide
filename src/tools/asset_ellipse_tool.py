@@ -15,9 +15,9 @@ from PyQt5.QtGui import (
     QPen
 )
 from PyQt5.QtCore import Qt
-from tools.base_tool import BaseTool
+from tools.asset_base_tool import AssetBaseTool
 
-class RectangleTool(BaseTool):
+class AssetEllipseTool(AssetBaseTool):
 
     scene_edited = pyqtSignal(QImage)
 
@@ -62,13 +62,12 @@ class RectangleTool(BaseTool):
         painter = QPainter(self.pixmap)
         pen = QPen(self.color)
         painter.setPen(pen)
+        drawn_rect = QRectF(self.start_point, self.end_point).normalized().toRect()
         painter.setClipRect(
             self.view.get_selection() or self.view.scene().sceneRect()
         )
         painter.setBrush(self.color)
-        painter.drawRect(
-            QRectF(self.start_point, self.end_point).normalized().toRect()
-        )
+        painter.drawEllipse(drawn_rect)
 
         scene = self.view.scene()
         if self.pixmap_item:
