@@ -84,6 +84,9 @@ class EditorView(QGraphicsView):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.clear_selection()
+            return
+
+        super().keyPressEvent(event)
 
     @pyqtSlot(ToolType)
     def set_tool(self, tool):
