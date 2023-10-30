@@ -7,7 +7,6 @@ from PyQt5.QtCore import (
 from PyQt5.QtGui import QPen
 from PyQt5.QtWidgets import QGraphicsRectItem
 from tools.asset_base_tool import AssetBaseTool
-import math
 
 class AssetSelectTool(AssetBaseTool):
     def __init__(self, view):
@@ -106,12 +105,12 @@ class SelectionBoxItem(QGraphicsRectItem):
 
         self.selection = QRect(
             QPoint(
-                math.floor(max(0, min(x_start, x_max))),
-                math.floor(max(0, min(y_start, y_max)))
+                int(max(0, min(x_start, x_max))),
+                int(max(0, min(y_start, y_max)))
             ),
             QPoint(
-                math.floor(max(0, min(x_end, x_max))),
-                math.floor(max(0, min(y_end, y_max)))
+                int(max(0, min(x_end, x_max))),
+                int(max(0, min(y_end, y_max)))
             )
         )
 
