@@ -1,7 +1,6 @@
 from PyQt5.QtCore import (
     Qt,
     QRect,
-    QRectF,
     QTimer,
     QPoint
 )

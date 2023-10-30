@@ -35,15 +35,12 @@ class PixelData(QObject):
     def get_asset(self, asset_index):
         tiles_per_row = self.data.width() // PixelData.asset_width
 
-        # Calculate the starting pixel coordinates of the specified tile
         start_x = (asset_index % tiles_per_row) * PixelData.asset_width
         start_y = (asset_index // tiles_per_row) * PixelData.asset_height
 
-        # Create a new QImage for the tile
         asset = QImage(PixelData.asset_width, PixelData.asset_height, QImage.Format_Indexed8)
         asset.setColorCount(PixelData.color_table_depth)
         
-        # Copy the pixel data from the original image to the tile image
         for y in range(PixelData.asset_height):
             for x in range(PixelData.asset_width):
                 pixel_color = self.data.pixelIndex(start_x + x, start_y + y)
@@ -124,21 +121,16 @@ class PixelData(QObject):
         image_data = []
         name_index = 0
 
-        # Iterate through the image, dividing it into tiles
         for y in range(0, self.data.height(), PixelData.asset_height):
             for x in range(0, self.data.width(), PixelData.asset_width):
                 tile_data = []
 
-                # Extract pixel data for the current tile
                 for row in range(PixelData.asset_height):
                     row_data = []
                     for col in range(PixelData.asset_width):
-                        # Append the RGB color tuple to the row data
                         row_data.append(self.data.pixelIndex(x + col, y + row))
-                    # Append the row data to the tile data
                     tile_data.append(row_data)
 
-                # Create a JSON representation of the tile and add it to the list
                 asset = {
                     "name": self.names[name_index],
                     "contents": tile_data

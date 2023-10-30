@@ -161,14 +161,12 @@ class EditorView(QGraphicsView):
         self.set_selection(None)
         self.tools[AssetToolType.SELECT].remove_selection_box()
 
-    @pyqtSlot()
     def copy(self):
         QApplication.clipboard().setImage(
             self.scene().get_image(True).copy(self.get_selection())
         )
         self.selection_copied.emit()
 
-    @pyqtSlot()
     def paste(self):
         if self.active_tool == AssetToolType.PASTE:
             return

@@ -90,7 +90,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_close.triggered.connect(self.close_project)
         self.action_exit.triggered.connect(self.quit_application)
         self.action_preferences.triggered.connect(self.open_preferences)
-        self.action_gen_dat_files.triggered.connect(lambda temp: print("this will generate .DAT files"))
+        self.action_gen_dat_files.triggered.connect(lambda temp: print(f"this will generate .DAT files"))
         self.action_load_jcap_system.triggered.connect(lambda temp: print("this will load the JCAP system"))
 
         self.editor_tabs.currentChanged.connect(self.select_tab)
@@ -404,14 +404,19 @@ class Jide(QMainWindow, Ui_main_window):
         )
         self.action_select_tool.trigger()
 
-        self.action_copy.triggered.connect(self.get_active_view().copy)
-        self.action_paste.triggered.connect(self.get_active_view().paste)
+        self.action_copy.triggered.connect(self.copy)
+        self.action_paste.triggered.connect(self.paste)
 
-        #TODO: TEMPORARY
         self.sprite_editor_view.selection_made.connect(
             lambda enabled: self.action_copy.setEnabled(enabled)
         )
         self.sprite_editor_view.selection_copied.connect(
+            lambda: self.action_paste.setEnabled(True)
+        )
+        self.tile_editor_view.selection_made.connect(
+            lambda enabled: self.action_copy.setEnabled(enabled)
+        )
+        self.tile_editor_view.selection_copied.connect(
             lambda: self.action_paste.setEnabled(True)
         )
 
@@ -504,7 +509,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.populate_models(project_data)
         self.enable_ui()
 
-        self.editor_tabs.setCurrentIndex(0)
+        self.select_tab(0)
 
     def populate_models(self, project_data):
         for palette in ColorData.parse_color_data(project_data["sprite_color_palettes"]):
@@ -583,6 +588,16 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_pixel_palette.setEnabled(True)
         self.tile_map_picker.setEnabled(True)
 
+    # def set_copied_state()
+
+    def copy(self):
+        self.copy_source = self.editor_tabs.currentIndex()
+        self.get_active_view().copy()
+
+    def paste(self):
+        self.select_tab(self.copy_source)
+        self.get_active_view().paste()
+
     def select_tab(self, index):
         dock_visibility = {
             0: (True, True, False, False, False),
@@ -595,6 +610,12 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_map_picker_dock.setVisible(dock_visibility[index][2])
         self.tile_color_palette_dock.setVisible(dock_visibility[index][3])
         self.tile_pixel_palette_dock.setVisible(dock_visibility[index][4])
+
+        self.editor_tabs.setCurrentIndex(index)
+
+        self.action_copy.setEnabled(
+            self.get_active_view().get_selection() is not None
+        )
 
     def get_active_view(self):
         views = [self.sprite_editor_view, self.tile_editor_view, self.map_editor_view]
@@ -750,7 +771,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_close.setEnabled(False)
         self.action_gen_dat_files.setEnabled(False)
         self.action_load_jcap_system.setEnabled(False)
-        self.editor_tabs.setCurrentIndex(0)
+        self.select_tab(0)
         self.editor_tabs.setEnabled(False)
 
         self.sprite_color_palette = ColorPalette()
@@ -792,13 +813,11 @@ class Jide(QMainWindow, Ui_main_window):
         save_prompt.setWindowTitle("Save Changes?")
         save_prompt.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
-        # Show the QMessageBox and wait for the user's response
         response = save_prompt.exec()
 
         if response == QMessageBox.Cancel:
             return False
 
-        # Check the user's response
         if response == QMessageBox.Yes:
             self.save_project()
         
