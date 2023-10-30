@@ -6,7 +6,7 @@ from PyQt5.QtCore import (
     QPoint
 )
 from PyQt5.QtGui import QPen
-from PyQt5.QtWidgets import QGraphicsItem
+from PyQt5.QtWidgets import QGraphicsRectItem
 from tools.asset_base_tool import AssetBaseTool
 import math
 
@@ -45,7 +45,9 @@ class AssetSelectTool(AssetBaseTool):
             self.remove_selection_box()
             return
         
-        self.view.set_selection(self.selection_box.get_selection())
+        self.view.set_selection(
+            self.selection_box.get_selection()
+        )
 
     def remove_selection_box(self):
         if self.selection_box:
@@ -55,7 +57,7 @@ class AssetSelectTool(AssetBaseTool):
         self.selection_box = None
         self.view.update()
 
-class SelectionBoxItem(QGraphicsItem):
+class SelectionBoxItem(QGraphicsRectItem):
     def __init__(self, selection_start, subject_width, subject_height, view, parent=None):
         super().__init__(parent)
         self.selection_start = selection_start
@@ -72,9 +74,6 @@ class SelectionBoxItem(QGraphicsItem):
         self.setVisible(False)
         self.update_selection(self.selection_start)
 
-    def boundingRect(self):
-        return QRectF(self.selection)
-
     def paint(self, painter, option, widget):
         pen = QPen(Qt.white)
         pen.setCosmetic(True)
@@ -88,6 +87,7 @@ class SelectionBoxItem(QGraphicsItem):
         pen.setDashOffset(self.ant_offset)
         painter.setPen(pen)
         painter.drawRect(self.selection)
+        super().paint(painter, option, widget)
 
     def get_selection(self):
         return self.selection

@@ -99,6 +99,7 @@ class EditorView(QGraphicsView):
         if event.key() == Qt.Key_Escape and self.active_tool == AssetToolType.PASTE:
             self.tools[self.active_tool].abort_paste()
             self.active_tool = self.temp_tool
+            self.update()
             return
 
         super().keyPressEvent(event)
