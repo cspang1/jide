@@ -6,12 +6,13 @@ from PyQt5.QtCore import (
 )
 from PyQt5.QtWidgets import (
     QGraphicsView,
-    QGraphicsScene,
-    QStyleOptionGraphicsItem
+    QStyleOptionGraphicsItem,
+    QApplication
 )
 from PyQt5.QtGui import (
     QColor,
-    QImage
+    QImage,
+    QMouseEvent
 )
 from tools.asset_base_tool import AssetToolType
 from tools.asset_pen_tool import AssetPenTool
@@ -21,10 +22,13 @@ from tools.asset_line_tool import AssetLineTool
 from tools.asset_rectangle_tool import AssetRectangleTool
 from tools.asset_ellipse_tool import AssetEllipseTool
 from tools.asset_fill_tool import AssetFillTool
+from tools.asset_paste_tool import AssetPasteTool
 
 class EditorView(QGraphicsView):
 
     scene_edited = pyqtSignal(QImage)
+    selection_made = pyqtSignal(bool)
+    selection_copied = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -34,7 +38,9 @@ class EditorView(QGraphicsView):
         self.setEnabled(True)
         self.selection = None
         self.last_pos = None
+        self.current_pos = None
         self.active_tool = None
+        self.temp_tool = None
         self.tools = {
             AssetToolType.ARROW: AssetArrowTool(self),
             AssetToolType.SELECT: AssetSelectTool(self),
@@ -42,7 +48,8 @@ class EditorView(QGraphicsView):
             AssetToolType.LINE: AssetLineTool(self),
             AssetToolType.RECTANGLE: AssetRectangleTool(self),
             AssetToolType.ELLIPSE: AssetEllipseTool(self),
-            AssetToolType.FILL: AssetFillTool(self)
+            AssetToolType.FILL: AssetFillTool(self),
+            AssetToolType.PASTE: AssetPasteTool(self)
         }
 
         self.tools[AssetToolType.PEN].scene_edited.connect(self.scene_edited)
@@ -50,6 +57,9 @@ class EditorView(QGraphicsView):
         self.tools[AssetToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
         self.tools[AssetToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
         self.tools[AssetToolType.FILL].scene_edited.connect(self.scene_edited)
+        self.tools[AssetToolType.PASTE].scene_edited.connect(self.scene_edited)
+
+        #TODO: Implement an overlay where each pixel's index is displayed
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -61,6 +71,9 @@ class EditorView(QGraphicsView):
         if event.button() == Qt.LeftButton:
             self.tools[self.active_tool].mousePressEvent(event)
 
+        if self.active_tool == AssetToolType.PASTE:
+            self.active_tool = self.temp_tool
+
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
         if event.buttons() == Qt.MiddleButton:
@@ -69,24 +82,44 @@ class EditorView(QGraphicsView):
             self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - delta.x())
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
 
-        if event.buttons() == Qt.LeftButton:
+        self.current_pos = event.pos()
+        if event.buttons() == Qt.LeftButton or self.active_tool == AssetToolType.PASTE:
             self.tools[self.active_tool].mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
         if event.button() == Qt.MiddleButton:
             self.setDragMode(QGraphicsView.NoDrag)
             self.viewport().setCursor(Qt.ArrowCursor)
-        super().mouseReleaseEvent(event)
 
         if event.button() == Qt.LeftButton:
             self.tools[self.active_tool].mouseReleaseEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape:
-            self.clear_selection()
+        if event.key() == Qt.Key_Escape and self.active_tool == AssetToolType.PASTE:
+            self.tools[self.active_tool].abort_paste()
+            self.active_tool = self.temp_tool
             return
 
         super().keyPressEvent(event)
+
+    def enterEvent(self, event):
+        self.setCursor(Qt.CrossCursor)
+
+    def leaveEvent(self, event):
+        self.unsetCursor()
+
+    def setScene(self, scene):
+        super().setScene(scene)
+        self.scene().installEventFilter(self)
+
+    def eventFilter(self, source, event):
+        if event.type() == QEvent.GraphicsSceneWheel:
+            self.zoom_canvas(event)
+            event.accept()
+            return True
+
+        return super().eventFilter(source, event)
 
     @pyqtSlot(AssetToolType)
     def set_tool(self, tool):
@@ -100,21 +133,9 @@ class EditorView(QGraphicsView):
         self.tools[AssetToolType.ELLIPSE].set_color(color, color_index)
         self.tools[AssetToolType.FILL].set_color(color, color_index)
 
-    def setScene(self, scene: QGraphicsScene) -> None:
-        super().setScene(scene)
-        self.scene().installEventFilter(self)
-
-    def eventFilter(self, source, event):
-        if event.type() == QEvent.GraphicsSceneWheel:
-            self.zoomCanvas(event)
-            event.accept()
-            return True
-
-        return super().eventFilter(source, event)
-
-    def zoomCanvas(self, event):
+    def zoom_canvas(self, event):
         zoomFactor = 2
-        oldPos = event.scenePos()
+        last_pos = event.scenePos()
 
         detail = QStyleOptionGraphicsItem.levelOfDetailFromTransform(
             self.transform()
@@ -124,8 +145,8 @@ class EditorView(QGraphicsView):
         if detail > 5 and event.delta() < 0:
             self.scale((1 / zoomFactor), (1 / zoomFactor))
 
-        newPos = event.scenePos()
-        delta = newPos - oldPos
+        current_pos = event.scenePos()
+        delta = current_pos - last_pos
         self.translate(delta.x(), delta.y())
 
     def get_selection(self):
@@ -133,7 +154,28 @@ class EditorView(QGraphicsView):
     
     def set_selection(self, selection):
         self.selection = selection
+        self.selection_made.emit(self.selection is not None)
 
     def clear_selection(self):
         self.set_selection(None)
         self.tools[AssetToolType.SELECT].remove_selection_box()
+
+    @pyqtSlot()
+    def copy(self):
+        QApplication.clipboard().setImage(
+            self.scene().get_image(True).copy(self.get_selection())
+        )
+        self.selection_copied.emit()
+
+    @pyqtSlot()
+    def paste(self):
+        if self.active_tool == AssetToolType.PASTE:
+            return
+
+        self.clear_selection()
+        self.temp_tool = self.active_tool
+        self.active_tool = AssetToolType.PASTE
+
+        self.tools[self.active_tool].mouseMoveEvent(
+            QMouseEvent(QMouseEvent.MouseMove, self.current_pos, Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        )

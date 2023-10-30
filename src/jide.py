@@ -86,8 +86,6 @@ class Jide(QMainWindow, Ui_main_window):
 
         self.action_new.triggered.connect(self.new_project)
         self.action_save.triggered.connect(self.save_project)
-        self.action_copy.triggered.connect(lambda temp: print("this will copy the current selection"))
-        self.action_paste.triggered.connect(lambda temp: print("this will paste the current selection"))
         self.action_open.triggered.connect(self.select_file)
         self.action_close.triggered.connect(self.close_project)
         self.action_exit.triggered.connect(self.quit_application)
@@ -406,6 +404,17 @@ class Jide(QMainWindow, Ui_main_window):
         )
         self.action_select_tool.trigger()
 
+        self.action_copy.triggered.connect(self.get_active_view().copy)
+        self.action_paste.triggered.connect(self.get_active_view().paste)
+
+        #TODO: TEMPORARY
+        self.sprite_editor_view.selection_made.connect(
+            lambda enabled: self.action_copy.setEnabled(enabled)
+        )
+        self.sprite_editor_view.selection_copied.connect(
+            lambda: self.action_paste.setEnabled(True)
+        )
+
         self.sprite_color_palette.color_selected.connect(self.sprite_editor_view.set_tool_color)
         self.tile_color_palette.color_selected.connect(self.tile_editor_view.set_tool_color)
 
@@ -586,6 +595,10 @@ class Jide(QMainWindow, Ui_main_window):
         self.tile_map_picker_dock.setVisible(dock_visibility[index][2])
         self.tile_color_palette_dock.setVisible(dock_visibility[index][3])
         self.tile_pixel_palette_dock.setVisible(dock_visibility[index][4])
+
+    def get_active_view(self):
+        views = [self.sprite_editor_view, self.tile_editor_view, self.map_editor_view]
+        return views[self.editor_tabs.currentIndex()]
 
     def select_file(self):
         if not self.check_unsaved_changes():

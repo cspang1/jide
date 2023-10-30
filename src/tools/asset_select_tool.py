@@ -93,7 +93,6 @@ class SelectionBoxItem(QGraphicsItem):
         return self.selection
 
     def update_selection(self, selection_end):
-        # TODO: Maybe find a way where if you just click without dragging then it clears the current selection?
         x_start = self.selection_start.x()
         y_start = self.selection_start.y()
         x_end = selection_end.x()
