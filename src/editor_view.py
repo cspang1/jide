@@ -1,3 +1,4 @@
+from enum import Enum
 from PyQt5.QtCore import (
     Qt,
     QEvent,
@@ -122,7 +123,7 @@ class EditorView(QGraphicsView):
 
         return super().eventFilter(source, event)
 
-    @pyqtSlot(AssetToolType)
+    @pyqtSlot(Enum)
     def set_tool(self, tool):
         self.active_tool = tool
 
@@ -174,6 +175,10 @@ class EditorView(QGraphicsView):
         self.clear_selection()
         self.temp_tool = self.active_tool
         self.active_tool = AssetToolType.PASTE
+
+        self.tools[self.temp_tool].mouseReleaseEvent(
+            QMouseEvent(QMouseEvent.MouseMove, self.current_pos, Qt.NoButton, Qt.NoButton, Qt.NoModifier)
+        )
 
         self.tools[self.active_tool].mouseMoveEvent(
             QMouseEvent(QMouseEvent.MouseMove, self.current_pos, Qt.NoButton, Qt.NoButton, Qt.NoModifier)

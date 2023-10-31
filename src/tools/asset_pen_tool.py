@@ -48,7 +48,7 @@ class AssetPenTool(AssetBaseTool):
         self.mouseMoveEvent(event)
 
     def mouseMoveEvent(self, event):
-        if self.previous_point is None:
+        if self.previous_point is None or self.current_point is None:
             return
 
         scene_pos = self.view.mapToScene(event.pos())
