@@ -6,9 +6,6 @@ from PyQt5.QtCore import (
 from tools.asset_base_tool import AssetBaseTool
 
 class AssetFillTool(AssetBaseTool):
-
-    scene_edited = pyqtSignal(QImage)
-
     def __init__(self, view):
         super().__init__(view)
         self.image = None
@@ -73,7 +70,3 @@ class AssetFillTool(AssetBaseTool):
                 for neighbor in neighbors:
                     if is_valid_point(neighbor):
                         stack.append(neighbor)
-
-    def set_color(self, color, color_index):
-        self.color = color
-        self.color_index = color_index

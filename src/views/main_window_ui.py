@@ -33,7 +33,7 @@ class Ui_main_window(object):
         self.sprite_editor_layout.setContentsMargins(0, 0, 0, 0)
         self.sprite_editor_layout.setSpacing(0)
         self.sprite_editor_layout.setObjectName("sprite_editor_layout")
-        self.sprite_editor_view = EditorView(self.sprite_tab)
+        self.sprite_editor_view = AssetEditorView(self.sprite_tab)
         self.sprite_editor_view.setObjectName("sprite_editor_view")
         self.sprite_editor_layout.addWidget(self.sprite_editor_view)
         self.editor_tabs.addTab(self.sprite_tab, "")
@@ -44,7 +44,7 @@ class Ui_main_window(object):
         self.tile_editor_layout.setContentsMargins(0, 0, 0, 0)
         self.tile_editor_layout.setSpacing(0)
         self.tile_editor_layout.setObjectName("tile_editor_layout")
-        self.tile_editor_view = EditorView(self.tile_tab)
+        self.tile_editor_view = AssetEditorView(self.tile_tab)
         self.tile_editor_view.setObjectName("tile_editor_view")
         self.tile_editor_layout.addWidget(self.tile_editor_view)
         self.editor_tabs.addTab(self.tile_tab, "")
@@ -55,7 +55,7 @@ class Ui_main_window(object):
         self.map_editor_layout.setContentsMargins(0, 0, 0, 0)
         self.map_editor_layout.setSpacing(0)
         self.map_editor_layout.setObjectName("map_editor_layout")
-        self.map_editor_view = EditorView(self.map_tab)
+        self.map_editor_view = MapEditorView(self.map_tab)
         self.map_editor_view.setObjectName("map_editor_view")
         self.map_editor_layout.addWidget(self.map_editor_view)
         self.editor_tabs.addTab(self.map_tab, "")
@@ -245,7 +245,7 @@ class Ui_main_window(object):
         self.menu_bar.addAction(self.menu_jcap.menuAction())
 
         self.retranslateUi(main_window)
-        self.editor_tabs.setCurrentIndex(0)
+        self.editor_tabs.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def retranslateUi(self, main_window):
@@ -296,8 +296,9 @@ class Ui_main_window(object):
         self.action_save.setToolTip(_translate("main_window", "Save Project"))
         self.action_save.setShortcut(_translate("main_window", "Ctrl+S"))
         self.action_close.setText(_translate("main_window", "Close Project"))
+from asset_editor_view import AssetEditorView
 from color_palette import ColorPalette
-from editor_view import EditorView
+from map_editor_view import MapEditorView
 from pixel_palette import PixelPalette
 from tile_map_picker import TileMapPicker
 from . import resources_rc

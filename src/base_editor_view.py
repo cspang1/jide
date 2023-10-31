@@ -11,21 +11,20 @@ from PyQt5.QtWidgets import (
     QApplication
 )
 from PyQt5.QtGui import (
-    QColor,
     QImage,
     QMouseEvent
 )
 from tools.asset_base_tool import AssetToolType
 from tools.asset_pen_tool import AssetPenTool
 from tools.asset_select_tool import AssetSelectTool
-from tools.asset_arrow_tool import AssetArrowTool
 from tools.asset_line_tool import AssetLineTool
 from tools.asset_rectangle_tool import AssetRectangleTool
 from tools.asset_ellipse_tool import AssetEllipseTool
 from tools.asset_fill_tool import AssetFillTool
 from tools.asset_paste_tool import AssetPasteTool
+from tools.map_base_tool import MapToolType
 
-class EditorView(QGraphicsView):
+class BaseEditorView(QGraphicsView):
 
     scene_edited = pyqtSignal(QImage)
     selection_made = pyqtSignal(bool)
@@ -40,26 +39,25 @@ class EditorView(QGraphicsView):
         self.selection = None
         self.last_pos = None
         self.current_pos = None
+        self.tool_type = None
         self.active_tool = None
         self.temp_tool = None
-        self.tools = {
-            AssetToolType.ARROW: AssetArrowTool(self),
-            AssetToolType.SELECT: AssetSelectTool(self),
-            AssetToolType.PEN: AssetPenTool(self),
-            AssetToolType.LINE: AssetLineTool(self),
-            AssetToolType.RECTANGLE: AssetRectangleTool(self),
-            AssetToolType.ELLIPSE: AssetEllipseTool(self),
-            AssetToolType.FILL: AssetFillTool(self),
-            AssetToolType.PASTE: AssetPasteTool(self)
+        self.tool_mapping = {
+            AssetToolType: {
+                AssetToolType.SELECT: AssetSelectTool(self),
+                AssetToolType.PEN: AssetPenTool(self),
+                AssetToolType.LINE: AssetLineTool(self),
+                AssetToolType.RECTANGLE: AssetRectangleTool(self),
+                AssetToolType.ELLIPSE: AssetEllipseTool(self),
+                AssetToolType.FILL: AssetFillTool(self),
+                AssetToolType.PASTE: AssetPasteTool(self),
+            },
+            MapToolType: {
+                MapToolType.SELECT: AssetSelectTool(self),
+                MapToolType.TILE: AssetEllipseTool(self),
+                MapToolType.PASTE: AssetPasteTool(self),
+            },
         }
-
-        self.tools[AssetToolType.PEN].scene_edited.connect(self.scene_edited)
-        self.tools[AssetToolType.LINE].scene_edited.connect(self.scene_edited)
-        self.tools[AssetToolType.RECTANGLE].scene_edited.connect(self.scene_edited)
-        self.tools[AssetToolType.ELLIPSE].scene_edited.connect(self.scene_edited)
-        self.tools[AssetToolType.FILL].scene_edited.connect(self.scene_edited)
-        self.tools[AssetToolType.PASTE].scene_edited.connect(self.scene_edited)
-
         #TODO: Implement an overlay where each pixel's index is displayed
 
     def mousePressEvent(self, event):
@@ -72,7 +70,7 @@ class EditorView(QGraphicsView):
         if event.button() == Qt.LeftButton:
             self.tools[self.active_tool].mousePressEvent(event)
 
-        if self.active_tool == AssetToolType.PASTE:
+        if self.active_tool == self.tool_type.PASTE:
             self.active_tool = self.temp_tool
 
     def mouseMoveEvent(self, event):
@@ -84,7 +82,7 @@ class EditorView(QGraphicsView):
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - delta.y())
 
         self.current_pos = event.pos()
-        if event.buttons() == Qt.LeftButton or self.active_tool == AssetToolType.PASTE:
+        if event.buttons() == Qt.LeftButton or self.active_tool == self.tool_type.PASTE:
             self.tools[self.active_tool].mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -97,7 +95,7 @@ class EditorView(QGraphicsView):
             self.tools[self.active_tool].mouseReleaseEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape and self.active_tool == AssetToolType.PASTE:
+        if event.key() == Qt.Key_Escape and self.active_tool == self.tool_type.PASTE:
             self.tools[self.active_tool].abort_paste()
             self.active_tool = self.temp_tool
             self.update()
@@ -123,17 +121,15 @@ class EditorView(QGraphicsView):
 
         return super().eventFilter(source, event)
 
+    def set_tool_type(self, tool_type):
+        self.tool_type = tool_type
+        self.tools = self.tool_mapping.get(self.tool_type, {})
+        for tool in self.tools.values():
+            tool.scene_edited.connect(self.scene_edited)
+
     @pyqtSlot(Enum)
     def set_tool(self, tool):
         self.active_tool = tool
-
-    @pyqtSlot(QColor, int)
-    def set_tool_color(self, color, color_index):
-        self.tools[AssetToolType.PEN].set_color(color, color_index)
-        self.tools[AssetToolType.LINE].set_color(color, color_index)
-        self.tools[AssetToolType.RECTANGLE].set_color(color, color_index)
-        self.tools[AssetToolType.ELLIPSE].set_color(color, color_index)
-        self.tools[AssetToolType.FILL].set_color(color, color_index)
 
     def zoom_canvas(self, event):
         zoomFactor = 2
@@ -160,7 +156,7 @@ class EditorView(QGraphicsView):
 
     def clear_selection(self):
         self.set_selection(None)
-        self.tools[AssetToolType.SELECT].remove_selection_box()
+        self.tools[self.tool_type.SELECT].remove_selection_box()
 
     def copy(self):
         QApplication.clipboard().setImage(
@@ -169,12 +165,12 @@ class EditorView(QGraphicsView):
         self.selection_copied.emit()
 
     def paste(self):
-        if self.active_tool == AssetToolType.PASTE:
+        if self.active_tool == self.tool_type.PASTE:
             return
 
         self.clear_selection()
         self.temp_tool = self.active_tool
-        self.active_tool = AssetToolType.PASTE
+        self.active_tool = self.tool_type.PASTE
 
         self.tools[self.temp_tool].mouseReleaseEvent(
             QMouseEvent(QMouseEvent.MouseMove, self.current_pos, Qt.NoButton, Qt.NoButton, Qt.NoModifier)

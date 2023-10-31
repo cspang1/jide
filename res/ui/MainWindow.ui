@@ -45,7 +45,7 @@
        <string notr="true"/>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="sprite_tab">
        <property name="styleSheet">
@@ -71,7 +71,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="EditorView" name="sprite_editor_view"/>
+         <widget class="AssetEditorView" name="sprite_editor_view"/>
         </item>
        </layout>
       </widget>
@@ -99,7 +99,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="EditorView" name="tile_editor_view"/>
+         <widget class="AssetEditorView" name="tile_editor_view"/>
         </item>
        </layout>
       </widget>
@@ -127,7 +127,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="EditorView" name="map_editor_view"/>
+         <widget class="MapEditorView" name="map_editor_view"/>
         </item>
        </layout>
       </widget>
@@ -580,15 +580,20 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>EditorView</class>
-   <extends>QGraphicsView</extends>
-   <header>editor_view</header>
-  </customwidget>
-  <customwidget>
    <class>TileMapPicker</class>
    <extends>QWidget</extends>
    <header>tile_map_picker</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>AssetEditorView</class>
+   <extends>QGraphicsView</extends>
+   <header>asset_editor_view</header>
+  </customwidget>
+  <customwidget>
+   <class>MapEditorView</class>
+   <extends>QGraphicsView</extends>
+   <header>map_editor_view</header>
   </customwidget>
  </customwidgets>
  <tabstops>

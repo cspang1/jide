@@ -1,16 +1,22 @@
 from enum import Enum
-from PyQt5.QtGui import QMouseEvent
-from PyQt5.QtCore import QObject
+from PyQt5.QtGui import (
+    QMouseEvent,
+    QImage
+)
+from PyQt5.QtCore import (
+    QObject,
+    pyqtSignal
+)
 
 class MapToolType(Enum):
-    ARROW = 0
-    SELECT = 1
-    MOVE = 2
-    TILE = 3
-    FILL = 4
-    PASTE = 5
+    SELECT = 0
+    TILE = 1
+    PASTE = 2
 
 class MapBaseTool(QObject):
+
+    scene_edited = pyqtSignal(QImage)
+    
     def __init__(self, view):
         super().__init__(view)
         self.view = view

@@ -45,6 +45,7 @@ from map_editor_scene import (
     RenderedTile
 )
 from tools.asset_base_tool import AssetToolType
+from tools.map_base_tool import MapToolType
 from models.undo_stack import UndoStack
 
 class Jide(QMainWindow, Ui_main_window):
@@ -365,12 +366,18 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_editor_view.setScene(self.sprite_scene)
         self.tile_editor_view.setScene(self.tile_scene)
         self.map_editor_view.setScene(self.tile_map_scene)
+        self.sprite_editor_view.set_tool_type(AssetToolType)
+        self.tile_editor_view.set_tool_type(AssetToolType)
+        self.map_editor_view.set_tool_type(MapToolType)
 
         self.action_select_tool.triggered.connect(
             lambda: self.sprite_editor_view.set_tool(AssetToolType.SELECT)
         )
         self.action_select_tool.triggered.connect(
             lambda: self.tile_editor_view.set_tool(AssetToolType.SELECT)
+        )
+        self.action_select_tool.triggered.connect(
+            lambda: self.map_editor_view.set_tool(MapToolType.SELECT)
         )
         self.action_pen_tool.triggered.connect(
             lambda: self.sprite_editor_view.set_tool(AssetToolType.PEN)
@@ -417,6 +424,12 @@ class Jide(QMainWindow, Ui_main_window):
             lambda enabled: self.action_copy.setEnabled(enabled)
         )
         self.tile_editor_view.selection_copied.connect(
+            lambda: self.action_paste.setEnabled(True)
+        )
+        self.map_editor_view.selection_made.connect(
+            lambda enabled: self.action_copy.setEnabled(enabled)
+        )
+        self.map_editor_view.selection_copied.connect(
             lambda: self.action_paste.setEnabled(True)
         )
 
@@ -587,8 +600,6 @@ class Jide(QMainWindow, Ui_main_window):
         self.sprite_pixel_palette.setEnabled(True)
         self.tile_pixel_palette.setEnabled(True)
         self.tile_map_picker.setEnabled(True)
-
-    # def set_copied_state()
 
     def copy(self):
         self.copy_source = self.editor_tabs.currentIndex()

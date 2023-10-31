@@ -16,9 +16,6 @@ from PyQt5.QtGui import (
 from tools.asset_base_tool import AssetBaseTool
 
 class AssetPasteTool(AssetBaseTool):
-
-    scene_edited = pyqtSignal(QImage)
-
     def __init__(self, view):
         super().__init__(view)
         self.image = None

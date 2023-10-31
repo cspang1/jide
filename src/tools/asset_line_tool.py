@@ -14,9 +14,6 @@ from PyQt5.QtCore import Qt
 from tools.asset_base_tool import AssetBaseTool
 
 class AssetLineTool(AssetBaseTool):
-
-    scene_edited = pyqtSignal(QImage)
-
     def __init__(self, view):
         super().__init__(view)
         self.pixmap = None
@@ -95,7 +92,3 @@ class AssetLineTool(AssetBaseTool):
                     return True
 
         return False
-
-    def set_color(self, color, color_index):
-        self.color = color
-        self.color_index = color_index
