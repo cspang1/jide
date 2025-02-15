@@ -77,6 +77,7 @@ class Jide(QMainWindow, Ui_main_window):
         self.tool_actions.addAction(self.action_line_tool)
         self.tool_actions.addAction(self.action_rectangle_tool)
         self.tool_actions.addAction(self.action_ellipse_tool)
+        self.tool_actions.addAction(self.action_place_tiles_tool)
 
         self.undo_stack = UndoStack(self)
         action_undo = self.undo_stack.createUndoAction(self, "&Undo")
@@ -409,6 +410,10 @@ class Jide(QMainWindow, Ui_main_window):
         self.action_fill_tool.triggered.connect(
             lambda: self.tile_editor_view.set_tool(AssetToolType.FILL)
         )
+        self.action_place_tiles_tool.triggered.connect(
+            lambda: self.map_editor_view.set_tool(MapToolType.TILE)
+        )
+    
         self.action_select_tool.trigger()
 
         self.action_copy.triggered.connect(self.copy)
@@ -616,11 +621,25 @@ class Jide(QMainWindow, Ui_main_window):
             2: (False, False, True, True, True)
         }
 
+        tool_visibility = {
+            0: (True, True, True, True, True, True, False),
+            1: (True, True, True, True, True, True, False),
+            2: (False, False, False, False, False, False, True)
+        }
+
         self.sprite_color_palette_dock.setVisible(dock_visibility[index][0])
         self.sprite_pixel_palette_dock.setVisible(dock_visibility[index][1])
         self.tile_map_picker_dock.setVisible(dock_visibility[index][2])
         self.tile_color_palette_dock.setVisible(dock_visibility[index][3])
         self.tile_pixel_palette_dock.setVisible(dock_visibility[index][4])
+
+        self.action_select_tool.setEnabled(tool_visibility[index][0])
+        self.action_pen_tool.setEnabled(tool_visibility[index][1])
+        self.action_fill_tool.setEnabled(tool_visibility[index][2])
+        self.action_line_tool.setEnabled(tool_visibility[index][3])
+        self.action_rectangle_tool.setEnabled(tool_visibility[index][4])
+        self.action_ellipse_tool.setEnabled(tool_visibility[index][5])
+        self.action_place_tiles_tool.setEnabled(tool_visibility[index][6])
 
         self.editor_tabs.setCurrentIndex(index)
 

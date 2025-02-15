@@ -155,6 +155,8 @@
    <addaction name="action_line_tool"/>
    <addaction name="action_rectangle_tool"/>
    <addaction name="action_ellipse_tool"/>
+   <addaction name="separator"/>
+   <addaction name="action_place_tiles_tool"/>
   </widget>
   <widget class="QDockWidget" name="sprite_color_palette_dock">
    <property name="enabled">
@@ -320,7 +322,7 @@
      <x>0</x>
      <y>0</y>
      <width>1416</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -563,6 +565,24 @@
    </property>
    <property name="text">
     <string>Close Project</string>
+   </property>
+  </action>
+  <action name="action_place_tiles_tool">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources.qrc">
+     <normaloff>:/icons/map.png</normaloff>:/icons/map.png</iconset>
+   </property>
+   <property name="text">
+    <string>Place Tiles</string>
+   </property>
+   <property name="toolTip">
+    <string>Place Tiles</string>
    </property>
   </action>
  </widget>

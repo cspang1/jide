@@ -50,12 +50,12 @@ class BaseEditorView(QGraphicsView):
                 AssetToolType.RECTANGLE: AssetRectangleTool(self),
                 AssetToolType.ELLIPSE: AssetEllipseTool(self),
                 AssetToolType.FILL: AssetFillTool(self),
-                AssetToolType.PASTE: AssetPasteTool(self),
+                AssetToolType.PASTE: AssetPasteTool(self)
             },
             MapToolType: {
                 MapToolType.SELECT: AssetSelectTool(self),
                 MapToolType.TILE: AssetEllipseTool(self),
-                MapToolType.PASTE: AssetPasteTool(self),
+                MapToolType.PASTE: AssetPasteTool(self)
             },
         }
         #TODO: Implement an overlay where each pixel's index is displayed

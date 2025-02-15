@@ -1,16 +1,17 @@
-<!DOCTYPE RCC><RCC version="1.0">
-    <qresource>
-        <file>icons/add.png</file>
-        <file>icons/remove.png</file>
-        <file>icons/rename.png</file>
-        <file>icons/switch_color.png</file>
-        <file>icons/add_row.png</file>
-        <file>icons/remove_row.png</file>
-        <file>icons/select_tool.png</file>
-        <file>icons/rect_tool.png</file>
-        <file>icons/pencil_tool.png</file>
-        <file>icons/line_tool.png</file>
-        <file>icons/fill_tool.png</file>
-        <file>icons/ellipse_tool.png</file>
-    </qresource>
+<RCC>
+  <qresource>
+    <file>icons/map.png</file>
+    <file>icons/add.png</file>
+    <file>icons/remove.png</file>
+    <file>icons/rename.png</file>
+    <file>icons/switch_color.png</file>
+    <file>icons/add_row.png</file>
+    <file>icons/remove_row.png</file>
+    <file>icons/select_tool.png</file>
+    <file>icons/rect_tool.png</file>
+    <file>icons/pencil_tool.png</file>
+    <file>icons/line_tool.png</file>
+    <file>icons/fill_tool.png</file>
+    <file>icons/ellipse_tool.png</file>
+  </qresource>
 </RCC>
